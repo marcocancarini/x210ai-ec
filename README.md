@@ -74,7 +74,27 @@ recovery. I materiali originali stanno in `inputs/`, i tool in `tools/`, i dump 
 
 ## 7. Verifica delle patch
 
-- `EC0416_fn-ctrl-swap.BIN`: size 131072 (identica), 1 solo byte diff (`0x0C35`), 16B-signature e vettori intatti. Emulazione routine `0x0C09`: `0x84` → `0x1D`/`0x9D` make/break = stesso output di L-Ctrl (`0x14`); tutti gli altri tasti invariati. Efficace, nessun problema di dimensione/logica.
+Confronto `EC0416.BIN` (originale) vs `EC0416_fn-ctrl-swap.BIN` (patch Fn→LCtrl):
+
+| Check | Esito |
+|---|---|
+| Dimensione | 131072 B = 131072 B ✓ (128 KiB corretta) |
+| Byte modificati | **1 solo**: `0x0C35`: `0x54 → 0x1D` |
+| Hash patch | md5 `26ea0534446468c3e863e9f372d2de0a`, sha256 `97043168…fabee8` |
+| 16B-signature `0x40` | identica ✓ |
+| Vettori `0x0000-0x003F`, tabella `0x0D03`, firma `0x7F80`, banchi 1-3 | identici ✓ |
+| Instruction stream | intatto: cambia solo l'operando di `MOV R7,#imm` a `0x0C34` (`0x7F 54`→`0x7F 1D`), lunghezza invariata |
+
+Disassembly del punto patchato (routine conversione `0x0C09`):
+
+```
+0C30: EF        MOV A, R7
+0C31: B4 84 04  CJNE A, #0x84, 0x0C38
+0C34: 7F 1D     MOV R7, #0x1D     ; patchato (originale: 7F 54)
+0C36: 7E 01     MOV R6, #0x01
+```
+
+Emulazione routine `0x0C09`: `0x84` → `0x1D`/`0x9D` make/break = stesso output di L-Ctrl (`0x14`); tutti gli altri tasti (0x83, 0x14, 0x58, 0x76, 0x5A, 0x29, 0x61) invariati. **Patch efficace, dimensione corretta, nessun problema di logica.**
 
 ## 8. Dump e flash via software interno
 
