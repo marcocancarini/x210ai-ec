@@ -20,7 +20,9 @@ x210ai-EC/
 │   ├── 05-patch-guide.md      #   guida patch rimappatura tasti (demo Fn/Ctrl) + ISO/JIS
 │   ├── 06-version-compare.md  #   confronto EC vecchio E03-250322 vs EC0416 (ISO/JIS identici)
 │   ├── 07-iso-keys-old-vs-new.md # perché i tasti ISO non passavano nella vecchia EC
-│   └── 08-fn-ctrl-swap.md     # swap Fn↔Ctrl: non è del BIOS, va patchato l'EC (pin Fn/matrice)
+│   ├── 08-fn-ctrl-swap.md     # swap Fn↔Ctrl: non è del BIOS, va patchato l'EC (pin Fn/matrice)
+│   ├── 09-fn-ctrl-swap-patch.md # patch Fn→Ctrl applicata (binario demo in dumps/)
+│   └── 10-dump-guide-hardware.md # dump/flash hardware: XGecu T48 e CH341A (± mod 3.3V)
 ├── tools/
 │   ├── i8051.py               # disassembler 8051 minimale (nessuna dipendenza)
 │   └── output/                # artefatti generati
@@ -28,7 +30,8 @@ x210ai-EC/
 │       └── key-regions.asm    #   disassembly delle regioni chiave
 ├── dumps/
 │   ├── EC0416.BIN             # dump EC 128 KiB (originale)
-│   └── EC0416_ctrl-caps-swap.BIN  # demo patch: swap L-Ctrl↔CapsLock (2 byte a 0x0D17/0x0D5B)
+│   ├── EC0416_ctrl-caps-swap.BIN  # demo patch: swap L-Ctrl↔CapsLock (2 byte a 0x0D17/0x0D5B)
+│   └── EC0416_fn-ctrl-swap.BIN    # patch Fn→LCtrl (1 byte a 0x0C35: 0x84→0x1D)
 ├── refs/
 │   └── DATASHEETS.md          # sezioni datasheet usate + hash dei materiali
 └── inputs/                    # materiali originali (non prodotti da noi)
