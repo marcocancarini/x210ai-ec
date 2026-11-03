@@ -48,3 +48,21 @@ Flusso: **KBS matrix scan → (row,col) → scancode set 2 → conversione set 1
   basta patchare la entry corrispondente; la routine `0x0C09` applica poi break (`|0x80`).
 - I tasti `0xE0` sono decisi dalla tabella a `0x305E`; le sequenze speciali (Pausa) a `0x25B2`.
 - Non spostare queste tabelle: sono referenziate con `DPTR` assoluti (`MOV DPTR,#0x0D03` ecc.).
+
+## 5. Approfondimento: scansione matrice hardware (KBS) nel firmware
+
+Registri KBS usati (base `0x1D00h`, Table 7-8): `KSOL@1D00h`, `KSOH1@1D01h`,
+`KSOCTRL@1D02h` (pull-up/open-drain KSO), `KSOH2@1D03h`, **`KSI@1D04h`**,
+`KSICTRLR@1D05h`, `KSOxLSDR@1D10-1D21h` (scan data per riga), `SDSR@1D25h`.
+
+- **Driver di scan nel banco 1** (`0x9300-0x9F00`, window `0x8000-0xFFFF`): loop su 16 righe
+  KSO (`SUBB A,#0x10` a `0x93AE`), lettura `KSI@0x1D04` (`0x9384`), scrittura
+  `KSOL@0x1D00` (`0x9406`), `KSOH1@0x1D01` (`0x941A`), `KSOH2@0x1D03` (`0x9747/0x9759`),
+  con helper `0x9DFD`, `0x9428`, `0x9DAD`, `0x9D94`.
+- **Lato dispositivo PS/2** (banco 0, regs base `0x1700h`, `PSCTL1@0x1700`): codice
+  `0x1780-0x1830` con buffer xdata `0x0832-0x083C` e routine `0x1D74` (gestione
+  clock/dati PS/2); GPIO `0x1600+` usato pesantemente (168 rif.) per KSI/KSO in modo GPIO
+  (Table 7-7) e altri pin.
+- Flusso completo: KBS scan (KSO out → KSI in) → tabella matrice `0x2119` → scancode set 2
+  → conversione set 1 (`0x0C09` + tabella `0x0D03`) → buffer KBC (`0x004C`) → porta host
+  `0x60` + IRQ1 (KBC Table 6-34: `KBHICR/KBIRQR/KBHISR/KBHIKDOR/KBHIMDOR/KBHIDIR`).

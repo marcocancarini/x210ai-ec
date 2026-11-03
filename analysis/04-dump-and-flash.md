@@ -76,3 +76,29 @@ flashrom --wp-list            # o: fpt.efi -d dump.bin e ispezione descriptor
 ```
 Se la regione EC risulta protetta (PRx / P0BA), sbloccarla via host (fpt) prima del
 programmatore esterno, altrimenti il write fallisce o produce un brick.
+
+## 6. Approfondimento: path di programmazione flash DENTRO il firmware EC
+
+Il firmware contiene le proprie routine di erase/program (usate dall'update EC via host):
+
+- **Sblocco/erase** (banco 1, `0x80C0-0x8110`): verifica selettore banco (`xdata 0x0083`
+  == `0xFC`/`0xFE`), poi GPIO `0x162A=0x40`, `0x1604 &= ~0x04`, `0x160A &= ~0x7F`,
+  `0x1602 &= ~0x7F`, write `0x22BF=0x55`, **`FLHCTRL3R (0x1063)=0`**, registri `0x1F01=0x20`,
+  `0x1F06=1`, `0x1F07=0x5A` (sequenza di unlock FSPI).
+- **Ciclo program/erase** (banco 1, `0x89C0-0x8A50`): imposta indirizzo in
+  `ECINDAR0-3 (0x103B-0x103E)` e dato in `ECINDDR (0x103F)`, poi toggling di `FLHCTRL3R`
+  bit0/bit6 (`0x89CB`, `0x89F1`) → write flash via SMFI.
+- **Handler update** (`0xDC1B-0xDC3E`): `0x1E02 |= 0x60`, `FLHCTRL6R (0x1081) |= 0x10`,
+  poi catena di handler `0xDBC7, 0xB290, 0xDBA5, 0xDBE9, 0x97CE, 0xDB97, 0xED69, 0xBF99`.
+- **Bank switch**: `0x2500-0x2525` scrive `FLHCTRL2R (0x1032) &= ~0x08`.
+
+Quindi l'update EC "da dentro" passa da questi registri SMFI; i tool host (`ifu.efi`,
+`fpt.efi`, flashrom) pilotano il chipset/LPC che a sua volta usa questi path (o l'ISP
+della boot ROM). Per il patching: non modificare le routine `0x80C0-0x8A50`/`0xDCxx` a
+meno di non sapere cosa si fa.
+
+## 7. Nota su protezioni attive
+
+Il firmware non scrive mai i registri di protezione `P0BA0R…P3ZR (0x104F-0x1075)`: se la
+regione EC risulta protetta, il lock è stato messo da boot ROM/descriptor (PRx) —
+verificare con `flashrom --wp-list` / `fpt.efi` prima di un flash esterno.
