@@ -17,9 +17,11 @@ attraverso i pin del package.
    KSO9=BUSY, KSO10=PE, KSO12=SLCT, KSI0=STB#). La boot ROM entra in modo programmazione
    e il tool ITE fa read/write della flash. Macchina spenta, standby presente.
 2. **Programmatore universale + zoccolo BGA (dopo dissaldatura)** — T48/T56 ecc. con
-   adattatore BGA: funziona **solo se il database del programmatore include l'algoritmo
-   e-flash del IT5571**; in tal caso leggi/scrivi i 128 KiB direttamente. È l'unico metodo
-   "diretto sul chip", ma è distruttivo (desaldare un BGA).
+   adattatore BGA: funziona **solo se il database include l'algoritmo e-flash del IT5571**.
+   **Verificato: NO** — nella lista ufficiale T48 (V13.16, 37103 IC, `SupportLists/T48_List.txt`)
+   la sezione `[ ITE [Testing] ]` riporta "IC Support: 0 PCS" e non esistono entry
+   IT55xx/IT85xx/IT8xxx: il T48 **non** programma gli EC ITE. Quindi questa via è chiusa
+   sul T48; resterebbe solo un programmatore con algoritmo ITE in database (non il T48).
 3. **Via host LPC/eSPI (HLPC, §6.4.3.8/6.4.3.9)** — flash programming through host LPC
    interface (scratch SRAM / serial-flash follow mode): è quello che fanno
    `fpt.efi` / `flashrom -p internal` / `ifu.efi` (doc 04). Macchina accesa.
