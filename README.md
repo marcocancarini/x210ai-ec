@@ -17,7 +17,8 @@ x210ai-EC/
 │   ├── 02-signature-checksum.md  # firme/checksum (16B-signature, nessuna firma crypto)
 │   ├── 03-keyboard-ps2.md     #   tastiera PS/2: KBS, KBC, conversione set2→set1
 │   ├── 04-dump-and-flash.md   #   procedure dump/flash (UEFI/ifu.efi/fpt.efi/flashrom/ISP/SPI)
-│   └── 05-patch-guide.md      #   guida patch rimappatura tasti (demo Fn/Ctrl) + ISO/JIS
+│   ├── 05-patch-guide.md      #   guida patch rimappatura tasti (demo Fn/Ctrl) + ISO/JIS
+│   └── 06-version-compare.md  #   confronto EC vecchio E03-250322 vs EC0416 (ISO/JIS identici)
 ├── tools/
 │   ├── i8051.py               # disassembler 8051 minimale (nessuna dipendenza)
 │   └── output/                # artefatti generati
