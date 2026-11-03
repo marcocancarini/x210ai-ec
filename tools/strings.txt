@@ -1,0 +1,339 @@
+      f (U""
+     17 (Z""
+     1f (_""
+     27 (d""
+     3c (s""
+     4e UUITE EC-V14.6   
+    45b d3p)
+    575 """"""""""2
+    967 m""""
+    b8e +T?$
+    c66 lEkp
+    c98 lEkp
+    d04 CA?=;<XdDB@>
+    d11 )Ye8*p
+    d1a Zfq,
+    d22 [g.- 
+    d2a \h9/!
+    d32 ]i10#"
+    d3a ^jr2$
+    d41 	_k3%
+    d4a `l45&'
+    d52 ams(t
+    d59 bn:6
+    d5f u+cvUVwxyz
+    d6a {|O}KG~
+    d72 oRSPLMH
+    d7a EWNQJ7IFT
+    fe8 ,L0hB
+   14fe 333T
+   1700 "'t@
+   1708 "'t@
+   1ec8 el`5
+   1f46 #Ht\
+   2288 4!"t
+   2433 v0u%
+   2605 !%(+/2
+   277e -Z-_-d-i
+   278c -n-s-x
+   27da GtAnalogix(MCU)
+   2ecb &%=>FE	
+   2edb $-<CDM
+   2efb #+;BKL]
+   2f1a "!*:AI
+   2fb5 AAAAI
+   3478 %s : %s PDOOff(%.bx), num(%.bx), pdo_length is %.bx
+   34ad connector
+   34b7 partner
+   34bf source
+   34c6 sink
+   34cb +++++++++++++++, DataLength(%.bx).
+   34ef ***********   get PDO from OS : 
+   3510 %.bx 
+   3518 ********   connector number is %.bx **** 
+   3543 Partner flag %.bx, type %.bx, drole %.bx.
+   356e port index(%.bx), anx_vbus_status is %.bx.
+   359a port index(%.bx), have event pending %x, just ignore.
+   35d1 set pdr process(port %.bx)
+   35ed pdr on port %.bx
+   35ff pdr  %.bx, %.bx, %.bx, role %.bx.
+   3622 data operation mode is %.bx, %.bx.
+   3646 processed %.bx, %.bx, %.bx.
+   3663 set uor process(port %.bx)
+   367f set uor port id %.bx
+   3695 processed  %.bx, %.bx, %.bx, role %.bx.
+   36be %s:%d ConnectorChangeAck(%.bx), CommandCompletedAck(%.bx).
+   36fa Code\Oem\UCSI.C
+   370a PPM alert OPM, cci -> %.bx %.bx %.bx %.bx.
+   3736 ++++    CTRL message -> 
+   374f %s:%d command timeout, pending command(%.bx), state(%.bx).
+   378b %s:%d ucsi reset async timer as %.bx.
+   37b2 %s:%d ucsi connector change (%.bx) async notify opm.
+   37e8 %s:%d change state(%d) to state(%d).
+   380e %s:%d UCSI state(ND), Command(%d).
+   3832 %s:%d ucsi pc process.
+   384a %s:%d Warning: received unsupported command(0x%x) at PPM_PC state.
+   388e %s:%d Warning: received unsupported command(0x%x) from OPM at PPM_BUSY state.
+   38dd %s:%d, recevied not ACK_CC_CI command, continue waiting.
+   3917  ack timeout, re-notify OPM.
+   3935  ack timeout, goto idle notification enable status.
+   396a %s:%d Cannot support command(0x%x) from OPM.
+   3998 %s:%d received command %.bx.
+   39b6 %s:%d, received command %.bx at busy state.
+   39e6 Accept
+   39ed Fail
+   39f2 Busy
+   39f7 Reject
+   39fe Unknown
+   3a06 PWR_SRC_CAP
+   3a12 PWR_SNK_CAP
+   3a1e PWR_OBJ_REQ
+   3a2a DP_SNK_IDENTITY
+   3a3a SVID
+   3a3f PSWAP_REQ
+   3a49 DSWAP_REQ
+   3a53 GOTO_MIN_REQ
+   3a60 DPALT_ENTER
+   3a6c DPALT_EXIT
+   3a77 GET_SRC_CAP
+   3a83 GET_RDO
+   3a8b GET_SNK_CAP
+   3a97 VCONN_SWAP_REQ
+   3aa6 GET_DP_SINK_CAP
+   3ab6 DP_SNK_CFG
+   3ac1 Software Reset
+   3ad0 Hardware Reset
+   3adf Restart
+   3ae7 PD_STATUS_REQ
+   3af5 ACCEPT
+   3afc REJECT
+   3b07 RESPONSE_TO_REQ
+   3b17 PD3_SRC_CAP
+   3b23 PD3_STS
+   3b2b PD3_GET_BATT_CAP
+   3b3c PD3_GET_BATT_STS
+   3b4d PD3_BATT_CAP
+   3b5a PD3_GET_MFR_INFO
+   3b6b PD3_MFR_INFO
+   3b78 PD3_PDFU_REQUEST
+   3b89 PD3_PDFU_RESPONSE
+   3b9b PD3_BATT_STS
+   3ba8 PD3_ALERT
+   3bb2 PD3_NOT_SUPPORTED
+   3bc4 PD3_GET_SRC_CAP
+   3bd4 PD3_GET_SRC_STS
+   3be4 PD3_FR_SWAP
+   3bf0 PD3_GET_PPS_STS
+   3c00 PD3_FR_SWAP_SIGNAL
+   3c13 PD3_GET_COUNTRY_INFO
+   3c28 TYPE_DP_DISCOVER_MODES_INFO
+   3c44 TYPE_GET_DP_CONFIGURE
+   3c5a TYPE_DP_CONFIGURE
+   3c6c TYPE_I2C_MASTER_WRITE
+   3c82 PD3_GET_COUNTRY_CODE
+   3c97 PD3_GET_SINK_CAP_EXT
+   3cac PD3_EXT_SINK_CAP_EXT
+   3cc1 PD3_EXT_PPS_CAP_STS
+   3cd5 PD3_EXT_COUNTRY_INFO
+   3cea PD3_EXT_COUNTRY_CODE
+   3cff TYPE_GET_VAR
+   3d0c TYPE_SET_VAR
+   3d19 rdo = %x, Requested RDO is %d, Provided RDO number is %d
+   3d53 pdo_max = %x
+   3d61 Resend 1.5A source caps byte 3 is %.bx.
+   3d8a Resend 1.5A sink caps, sink caps byte 3 is %.bx.
+   3dbc cur:%x, vol:%x, power:%x rdo :%lx, rdo length(%.bx)
+   3df1 usb vendor id(0x%x), product id(0x%x).
+   3e19 enter mode :%x.
+   3e2a received hardware reset event.
+   3e4a notify hardware reset event to ucsi.
+   3e70 RESPONSE for %s is %s
+   3e87 no cable vdo.
+   3e96 read 0x%x idata = 
+   3ea9 read 0x%x xdata = 
+   3ebc read REG_FW_VAR[0x%x] = 
+   3ed5 read pd_src_pdo[0x%x] = 
+   3eee read pd_snk_pdo[0x%x] = 
+   3f07 read pd_rdo_bak[0x%x] = 
+   3f20 read pd_rdo[0x%x] = 
+   3f35 read DP_cap[0x%x] = 
+   3f4a read configure_DP_caps[0x%x] = 
+   3f6a read src_dp_status[0x%x] = 
+   3f86 read sink_svid_vdo[0x%x] = 
+   3fa2 read sink_identity[0x%x] = 
+   3fbe read 0x%x ?data = 
+   3fd1 SendMSG ->%s: 
+   3fe1 unknown type %2X
+   3ff3 Tx Buf Full
+   4000 checksum error: 
+   4012 rev <- %s
+   401d Sending sink identity
+   4034 power on 550ms, data operation mode is %.bx.
+   4062 power on 560ms, power operation mode is %.bx.
+   4091 set tcpc role as Rp(0x5), reg 0xaa(%.bx)
+   40bb set tcpc role as Rd(0xa), reg 0xaa(%.bx)
+   40e5 set tcpc role as Rd + DRP en(0x4A), %.bx chip
+   4114 Not calibrate chip.
+   4129 enable auto pd function
+   4142 power on port %.bx.
+   4157 voltage : %.bx, current : %.bx.
+   4178 check uom port(%.bx) role(%.bx), need role(%.bx)
+   41aa port(%.bx) force power of, role(%.bx), need role(%.bx)
+   41e2 port(%.bx) power on, ocm v%bx.%bx.%bx.
+   420a port(%.bx) power off, alert0(%.bx), alert1(%.bx).
+   423d VBUS 5V OUT.
+   424b VBUS change to input.
+   4262 re-notify OPM at reboot stage.
+   4282 VDM header: %.bx:%.bx:%.bx:%.bx.
+   42a4 VDO1 %.bx:%.bx:%.bx:%.bx.
+   42bf VDO2 %.bx:%.bx:%.bx:%.bx.
+   42da Attention
+   4326 AUBRCAAU
+   7f80 ITE Tech. Inc. $
+   7f91 2025/04/15$
+   7f9d 18:20:35$
+   7fa7 V0.3.2$
+   8f99 dp`,
+   8f9e dq`'
+   8fa3 dk`"
+   8fbc d}`	
+   902e p&0H
+   9033  Ib J_
+   9050 .0JD
+   905c p:0I
+   90bd p20H
+   90c2  Ia J^
+   90eb &0J7
+   90f7 p-0I
+   91e2 p?0K
+   91ee  L( I%0J
+   939b gtm/
+   9690 hUg`$
+   96a7 Tud2
+   99b7 O`	CR
+   99f9 et}/
+   9b02 CR {
+   9c0e fUe`#
+   9c25 Nud2
+   9c35 cx%|
+   9d9f "x&|
+   a005 u db
+   a0ac u d#
+   a132 lt F
+   a144 jt@F
+   a8a5 ]N`]
+   aa0c  4{x
+   addd Lp<t
+   b25d 4&"t
+   b2c1 """"""""
+   b2e8 """""
+   b482 """""
+   b67c """""
+   b813 """"""
+   b9e1 uTpp
+   b9f5 uTpp
+   ba66 gtB/
+   ba8b -tf/
+   baa3 -tb/
+   babb -t^/
+   bad2 ZtZ/
+   bae9 CtV/
+   bb00 ,tR/
+   bb33 #tJ/
+   bbae ef`p
+   bbe7 ftF/
+   bc69 "tL/
+   bc74 "t@/
+   bc8b "tD/
+   be30 T N`
+   c999 """""""""
+   d7b3 lEk`1
+   d805 `+$mp2
+   d830 ]"0]
+   e69a P\$	pM
+   edc5 m"uk
+   eddf lEkp
+   ee2b lEkp
+   ee31 lEkp
+   f44b """"""""""""""""""
+   f474 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+   f4c0 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+   f6fa """}
+  1051d z4yx
+  10777 333T
+  108df 333T
+  109a4 z5yC
+  109cb |z5yn
+  10e00 |z5y
+  10f7b z6y"
+  10fc6 z6yF
+  1100d z6yc
+  1156e z7y6
+  115cb z7yO
+  1170f z8y2
+  11736 z8yJ
+  11919 z9y5
+  11a2d z9yj
+  12188 N"$D
+  12267 T?"x
+  123d1 z:y*
+  123da z:y:
+  123e3 z:y?
+  123ec z:yI
+  123f5 z:yS
+  123fe z:y`
+  12407 z:yl
+  12410 z:yw
+  12497 z;y#
+  124a0 z;y+
+  124a9 z;y<
+  124b2 z;yM
+  124bb z;yZ
+  124c4 z;yk
+  124cd z;yx
+  1252c z<y(
+  12534 z<yD
+  1253c z<yZ
+  12544 z<yl
+  128ce MNO`'
+  128f6 Sv@5{
+  1295c z=yS
+  12a2e zCyD
+  12aed z=ya
+  12b0a zCye
+  1334b zCy,
+  13355 	zCy$
+  13377 z>y*
+  133a0 z>yJ
+  133e6 *z>yp
+  13627 z?y 
+  1363f z?y5
+  13657 z?yJ
+  1366f z?yj
+  13773 d9p_
+  137a7 d9pS
+  1396c *z?y
+  13aa6 `#$L`
+  13e0a *z@y
+  13e94 |zCyUt
+  13ebc z@y4
+  13f13 z@yb
+  13f95 0z@y
+  13fad 0z@y
+  140ea m{Z}
+  14134 zAy)
+  141f6 zAyB
+  14406 zAyW
+  14446 zAyx
+  14475 "zAy
+  145b0 	zCyHt
+  145c1 zCym
+  146ee zBy=
+  1470a zByK
+  148c7 zByb
+  148ee MNO`
+  14bec o"}#
+  1516a zCya
+  152f2 kd%`
+  152fe kd%`
+  15400 uk%ul
