@@ -19,7 +19,8 @@ x210ai-EC/
 │   ├── 04-dump-and-flash.md   #   procedure dump/flash (UEFI/ifu.efi/fpt.efi/flashrom/ISP/SPI)
 │   ├── 05-patch-guide.md      #   guida patch rimappatura tasti (demo Fn/Ctrl) + ISO/JIS
 │   ├── 06-version-compare.md  #   confronto EC vecchio E03-250322 vs EC0416 (ISO/JIS identici)
-│   └── 07-iso-keys-old-vs-new.md # perché i tasti ISO non passavano nella vecchia EC
+│   ├── 07-iso-keys-old-vs-new.md # perché i tasti ISO non passavano nella vecchia EC
+│   └── 08-fn-ctrl-swap.md     # swap Fn↔Ctrl: non è del BIOS, va patchato l'EC (pin Fn/matrice)
 ├── tools/
 │   ├── i8051.py               # disassembler 8051 minimale (nessuna dipendenza)
 │   └── output/                # artefatti generati
