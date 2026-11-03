@@ -25,7 +25,8 @@ x210ai-EC/
 │   ├── 10-dump-guide-hardware.md # dump/flash hardware: XGecu T48 e CH341A (± mod 3.3V)
 │   ├── 11-ec-direct-write.md   # scrittura diretta chip EC: BGA+eFlash embedded, no clip; ISP via KBS
 │   ├── 12-patch-verifica.md    # verifica patch Fn→Ctrl (1 byte OK) + database T48: ITE non supportato
-│   └── 13-fn-level-thinklight-dump.md # livello Fn/ThinkLight non toccato dalla patch + come estrarre il dump EC
+│   ├── 13-fn-level-thinklight-dump.md # livello Fn/ThinkLight non toccato dalla patch + come estrarre il dump EC
+│   └── 14-brick-e-chip-ricambio.md # flash EC fallito: recovery via ISP; chip IT5571 da terze parti
 ├── tools/
 │   ├── i8051.py               # disassembler 8051 minimale (nessuna dipendenza)
 │   └── output/                # artefatti generati
