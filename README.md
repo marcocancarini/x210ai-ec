@@ -18,7 +18,8 @@ x210ai-EC/
 │   ├── 03-keyboard-ps2.md     #   tastiera PS/2: KBS, KBC, conversione set2→set1
 │   ├── 04-dump-and-flash.md   #   procedure dump/flash (UEFI/ifu.efi/fpt.efi/flashrom/ISP/SPI)
 │   ├── 05-patch-guide.md      #   guida patch rimappatura tasti (demo Fn/Ctrl) + ISO/JIS
-│   └── 06-version-compare.md  #   confronto EC vecchio E03-250322 vs EC0416 (ISO/JIS identici)
+│   ├── 06-version-compare.md  #   confronto EC vecchio E03-250322 vs EC0416 (ISO/JIS identici)
+│   └── 07-iso-keys-old-vs-new.md # perché i tasti ISO non passavano nella vecchia EC
 ├── tools/
 │   ├── i8051.py               # disassembler 8051 minimale (nessuna dipendenza)
 │   └── output/                # artefatti generati
