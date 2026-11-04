@@ -1,7 +1,8 @@
 # X210AI — ITE IT5571 EC: guida completa (reverse engineering, patch, dump/flash)
 
-Firmware EC di una scheda **X210AI** con chip **ITE IT5571 rev. 2** (varianti
-IT5571E/VG-128: eFlash embedded 128 KiB, core **8051**, package LQFP-128/VFBGA-128 7×7).
+Firmware EC di una scheda **X210AI** con chip **ITE IT5571 rev. 2**: eFlash embedded 128 KiB,
+core **8051**, package **LQFP-128** con piedini (14×14 mm, passo 0,4 mm), quindi la variante
+`IT5571E-128` e **non** la VFBGA. Package visto in foto (§16); il marking completo è da leggere sul chip.
 Questa guida è l'unico documento del progetto: contiene analisi, patch, dump/flash e
 recovery. I materiali originali stanno in `inputs/`, i tool in `tools/`, i dump in `dumps/`.
 
@@ -22,6 +23,7 @@ recovery. I materiali originali stanno in `inputs/`, i tool in `tools/`, i dump 
 13. [Se il flash dell'EC fallisce (brick) e recovery](#13-brick-e-recovery)
 14. [Comprare il chip IT5571 da terze parti](#14-chip-di-ricambio)
 15. [Strumenti e convenzioni](#15-strumenti-e-convenzioni)
+16. [Porta di debug EC_SPI1](#16-porta-di-debug-ec_spi1)
 
 ---
 
@@ -101,7 +103,7 @@ Emulazione routine `0x0C09`: `0x84` → `0x1D`/`0x9D` make/break = stesso output
 - Dal pacchetto BIOS (`inputs/bios/`): UEFI Shell su USB (`EFI/BOOT/BOOTX64.efi`), `fpt.efi -f <bios>.bin` (BIOS) e dump `fpt.efi -d full.bin`; **EC: `ifu.efi <EC>.bin 128`** (128 = KiB).
 - Linux: `flashrom -p internal -r/-w` (legge la SPI host = BIOS; l'EC embedded non è lì).
 - Verifica dump: size 131072, 16B-signature `0x40`, sha256 vs `acaf8fed…`.
-- ISP via KBS (datasheet §7.23.3.3/§7.24.3.1): adattatore DB25 sul connettore tastiera (KSO0-7=PD0-7, KSO8=ACK#, KSO9=BUSY, KSO10=PE, KSO12=SLCT, KSI0=STB#) → boot ROM in modo programmazione → tool ITE fa read/write eFlash. Macchina spenta.
+- ISP via KBS (datasheet §7.23.3.3/§7.24.3.1): adattatore DB25 sul connettore tastiera (KSO0-7=PD0-7, KSO8=ACK#, KSO9=BUSY, KSO10=PE, KSO12=SLCT, KSI0=STB#) → boot ROM in modo programmazione → tool ITE fa read/write eFlash. L'ingresso è lo strap `KSI[5,4,2,1]=0011b` (DBGR/EPP). Host spento, ma il datasheet richiede **VSTBY presente** e l'EC saldato sulla scheda: mai alimentare la scheda dal programmatore. Tool e limiti in §16.
 
 ## 9. Dump/flash hardware: T48 e CH341A
 
@@ -113,11 +115,13 @@ Emulazione routine `0x0C09`: `0x84` → `0x1D`/`0x9D` make/break = stesso output
 
 ## 10. Scrivere il chip EC "direttamente"?
 
-**No con clip SOIC**: VFBGA-128 (BGA) + eFlash embedded nel die; i pin FSPI sono solo per flash esterna (datasheet Table 5-5). Vie valide: ISP via KBS (in-circuit), host LPC/eSPI (HLPC §6.4.3.8/9 = fpt/flashrom/ifu), debug I2EC via `2Eh/2Fh`, oppure dissaldare + zoccolo BGA su programmatore **che abbia l'algoritmo ITE** (il T48 no, vedi §11).
+**No con clip SOIC**: LQFP-128 con eFlash embedded nel die; i pin FSPI sono solo per flash esterna (datasheet Table 5-5), quindi anche una clip sui piedini non darebbe accesso SPI all'eFlash. Vie valide: ISP via KBS (in-circuit), DBGR/SMB (§16), host LPC/eSPI (HLPC §6.4.3.8/9 = fpt/flashrom/ifu), debug I2EC via `2Eh/2Fh`, oppure dissaldare + zoccolo LQFP-128 su programmatore **che abbia l'algoritmo ITE** (il T48 no, vedi §11).
+
+Il package a piedini aiuta comunque: ogni segnale è raggiungibile con il puntale del multimetro o con un filo sottile sul piedino (passo 0,4 mm, serve mano ferma), e i piedini permettono di ricostruire il pinout del connettore di debug (§16). Sostituzione e rework non richiedono reballing.
 
 ## 11. Database T48: ITE non supportato
 
-Lista ufficiale `T48_List.txt` V13.16 (37103 IC, mirror github.com/Kreeblah/XGecu_Software `SupportLists/`): sezione `[ ITE [Testing] ]` = **"IC Support: 0 PCS"**, nessuna entry IT55xx/IT85xx/IT8xxx → **il T48 non programma gli EC ITE**. OK solo per la flash BIOS. Per l'EC: ISP via KBS o programmatore ITE dedicato ("ITE Download Board 4").
+Lista ufficiale `T48_List.txt` V13.16 (37103 IC, mirror github.com/Kreeblah/XGecu_Software `SupportLists/`): sezione `[ ITE [Testing] ]` = **"IC Support: 0 PCS"**, nessuna entry IT55xx/IT85xx/IT8xxx → **il T48 non programma gli EC ITE**. OK solo per la flash BIOS. Per l'EC: ISP via KBS, DBGR/SMB se raggiungibile (§16) o programmatore ITE dedicato ("ITE Download Board 4").
 
 ## 12. Livello Fn / ThinkLight (Fn+PgUp)
 
@@ -127,15 +131,72 @@ Lista ufficiale `T48_List.txt` V13.16 (37103 IC, mirror github.com/Kreeblah/XGec
 ## 13. Brick e recovery
 
 - Flash EC corrotto → boot ROM (ROM mascherata, intatta) non trova la 16B-signature → EC in modo ISP. Sintomi: no power-on / no tastiera / no ricarica / ventola al max.
-- **Recovery**: ISP via KBS + dump originale (`EC0416.BIN`) → riparte. Funziona anche con flash illeggibile, se il chip è vivo e VSTBY presente. Sempre verifica post-write.
-- Chip morto elettricamente (5V, ESD…) → sostituire chip (rework BGA) o scheda.
+- **Recovery**: ISP via KBS + dump originale (`EC0416.BIN`) → riparte. Funziona anche con flash illeggibile, se il chip è vivo e VSTBY presente. Sempre verifica post-write. La porta EC_SPI1 è una possibile via in più solo se il pinout confermerà i segnali DBGR/SMB (§16): oggi non va considerata un piano di recovery.
+- Chip morto elettricamente (5V, ESD…) → sostituire chip (rework LQFP ad aria calda o drag soldering, senza reballing) o scheda.
 
 ## 14. Chip di ricambio
 
-- Disponibili: JLCPCB/LCSC `IT5571E-128/CX` (LQFP-128, C24833823), `IT5571VG-128/CX` (VFBGA-128, C7429720); AliExpress/eBay (IT5571VG-128/256, IT5571E-128, IT5570E-128); pre-programmati per modello su icchipforlaptop.com e simili.
-- Chip nuovo = eFlash vuota → programmare dopo (ISP via KBS / LPC / programmatore ITE; **non T48**). Package/size devono combaciare (`E-128/CX`=LQFP, `VG-128`=VFBGA, `-128`=128 KiB); firmware board-specific → flashare il proprio dump. Se è fallito solo il flash, non comprare nulla: riflash via ISP.
+- **Per questa scheda serve il package LQFP-128**: JLCPCB/LCSC `IT5571E-128/CX` (C24833823); AliExpress/eBay IT5571E-128. Le versioni VFBGA (`IT5571VG-128/CX`, C7429720, IT5571VG-128/256) **non sono compatibili con la piazzola**. IT5570E-128 ha lo stesso package ma è un altro chip; pre-programmati per modello su icchipforlaptop.com e simili. Prima di ordinare, leggere il marking sul chip.
+- Chip nuovo = eFlash vuota → programmare dopo (ISP via KBS / LPC / programmatore ITE; **non T48**). Package/size devono combaciare (qui `E-128/CX`=LQFP; `-128`=128 KiB); firmware board-specific → flashare il proprio dump. Se è fallito solo il flash, non comprare nulla: riflash via ISP.
 
 ## 15. Strumenti e convenzioni
 
 - `python3 tools/i8051.py <bin> 0 <start_hex> <end_hex>` — disassembler 8051 minimale (no deps; `0x12`=LCALL addr16, indirizzi 16-bit big-endian). `tools/output/strings.txt`, `tools/output/key-regions.asm` = artefatti generati.
 - Convenzioni repo: commit raggruppati (batch per sessione); i due repo privati restano in sync con questa cartella. Hash dei file in `refs/DATASHEETS.md`.
+
+## 16. Porta di debug EC_SPI1
+
+![Connettore EC_SPI1 sopra il chip ITE](refs/img/ec-spi1-connettore.png)
+
+**Stato: connettore individuato, pinout sconosciuto.** Nessun documento pubblico trovato descrive i segnali, quindi al momento non è dimostrato che da qui si possa leggere o scrivere l'EC.
+
+### Cosa si sa
+
+- Connettore FPC a passo fine, serigrafia `EC_SPI1`, subito sopra l'EC, sul lato della scheda opposto alla RAM. Serigrafia letta da foto a bassa risoluzione.
+- Nello [schema del produttore](refs/img/scheda-porte-debug.png) i connettori **10, 12 e 20** sono "Debug port will be removed in the bulk". Per posizione EC_SPI1 è il **12**. Le schede di serie **potrebbero non averlo**: controllare la propria.
+- Sulla [scheda assemblata](refs/img/ec-spi1-assemblato.png) il connettore è montato e si raggiunge dall'apertura nel telaio. Nella stessa foto, in basso a destra, c'è la serigrafia `ESPI` vicino a un altro connettore: forse il 10, da verificare. Il 20 non è identificato.
+
+### Cosa può portare
+
+Il datasheet prevede ISP solo tramite DBGR, su **EPP (pin KBS)** o **SMBus** (§7.23): nessuna delle due è un bus SPI. Il nome "SPI" quindi non garantisce che la porta serva a programmare. Numeri di piedino: LQFP-128, Table 4-1.
+
+| Ipotesi | Piedini EC | Indizi dal firmware `EC0416` | Se confermata |
+|---|---|---|---|
+| **FSPI** (flash esterna) | FSCK 105, FSCE# 101, FMOSI 102, FMISO 103, VFSPI 106 | Nessuno: pin dedicati, fuori dalla tabella GPIO | Il nome è compatibile, ma il datasheet non descrive accesso esterno all'eFlash da qui: un programmatore SPI può non vedere nulla |
+| **DBGR/SMB** | SMCLK0/SMDAT0 87/88, SMCLK1/SMDAT1 115/116, SMCLK2/SMDAT2 117/118 (canale da verificare) | Non disabilitato (vedi sotto) | È il caso utile: ISP e debug, ma con lo strumento giusto |
+| **UART** | TXD 17, RXD 16 | Non verificato | Solo console di debug, se il firmware la usa |
+| **SSPI** (master verso periferiche) | SSCK 32, SMOSI 56, SMISO 57, SSCE0# 100, SSCE1# 125, SBUSY 122 | Improbabile: nessun accesso ai registri `0x2600-0x2604`; SSCK/SMOSI/SMISO sono GPIO in uscita, SSCE# in ingresso | Nessun ISP |
+
+**Il firmware non blocca il debug** (analisi statica, non provata sull'hardware):
+
+- `KSICTRLR` `0x1D05` riceve `0x04` dalla tabella di init `0x2564-0x2599`: `OVRPPK=0`, DBGR/EPP non disabilitato. Il codice che carica questa tabella non è stato individuato.
+- `SLVISELR` `0x1C34` non compare mai: `OVRSMDBG` resta `0`, DBGR/SMB non disabilitato.
+- Configurazione dei pin: tabella GPIO `0x2643-0x2777` (103 triplette indirizzo + valore), caricata dal loop a `0xB290`.
+
+### Come identificare il pinout
+
+1. **Senza alimentazione** (batteria staccata, alimentatore scollegato): controllare che il connettore ci sia, contare i contatti, annotare il passo.
+2. **Continuità** tra ogni contatto e i piedini della tabella, più VSS (1, 27, 49, 91, 104) e VSTBY (121, 114, 92). È il controllo decisivo e il package LQFP lo rende fattibile.
+3. Solo dopo, a **scheda in standby: misurare le tensioni** contatto per contatto. VFSPI può essere 1,8 V o 3,3 V.
+4. **Ascolto passivo** con analizzatore logico durante l'accensione, prima di pilotare qualsiasi linea.
+5. Primo accesso **solo in lettura**: due dump identici che corrispondano a `EC0416.BIN` (sha256 §1), altrimenti nessuna scrittura.
+
+**Rischi**
+
+- `FSCK, GPG6, FMISO, FMOSI, FSCE#, GPG2` sono anche gli strap del **test mode** (Table 5-21): non forzarli durante l'accensione.
+- Non alimentare mai la scheda dal connettore.
+- Niente CH341A a 5 V: livelli al massimo 3,3 V, e 1,8 V se VFSPI lo è.
+- Il T48 non aiuta (§11).
+- DBGR/SMB non si può lasciare senza reset dopo l'ingresso (§7.23.3.2): prevedere un ciclo di alimentazione.
+
+### Strumenti da valutare
+
+Nessuno è dichiarato compatibile con IT5571: partire sempre dalla sola lettura.
+
+| Via | Strumento | Stato |
+|---|---|---|
+| EPP sul connettore tastiera | [ITE-EC-Pico-USB-Parallel-ISP](https://github.com/bernTP/ITE-EC-Pico-USB-Parallel-ISP) (RP2040/RP2350) | Provato solo su IT5261; IT5570 citato solo come fonte del datasheet. Solo 3,3 V, resistenze in serie, GND dalla scheda |
+| EPP sul connettore tastiera | [system76/ec, programmatore esterno](https://github.com/system76/ec/blob/master/docs/flashing.md) (Arduino Mega 2560) | Documentato per IT5570; mappa pin da adattare alla tastiera di questa scheda |
+| DBGR/SMB | [`iteflash`, Chromium EC](https://chromium.googlesource.com/chromiumos/platform/ec/+/6555d8eefedd62af8f0b0e890cb3e696690a76cc/docs/ite-ec-reflashing.md) | Scritto per IT83xx; ingresso con forme d'onda speciali su clock e dati |
+
+Le procedure di alimentazione differiscono (il progetto Pico tiene l'alimentatore collegato senza batteria, la guida System76 vuole la macchina senza alimentazione): seguire quella dello strumento scelto, confrontandola con il requisito VSTBY del datasheet.

@@ -4,10 +4,10 @@
 
 | File | SHA256 | Note |
 |---|---|---|
-| `EC0416.BIN` | `acaf8fed4b797f39d983849b916baaf61352832b337950fa9fb3225994cb6dca` | dump EC 128 KiB (versionato in `dumps/`) |
-| `IT5571E-128.pdf` (29 pag.) | `a4e4afae8a157b7424401cf65c9dbecddce937b8b88a3dc1474124439bfc5753` | datasheet sintetico IT5571E-128 (features: 8051, eSPI MAFS, LPC, KBC 8042, PS/2 ×2, KBS 18×8, ISP via KBS/parallel port, 128K eFlash) |
-| `IT5570_A_V0.3.1_U.pdf` | `01666ebe44ece4a436b5ffaad40c9570c17f0b3480862caf224953585c59102f` | datasheet IT5570 A-version V0.3.1 (archive.org) — parente stretto di IT5571 (chip ID 0x5571 ≈ IT8571) |
-| `X210AI0724BIOS.zip` | `2abe4276145b40d0e998d948e04223742b9efd05e434ef7d65fd56aab45e4d32` | pacchetto BIOS+tool: `Fpt.efi`, `fb.nsh`, UEFI shell, tutorial docx (`ifu.efi xx.bin 128` per EC) |
+| `dumps/EC0416.BIN` | `acaf8fed4b797f39d983849b916baaf61352832b337950fa9fb3225994cb6dca` | dump EC 128 KiB (in `dumps/`) |
+| `inputs/datasheets/IT5571E-128.pdf` (29 pag.) | `a4e4afae8a157b7424401cf65c9dbecddce937b8b88a3dc1474124439bfc5753` | datasheet sintetico IT5571E-128 (features: 8051, eSPI MAFS, LPC, KBC 8042, PS/2 ×2, KBS 18×8, ISP via KBS/parallel port, 128K eFlash) |
+| `inputs/datasheets/IT5570_A_V0.3.1_U.pdf` | `01666ebe44ece4a436b5ffaad40c9570c17f0b3480862caf224953585c59102f` | datasheet IT5570 A-version V0.3.1 (archive.org) — parente stretto di IT5571 (chip ID 0x5571 ≈ IT8571) |
+| `inputs/bios/X210AI0724BIOS.zip` | `2abe4276145b40d0e998d948e04223742b9efd05e434ef7d65fd56aab45e4d32` | pacchetto BIOS+tool: `inputs/bios/extracted/`: `Fpt.efi`, `fb.nsh`, UEFI shell, tutorial docx (`ifu.efi xx.bin 128` per EC) |
 
 ## Sezioni datasheet usate (IT5570 V0.3.1)
 
@@ -19,3 +19,14 @@
 - §7.5 GPIO base `0x1600h`; PMC base `0x1500h`
 - §7.24.3.1 **ISP via parallel port su connettore KBS** (DB25: KSO0-7=PD0-7, KSO8=ACK#, KSO9=BUSY, KSO10=PE, KSO12=SLCT, KSI0=STB#)
 - eSPI MAFS/SAFS: flash condivisa host↔EC, code-fetch switch via FLHCTRL5R
+- §7.23 **DBGR**: ISP e debug via DBGR/EPP o DBGR/SMB; §7.23.3.2 DBGR/SMB attivabile a caldo, uscita solo con reset
+- §7.4.4.6 **KSICTRLR** `0x1D05`: bit 4 OVRPPK disabilita DBGR/EPP; §7.7.4.26 **SLVISELR** `0x1C34`: bit 4 OVRSMDBG disabilita DBGR/SMB
+- Table 5-21 strap: `KSI[5,4,2,1]=0011b` = ingresso DBGR/EPP; `FSCK, GPG6, FMISO, FMOSI, FSCE#, GPG2` = ingresso test mode
+- Table 5-5 FSPI, Table 5-6 SSPI, Table 4-1 piedini LQFP-128, §7.21.5 SSPI base `0x2600h`, §7.5.3.28 GPCRn (`GPMD`: 00 alternate, 01 output, 10 input)
+- LQFP 128 Outline Dimensions: corpo 14×14 mm, passo 0,40 mm, ingombro 16×16 mm
+
+## Immagini della scheda (`refs/img/`)
+
+- `ec-spi1-connettore.png`: connettore EC_SPI1 sopra il chip ITE LQFP
+- `scheda-porte-debug.png`: schema porte del produttore (debug port 10, 12, 20)
+- `ec-spi1-assemblato.png`: connettore su scheda assemblata nel telaio
