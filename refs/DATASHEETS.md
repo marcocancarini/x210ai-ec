@@ -7,7 +7,7 @@
 | `dumps/EC0416.BIN` | `acaf8fed4b797f39d983849b916baaf61352832b337950fa9fb3225994cb6dca` | dump EC 128 KiB (in `dumps/`) |
 | `inputs/datasheets/IT5571E-128.pdf` (29 pag.) | `a4e4afae8a157b7424401cf65c9dbecddce937b8b88a3dc1474124439bfc5753` | datasheet sintetico IT5571E-128 (features: 8051, eSPI MAFS, LPC, KBC 8042, PS/2 ×2, KBS 18×8, ISP via KBS/parallel port, 128K eFlash) |
 | `inputs/datasheets/IT5570_A_V0.3.1_U.pdf` | `01666ebe44ece4a436b5ffaad40c9570c17f0b3480862caf224953585c59102f` | datasheet IT5570 A-version V0.3.1 (archive.org) — parente stretto di IT5571 (chip ID 0x5571 ≈ IT8571) |
-| `inputs/bios/X210AI0724BIOS.zip` | `2abe4276145b40d0e998d948e04223742b9efd05e434ef7d65fd56aab45e4d32` | pacchetto BIOS+tool: `inputs/bios/extracted/`: `Fpt.efi`, `fb.nsh`, UEFI shell, tutorial docx (`ifu.efi xx.bin 128` per EC) |
+| `inputs/bios/X210AI0724BIOS.rar` | `a1090b7986e6e3cb2485333f73fd5f8d62822f64bedfe7cad5733e88ddd94663` | pacchetto strumenti, estratto in `inputs/bios/extracted/`: `Fpt.efi`, `fparts.txt`, `fb.nsh`, `uefi-shell/`, tutorial docx (`ifu.efi xx.bin 128` per EC). Nessuna immagine BIOS |
 
 ## Sezioni datasheet usate (IT5570 V0.3.1)
 

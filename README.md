@@ -4,7 +4,7 @@ Firmware EC di una scheda **X210AI** con chip **ITE IT5571 rev. 2**: eFlash embe
 core **8051**, package **LQFP-128** con piedini (14×14 mm, passo 0,4 mm), quindi la variante
 `IT5571E-128` e **non** la VFBGA. Package visto in foto (§16); il marking completo è da leggere sul chip.
 Questa guida è l'unico documento del progetto: contiene analisi, patch, dump/flash e
-recovery. I materiali originali stanno in `inputs/`, i tool in `tools/`, i dump in `dumps/`.
+recovery. I materiali originali stanno in `inputs/` (`bios/`, `ec/`, `datasheets/`), i tool in `tools/`, i dump in `dumps/`.
 
 ## Indice
 
@@ -25,6 +25,7 @@ recovery. I materiali originali stanno in `inputs/`, i tool in `tools/`, i dump 
 15. [Strumenti e convenzioni](#15-strumenti-e-convenzioni)
 16. [Porta di debug EC_SPI1](#16-porta-di-debug-ec_spi1)
 17. [Guida: riconoscere il pinout di EC_SPI1](#17-guida-riconoscere-il-pinout-di-ec_spi1)
+18. [Flasher: rischi di ifu.efi](#18-flasher-rischi-di-ifuefi)
 
 ---
 
@@ -35,12 +36,12 @@ recovery. I materiali originali stanno in `inputs/`, i tool in `tools/`, i dump 
 | `dumps/EC0416.BIN` | `acaf8fed4b797f39d983849b916baaf61352832b337950fa9fb3225994cb6dca` | EC nuova X210AI, 131072 B, build `V0.3.2` 2025-04-15 18:20:35, md5 `7392fa5138c906ac17c7049fa69514e7` |
 | `dumps/EC0416_ctrl-caps-swap.BIN` | `21f63a733dd5ee8b338ffefcda093ffec8d38c38138bc97c1e82a65a20acd406` | patch demo L-Ctrl↔CapsLock (2 byte) |
 | `dumps/EC0416_fn-ctrl-swap.BIN` | `970431688f10aa160973d3f276c453e5cc86427a28a01ee34ef43ea17dfabee8` | patch Fn→LCtrl (1 byte) |
-| `MTLH-NB06-ec-250322/MTLH-NB06_E03-250322.BIN` | md5 `4bbc1e54aad8cac51a3e0a5e5274ed28` | EC vecchia (build 2025-03-22, board MTLH-NB06) |
+| `inputs/ec/MTLH-NB06-ec-250322/MTLH-NB06_E03-250322.BIN` | md5 `4bbc1e54aad8cac51a3e0a5e5274ed28` | EC vecchia (build 2025-03-22, board MTLH-NB06) |
 | `inputs/datasheets/IT5571E-128.pdf` | `a4e4afae8a157b7424401cf65c9dbecddce937b8b88a3dc1474124439bfc5753` | datasheet sintetico 29 pag |
 | `inputs/datasheets/IT5570_A_V0.3.1_U.pdf` | `01666ebe44ece4a436b5ffaad40c9570c17f0b3480862caf224953585c59102f` | IT5570 V0.3.1 (parente stretto di IT5571, chip ID 0x5571≈IT8571) |
-| `inputs/bios/X210AI0724BIOS.zip` | `2abe4276145b40d0e998d948e04223742b9efd05e434ef7d65fd56aab45e4d32` | Fpt.efi, UEFI shell, tutorial (`ifu.efi xx.bin 128` per EC) |
+| `inputs/bios/X210AI0724BIOS.rar` | `a1090b7986e6e3cb2485333f73fd5f8d62822f64bedfe7cad5733e88ddd94663` | Pacchetto strumenti, estratto in `inputs/bios/extracted/`: Fpt.efi, fparts.txt, fb.nsh, UEFI Shell (`uefi-shell/`), tutorial. **Nessuna immagine BIOS** |
 
-`/home/marco/bios_backup.rom` (12 MiB) = dump flash BIOS: **non contiene l'EC** (verificato: nessuna 16B-signature/stringa ITE).
+**Immagine BIOS assente.** Il pacchetto contiene solo gli strumenti: `fb.nsh` chiama `MTLH-NB06_B0.2.bin`, che non è incluso (verificato: nessun volume firmware in alcun file del progetto). Dettagli in §18.
 
 ## 2. Architettura e mappa memoria
 
@@ -51,10 +52,10 @@ recovery. I materiali originali stanno in `inputs/`, i tool in `tools/`, i dump 
 
 ## 3. Firme e checksum
 
-- **Nessuna firma crittografica e nessun checksum interno**: niente costanti SHA/RSA/MD5/CRC, somme non nulle, blocco `0x7F80` solo testo e non referenziato, reset `0x0070` non verifica la flash.
-- L'unico "signature" è la **16B-signature a `0x40`** (`A5…A4 95 85 12 26 E6 AA 00 55 55`): marcatore di power-on per localizzare la code base (datasheet §6.4.3.11.1, formato "implicit" → base `0x000000`). **Va preservata intatta nelle patch** (offset validi `0x40-0xF0`).
+- **Nessuna firma crittografica trovata**: niente costanti SHA/RSA/MD5/CRC, somme non nulle, blocco `0x7F80` solo testo e non referenziato, reset `0x0070` non verifica la flash, e il firmware non legge da codice la zona `0x40-0x4F`.
+- **Punto aperto, byte `0x4A-0x4B`:** valgono `26 E6` in `EC0416` e `F9 0C` nella build vecchia, mentre datasheet e System76 hanno `5A 5A` fissi. Non corrispondono a somme a 8/16 bit, XOR o CRC-16 con polinomi noti sugli intervalli provati. Il firmware System76 con `5A 5A` avvia su IT5570, quindi un controllo della boot ROM è improbabile, ma **non escluso** per valori diversi da `5A 5A`. Nessuna patch risulta provata sull'hardware.
+- Il solo marcatore è la **16B-signature a `0x40`** (`A5…A4 95 85 12 26 E6 AA 00 55 55`): marcatore di power-on per localizzare la code base (datasheet §6.4.3.11.1, formato "implicit" → base `0x000000`). **Va preservata intatta nelle patch** (offset validi `0x40-0xF0`).
 - Protezione in scrittura: P0BA (SMFI) + PRx del descriptor — gestite da boot ROM/host, mai toccate dal firmware. Verifica con `flashrom --wp-list` / `fpt.efi`.
-- Lato host la firma c'è solo sulla capsula BIOS Lenovo (.fl1), non sull'immagine EC.
 
 ## 4. Tastiera PS/2
 
@@ -73,7 +74,7 @@ recovery. I materiali originali stanno in `inputs/`, i tool in `tools/`, i dump 
 
 - **Livello scancode** (tasti host-visibili): tabella `0x0D03`. Demo: `dumps/EC0416_ctrl-caps-swap.BIN` (swap L-Ctrl `0x14`↔Caps `0x58`: byte `0x0D17`↔`0x0D5B`).
 - **Fn↔Ctrl**: Fn è **fuori matrice** (pin dedicato, tipo T61 I/O18→GND — rif. github.com/thedalles77/USB_Laptop_Keyboard_Controller) e **non è uno scancode** → non si scambia via tabella; non c'è logica di swap né flag BIOS letto (BRAM `0x2200h` non usata come setting). Patch lato EC: `dumps/EC0416_fn-ctrl-swap.BIN` = 1 byte a `0x0C35` (caso `0x84` in `0x0C09`: `0x54→0x1D`) → codice interno `0x84` emette LCtrl. *Caveat: non confermato al 100% che `0x84`=Fn — serve lo schema del connettore tastiera.* La direzione inversa (Ctrl fisico che fa da Fn) richiede la posizione matrice di Ctrl (driver banco1, indice `0x4D`).
-- **Regole di patch**: dimensione fissa 128 KiB (pad `0xFF`), 16B-signature `0x40` intatta, non spostare tabelle (indirizzi assoluti), nessun checksum da aggiornare; verifica con diff byte + disassembly; flash con `ifu.efi <bin> 128`.
+- **Regole di patch**: dimensione fissa 128 KiB (pad `0xFF`), 16B-signature `0x40` intatta, non spostare tabelle (indirizzi assoluti), nessun checksum noto da aggiornare (ma vedi il punto aperto in §3); verifica con diff byte + disassembly; flash con `ifu.efi <bin> 128`, leggendo prima §18. Il flash via `ifu` dipende dal firmware in esecuzione: una patch non deve toccare il gestore `0xDC` né il ciclo di flash.
 
 ## 7. Verifica delle patch
 
@@ -131,6 +132,7 @@ Lista ufficiale `T48_List.txt` V13.16 (37103 IC, mirror github.com/Kreeblah/XGec
 
 ## 13. Brick e recovery
 
+- Rischi noti del flasher in §18.
 - Flash EC corrotto → boot ROM (ROM mascherata, intatta) non trova la 16B-signature → EC in modo ISP. Sintomi: no power-on / no tastiera / no ricarica / ventola al max.
 - **Recovery**: ISP via KBS + dump originale (`EC0416.BIN`) → riparte. Funziona anche con flash illeggibile, se il chip è vivo e VSTBY presente. Sempre verifica post-write. La porta EC_SPI1 è una possibile via in più solo se il pinout confermerà i segnali DBGR/SMB (§16): oggi non va considerata un piano di recovery.
 - Chip morto elettricamente (5V, ESD…) → sostituire chip (rework LQFP ad aria calda o drag soldering, senza reballing) o scheda.
@@ -188,13 +190,13 @@ Procedura completa in §17. Non esiste un pinout standard: lo decide il progetti
 
 ### Strumenti da valutare
 
-Nessuno è dichiarato compatibile con IT5571: partire sempre dalla sola lettura.
+Nessuno è dichiarato compatibile con IT5571: partire sempre dalla sola lettura. La scelta dipende dalla via: **RP2040 per EPP** sul connettore tastiera (15 linee con handshake, c'è già un progetto), **FT232H per DBGR/SMB** e per l'ascolto SPI, se i segnali si raggiungono da EC_SPI1 o dai piedini dell'EC.
 
 | Via | Strumento | Stato |
 |---|---|---|
 | EPP sul connettore tastiera | [ITE-EC-Pico-USB-Parallel-ISP](https://github.com/bernTP/ITE-EC-Pico-USB-Parallel-ISP) (RP2040/RP2350) | Provato solo su IT5261; IT5570 citato solo come fonte del datasheet. Solo 3,3 V, resistenze in serie, GND dalla scheda |
 | EPP sul connettore tastiera | [system76/ec, programmatore esterno](https://github.com/system76/ec/blob/master/docs/flashing.md) (Arduino Mega 2560) | Documentato per IT5570; mappa pin da adattare alla tastiera di questa scheda |
-| DBGR/SMB | [`iteflash`, Chromium EC](https://chromium.googlesource.com/chromiumos/platform/ec/+/6555d8eefedd62af8f0b0e890cb3e696690a76cc/docs/ite-ec-reflashing.md) | Scritto per IT83xx; ingresso con forme d'onda speciali su clock e dati |
+| DBGR/SMB | [`iteflash`, Chromium EC](https://chromium.googlesource.com/chromiumos/platform/ec/+/6555d8eefedd62af8f0b0e890cb3e696690a76cc/docs/ite-ec-reflashing.md) | Scritto per IT83xx su FT4232 (Servo v2): `check_chipid()` accetta solo `0x83xx` e l'interfaccia è la B, quindi per IT5571 + FT232H va modificato. Waveform 50 ms su clock e dati, poi I2C 400 kHz agli indirizzi `0x5A/0x35/0x79`. FT232H: solo 3,3 V, pull-up esterni, DO e DI uniti per SDA |
 
 Le procedure di alimentazione differiscono (il progetto Pico tiene l'alimentatore collegato senza batteria, la guida System76 vuole la macchina senza alimentazione): seguire quella dello strumento scelto, confrontandola con il requisito VSTBY del datasheet.
 
@@ -300,3 +302,84 @@ Solo con la scheda da compilare già piena.
 - **Non collegata all'EC, o connettore assente:** resta la via KBS (§8, §16).
 
 In ogni caso la prima scrittura arriva solo dopo due dump identici che corrispondono a `EC0416.BIN` (sha256 §1). Riporta poi il pinout nella §16.
+
+## 18. Flasher: rischi di ifu.efi
+
+**Stato:** ci sono segnalazioni di brick occasionali, non riprodotte qui. L'analisi statica non individua la causa di un caso specifico, ma mostra che `ifu` non ha margine d'errore: qualsiasi problema a metà scrittura lascia l'EC senza firmware avviabile. Nulla è stato eseguito: `ifu.efi`, `Fpt.efi` e i dump sono stati solo disassemblati.
+
+### Cosa fa ogni file
+
+| File | Ruolo | Note |
+|---|---|---|
+| `inputs/bios/extracted/uefi-shell/EFI/BOOT/BOOTX64.efi`, `BOOTIA32.efi` | UEFI Shell (build 2013) | **Non scrive nulla**: è solo l'ambiente da cui lanciare i flasher, da copiare in radice sulla chiavetta |
+| `inputs/ec/MTLH-NB06-ec-250322/ifu.efi` | Flasher EC: ITE Flash Utility 2.3.1a, build DEBUG | Presente solo nel pacchetto EC, non in quello BIOS |
+| `inputs/bios/extracted/Fpt.efi` + `fb.nsh` | Flasher BIOS: Intel Flash Programming Tool | Dettagli sotto. `fb.nsh` esegue `fpt.efi -f MTLH-NB06_B0.2.bin`, ma **quel file non è nel pacchetto** |
+| `inputs/bios/extracted/fparts.txt` | Lista di 204 voci di flash SPI | Parametri per `Fpt`; il file stesso dice che le voci non sono validate |
+
+### Come funziona il flash EC
+
+`ifu` non scrive l'eFlash da solo: serve la collaborazione del **firmware in esecuzione**.
+
+1. Invia `0xAD` al KBC e `0xDC` sulla porta `0x66`.
+2. Il firmware disabilita gli interrupt, porta il ciclo di flash in Scratch ROM (`0xDC94`) e ci salta (`0x800C`; variante PMC2 `0xD9D3`, caso `0xDC` nella tabella `0xF61E`). Risponde `0x33` sulla porta `0x62`. Percorso PMC1: switch `0x0A0F` → `0x0A40` → `0x0928` → `0x8A62`, **senza alcuna condizione**.
+3. L'host pilota il follow mode. Per ogni blocco: cancella, verifica la cancellazione, programma, verifica.
+4. Alla fine invia `0xFE`: reset tramite watchdog. Con `/j` invia `0xFC`: salto a `0x0400`.
+
+Finché il ciclo gira, l'EC fa solo questo. Ricarica, ventola e tastiera restano ferme nello stato corrente (deduzione dal codice del ciclo).
+
+### Debolezze verificate nel codice
+
+| Punto | Comportamento | Conseguenza |
+|---|---|---|
+| ACK `0x44A9` | Se non è `0x33`, stampa `EC ACK Fail` e **prosegue** | Il tool continua senza sapere se l'EC è entrato nel ciclo |
+| Attese su `0x62/0x66` | Cicli **senza timeout**, compresa l'attesa WIP `0x27DC` | Se l'EC o la flash non rispondono il tool resta bloccato, e l'unica uscita è spegnere |
+| Prima di `0xDC` | Nessuno svuotamento del buffer d'uscita (`0x43D0-0x4494`) | Un byte vecchio verrebbe letto come ACK, e il `0x33` slitterebbe sulla lettura successiva, come l'ID flash |
+| Errore di cancellazione o verifica `0x46F4`, `0x4758` | **Nessun nuovo tentativo**: invia `0xFE` e termina | L'EC si riavvia da una flash danneggiata, invece di restare vivo in Scratch ROM |
+| Esito `0x5150` | `main` ignora il risultato; `Flash Update Fail` non è su questo percorso | L'unico segnale è la riga ` -- Verify Fail.` a schermo |
+| File in ingresso | Controllata solo la dimensione rispetto al parametro; nessun controllo trovato su 16B-signature o scheda | Un file sbagliato da 128 KiB viene scritto |
+| Ordine | I blocchi vengono cancellati a partire da quello con il codice di avvio | Un errore precoce elimina subito la parte necessaria per ripartire |
+| Ciclo firmware | Comandi su PMC senza autenticazione; `0xDC` senza condizioni e senza uscita a tempo | Qualsiasi altro accesso a `0x62/0x66` è un comando di flash; un `0xDC` inviato per errore congela l'EC fino a reset |
+
+### Verificato, senza problemi
+
+- File letto in memoria **prima** di iniziare: la chiavetta non è il rischio principale.
+- `128` dimenticato o sbagliato: il tool si ferma (`File Size Paramter Lost`, `Paramter NOT Match`) prima di scrivere.
+- Porte non decodificate: il tool si ferma se `0x62/0x66` leggono `0xFF`.
+- Build vecchia e `EC0416`: stessa tabella GPIO di 103 voci, stesso ciclo a `0x8000-0x8100`, stesso switch di comandi. Non è una regressione.
+- Protezione: il firmware non scrive i registri P0BA-P3ZR.
+
+Attenzione invece ai nomi: entrambe le build si dichiarano `V0.3.2`, pur differendo per 46.608 byte. Solo la vecchia contiene `MTLH-NB06`. Per distinguerle usare data o sha256.
+
+### Possibili cause dei brick (ipotesi)
+
+- Firmware BIOS/SMM che accede alle porte EC durante il flash. Non verificabile senza il BIOS della X210AI.
+- Un byte vecchio nel buffer d'uscita, che sposta le letture successive.
+- Alimentazione: l'EC è fermo mentre gestisce ricarica e USB-C PD, quindi un'alimentazione solo via USB-C è il caso più sospetto.
+- Blocco dell'EC, seguito da spegnimento forzato.
+- Errore isolato di cancellazione o programmazione, che il tool trasforma in reset su flash danneggiata.
+
+### Come ridurre il rischio
+
+1. **Prima di tutto la recovery:** prova la via ISP KBS (§8, §16) in sola lettura, con dump verificato. Senza questa, un brick significa rework.
+2. Controlla lo sha256 del file sulla chiavetta (§1) e usa sempre il parametro `128`.
+3. Alimentatore DC sul connettore dedicato e batteria carica. Evita la sola USB-C.
+4. Avvia la UEFI Shell direttamente da USB e non fare altro sulla macchina.
+5. Fotografa lo schermo. `EC ACK Fail` o `Verify Fail` vanno trattati come flash non riuscito, anche se il tool termina normalmente.
+6. Non spegnere durante la scrittura finché c'è ancora avanzamento. Il riavvio finale è brusco ed è normale.
+
+### Cosa manca per chiudere l'analisi
+
+- **Immagine BIOS:** `MTLH-NB06_B0.2.bin`, oppure un dump della X210AI con `fpt.efi -d full.bin` dalla UEFI Shell o `flashrom -p internal -r` da Linux. Sola lettura.
+- **Tabelle ACPI**, con `acpidump` su quella macchina.
+- **Dettagli di un brick reale:** alimentazione, messaggi a schermo, stato prima del flash.
+
+### Flash BIOS con Fpt: cosa risulta dal pacchetto
+
+- **Piattaforma coerente:** `Fpt.efi` contiene le stringhe `Meteor Lake Platform` e `Lunar Lake Platform`. La versione esatta non è ricavabile dal file, e nemmeno la compatibilità con il ME della scheda.
+- **Verifica:** l'aiuto indica `-f <file> [NOVERIFY]`, e il tool ha le fasi `Programming Flash` e `Verifying Flash`. La verifica risulta quindi prevista di default, e `fb.nsh` non la disattiva.
+- **Portata:** `fb.nsh` usa `-f` senza `-bios`, quindi scrive **dall'indirizzo zero**, su tutte le regioni presenti nell'immagine. Con `-bios` si limiterebbe alla regione BIOS. Dati specifici della singola macchina possono andare persi se l'immagine li copre.
+- **Prompt:** il tool può chiedere conferma (`Do you want to continue?`, `Do you want to truncate the data and continue?`). Davanti a una richiesta di troncare, **rispondere no**: significa che immagine e flash non coincidono.
+- **Flash:** il marking del chip va confrontato con `fparts.txt` prima di scrivere.
+- **Requisito:** la UEFI Shell del pacchetto non è firmata, quindi va probabilmente disattivato il Secure Boot.
+
+Senza l'immagine non si possono verificare descriptor, regioni, ME, protezioni né come il BIOS usa l'EC.
