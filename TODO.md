@@ -1,12 +1,21 @@
 # TODO — X210AI EC (IT5571) — prossimi passi
 
-Stato: analisi statica completa (vedi README.md). Nessun tool eseguito su hardware reale.
-Verifiche indipendenti rifatte il 2026-11-04: hash, patch (2 byte @0x0D17/0x0D5B, 1 byte @0x0C35),
-signature @0x40, firma @0x7F80, mappa banchi, tabella set2→set1 @0x0D03 — tutte confermate.
+Stato: analisi statica completa (vedi README.md). Verifiche indipendenti rifatte il 2026-11-04:
+hash, patch (2 byte @0x0D17/0x0D5B, 1 byte @0x0C35), signature @0x40, firma @0x7F80, mappa banchi,
+tabella set2→set1 @0x0D03 — tutte confermate.
 
-## Priorità
+## Sessione 2026-11-04 (hardware reale)
 
-- [ ] Dump EC software: `ifu.efi /S 128` (opzione nascosta, sola lettura) → confrontare con `dumps/EC0416.BIN` (size 131072, signature @0x40, 2 letture identiche)
+- [x] Dump BIOS: `Bios dumps/full.bin` + `full2.bin`, 33554432 B (32 MiB), sha256 `dd6e3116…4669`
+  identici, flash descriptor `0x5AA5F00F` a 0x10 valido → **dump BIOS OK**, recovery BIOS coperta
+- [x] Analisi `chiavetta usb/ifu.efi` (ITE Flash Utility 2.3.1a, PE32+ DEBUG, sha256 `16c08273…8176`):
+  opzioni `/S`(nascosta) `/V /VB /VBF /BK /Mn /Bp /PB /T /k /j /O`; ramo /S a RVA 0x5174 → routine
+  lettura RVA 0x422c (fast read 0x0B, blocchi 32 KiB, fwrite su ITEFW.bin); **se size=0 salta tutto
+  e crea file vuoto** (jle a 0x43a2)
+- [ ] Dump EC software: `ifu.efi /S 128` → **FALLITO**: `ITEFW.bin` 0 byte, `SPIDeviceID= FF FF FF FF`,
+  ACK ok, spegnimento brusco (0xFE, normale). Buffer 0x62 svuotato prima (0x66=0x00), alim. DC+batteria.
+  `EC versions/EC0400_dump1/2.bin` vuoti. Conclusione: via software ifu non funzionante su questa scheda
+  (mai testata prima, README §6) → **passare a RP2040**
 - [ ] Dump BIOS prima di qualsiasi flash: `fpt.efi -d full.bin` o `flashrom -p internal -r full.bin` (oggi nessuna immagine di recovery esiste)
 - [ ] Cicalino 15 segnali KSO/KSI dal connettore tastiera ai pin EC (tabella §7 README; KSO1 foto=contatto 16 vs schema 18 — ricontrollare) → chiude mappa EPP per RP2040
 - [ ] Misurare EC_SPI1 contatti 1, 3, 7, 8, 9, 10 (massa, EC 119 = GPG6, EC 100 = GPG2, SMBus 87/88, 115/116, 117/118); FSPI già mappata sui contatti 2,4,5,6
