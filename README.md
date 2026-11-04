@@ -26,7 +26,7 @@ Questa guida è l'unico documento del progetto. I materiali originali stanno in 
 2. Cicalino sui contatti 1, 3, 7, 8, 9 e 10 di `EC_SPI1`: massa, EC 119, EC 100 e piedini SMBus (§13).
 3. Accesso al connettore tastiera: cavo di una tastiera X201 guasta o spina JAE AA01 a 40 posizioni, codice non ancora trovato (§7).
 4. Cablaggio RP2040, poi `isp id` e `isp read` con l'EC sano: il risultato va confrontato con il dump `V0.4.0`. Niente scritture prima (§7).
-5. Ricreare le patch tastiera sulla `V0.4.0` (§5).
+5. Provare le patch `V0.4.0` solo dopo aver verificato la recovery (§5, §9).
 
 ## Indice
 
@@ -67,9 +67,12 @@ Questa guida è l'unico documento del progetto. I materiali originali stanno in 
 | File | SHA256 | Note |
 |---|---|---|
 | `dumps/EC-V0.4.0-20250723-lettura1.bin`, `-lettura2.bin` | `9b8334bd5d5986ce97dfc5d8503fa643a97d8abb6c6166ce181c0525ec722311` | **Firmware installato sulla scheda**, letto il 2026-11-04. 131072 B, build `V0.4.0` 2025-07-23 18:11:04. Due letture identiche |
+| `dumps/EC-V0.4.0-iso-jis.bin` | `133564d2a2fdda1bf0f90fa39e1ed4f3b79eeba7821ecafc0d2e7107d9affeaf` | `V0.4.0` con tasti ISO e JIS (7 byte), mai provata |
+| `dumps/EC-V0.4.0-fn-ctrl-swap.bin` | `a0b07b248ef3e4713a98bc0f69402bcbe850de430981f7c08a28b77ebb6fac22` | `V0.4.0` con scambio Fn↔LCtrl (3 byte), mai provata |
+| `dumps/EC-V0.4.0-iso-jis-fn-ctrl-swap.bin` | `3dfe2965ba0221c617ed04be8497b4834375cc84cdb844b09fe7fefaf27b2bba` | Entrambe (10 byte), mai provata |
 | `dumps/EC0416.BIN` | `acaf8fed4b797f39d983849b916baaf61352832b337950fa9fb3225994cb6dca` | EC di aprile, **più vecchia della build installata**. 131072 B, build `V0.3.2` 2025-04-15 18:20:35, md5 `7392fa5138c906ac17c7049fa69514e7` |
 | `dumps/EC0416_ctrl-caps-swap.BIN` | `21f63a733dd5ee8b338ffefcda093ffec8d38c38138bc97c1e82a65a20acd406` | Patch demo L-Ctrl↔CapsLock (2 byte) |
-| `dumps/EC0416_fn-ctrl-swap.BIN` | `970431688f10aa160973d3f276c453e5cc86427a28a01ee34ef43ea17dfabee8` | Patch Fn→LCtrl (1 byte) |
+| `dumps/EC0416_fn-ctrl-swap.BIN` | `970431688f10aa160973d3f276c453e5cc86427a28a01ee34ef43ea17dfabee8` | **Errata, non usare:** cambia Alt+SysRq, non Fn (§5) |
 | `inputs/ec/MTLH-NB06-ec-250322/MTLH-NB06_E03-250322.BIN` | `151edd7a59cad1eb4a3d7b0827ee0937f73f0645a3cbf8d532f5e6bc0de5bbde` | EC vecchia, build 2025-03-22, md5 `4bbc1e54aad8cac51a3e0a5e5274ed28` |
 | `inputs/ec/X210AI-EC-updated-on-03-22.zip` | `b850c8941df6eecbea035aefe481eb1c50fe8d5da4ea9b333717fc7a7230bc4e` | Archivio originale di `MTLH-NB06-ec-250322/` |
 | `inputs/bios/X210AI0724BIOS.rar` | `a1090b7986e6e3cb2485333f73fd5f8d62822f64bedfe7cad5733e88ddd94663` | Solo strumenti, estratti in `inputs/bios/extracted/`. **Nessuna immagine BIOS** |
@@ -105,22 +108,40 @@ Sezioni del datasheet usate: `refs/DATASHEETS.md`.
 ## 4. Tastiera, ISO e JIS
 
 - **KBS matrix 18×8** (base `0x1D00h`: KSOL/KSOH1/KSOCTRL/KSOH2/KSI@`0x1D04`/KSOxLSDR `0x1D10-0x1D21`). Driver in banco1 `0x9300-0x9F00`: loop 16 righe KSO, legge KSI, indice `0x4D=(col<<4)|row|0x08`.
-- **Conversione scancode**: routine `0x0C09` (F0→break marker 0xFF, bit E7→casi speciali `0x83→0x41`/`0x84→0x54`, break `\|0x80`) e tabella **set2→set1 `0x0D03`** (128 B). Estesi `0xE0`: tabella `0x305E`; sequenze multi-byte (Pausa `E1 14 77`): `0x25B2`; comandi PS/2: `0x2636`.
+- **Tabella matrice `0x2EB9`:** 128 byte, indice `(KSI<<4)|KSO` (`0x8CB2`). Identica in `EC0416` e `V0.4.0`. La tabella `0x2F39` (24 byte, 2 KSO extra) è vuota. Le voci sono codici interni, non scancode (vedi sotto).
+- **Codici interni** (`0x8D77`): `<0x80` set 2 diretto; `0x80-0x9B` tabella `0x3060` (`0x82` LWin, `0x84` Menu, `0x88` LShift, `0x89` RShift, `0x8A` LAlt, `0x8B` RAlt, `0x8C` LCtrl, `0x8D` RCtrl, `0x8E` Fn); `0x9C-0xDF` varianti a `0x2FE3`; `≥0xE0` coppie normale/Fn a `0x3046`.
+- **Fn:** non è in matrice. È il pin `0x1608` bit 7 (attivo basso, `0xC447`), con debounce nella voce 4 della tabella `0x2795`. Pressione e rilascio chiamano `0x8D77` con `0x8E` (`0xC45E`, `0xC465`), che imposta il bit `0x40` dello stato tastiera in iRAM `0xBC`. Quel pin non viene letto altrove.
+- **Conversione scancode**: routine `0x0C09` (F0→break marker 0xFF, bit E7→casi speciali `0x83→0x41`/`0x84→0x54`, break `\|0x80`) e tabella **set2→set1 `0x0D03`** (128 B). Qui `0x83` e `0x84` sono byte set 2 già in uscita: F7 e Alt+SysRq. Sequenze multi-byte (Pausa `E1 14 77`): `0x25B2`; comandi PS/2: `0x2636`.
 - KBC 8042 (IRQ1/IRQ12, A20G): init `0x0A76`, dispatcher eventi `0x0D9C` (flag bit `0x30-0x3D`).
 - Flusso: KBS scan → tabella matrice → scancode set2 → conversione set1 → buffer KBC → porta `0x60` + IRQ1.
-- **ISO/JIS:** la matrice ha 144 posizioni e la tabella `0x0D03` copre tutti i set-2 `0x00-0x7F`, incluso il tasto extra ISO `0x61→0x56`. Il layout fisico dipende dal cablaggio della tastiera.
-- **Build vecchia e `EC0416`:** tabelle set2→set1 (`0x0D2C` vs `0x0D03`), matrice, estesi e sequenze sono identiche, quindi ISO e JIS sono supportati in entrambe. Se nella vecchia ù/<> non passavano all'OS, o Fn+PgUp non funzionava, la causa è nel codice di scansione o di gestione Fn di quella build, non nelle tabelle.
+- **ISO/JIS:** la tabella `0x0D03` copre tutti i set-2 necessari, ma **la matrice no**: le celle dei tasti ISO e JIS sono a `0x00`, e `0x8D77` scarta quel codice. Da qui il sintomo di `ù` e `<>` che non arrivano all'OS, in tutte le build viste.
+- **Confronto con ThinkPad:** la matrice coincide, trasposta, con la X220 di [thinkpad-ec](https://github.com/hamishcoleman/thinkpad-ec/blob/master/docs/table_matrix.txt): 88 celle occupate in comune e 52 tasti di scrittura su 52 con il codice atteso. Lì i codici sono numeri di tasto IBM, quindi quelli "sconosciuti" sono 14 Yen, 131 Muhenkan, 132 Henkan e 133 Kana. Differenze: LWin sta in `KSI2/KSO11` invece di `KSI3/KSO9`, e qui mancano ThinkVantage, Mic e PgBk/PgFd. Il confronto con una tastiera X201 reale non è stato fatto.
 
 ## 5. Patch della tastiera
 
-**Vale solo per `EC0416`:** i file `EC0416_*.BIN` sono basati sulla `V0.3.2` e flasharli riporterebbe indietro il firmware installato (§9). Sulla `V0.4.0` i byte `0x0C35`, `0x0D17` e `0x0D5B` stanno agli stessi indirizzi, con gli stessi valori e lo stesso contesto, quindi le patch si possono ricreare sul dump. Non è ancora stato fatto.
+**Patch per il firmware installato.** `tools/patch_keyboard.py` parte dal dump `V0.4.0`, ne controlla l'hash e i byte attesi, e genera i tre file `dumps/EC-V0.4.0-*.bin` (§1). **Verificate solo staticamente, mai flashate.** Se i byte `0x4A-0x4B` (§3) fossero un controllo, l'immagine modificata potrebbe non partire: prima serve la recovery (§9).
+
+| Byte | Da → a | Effetto |
+|---|---|---|
+| `0x2F0A` (`KSI5/KSO1`) | `00 → 61` | ISO `<>` |
+| `0x2F20` (`KSI6/KSO7`) | `00 → 5D` | ISO `#`, `ù` su layout italiano |
+| `0x2EE1` (`KSI2/KSO8`) | `00 → 6A` | JIS Yen |
+| `0x2F2E` (`KSI7/KSO5`) | `00 → 51` | JIS Ro |
+| `0x2F29` (`KSI7/KSO0`) | `00 → 67` | JIS Muhenkan |
+| `0x2F0F` (`KSI5/KSO6`) | `00 → 64` | JIS Henkan |
+| `0x2F2F` (`KSI7/KSO6`) | `00 → 13` | JIS Katakana/Hiragana |
+| `0x2EC8` (`KSI0/KSO15`) | `8C → 8E` | Il tasto LCtrl fa da Fn |
+| `0xC461`, `0xC468` | `8E → 8C` | Il tasto Fn fa da LCtrl |
+
+Le celle ISO/JIS erano vuote: se su una tastiera non c'è il tasto, non cambia nulla. Le posizioni vengono dalla X220 e vanno confermate sulla tastiera reale. RCtrl non cambia.
+
+**Patch `EC0416` (basate sulla `V0.3.2`):** flasharle riporterebbe indietro il firmware installato (§9).
 
 **Regole:** dimensione fissa 128 KiB (pad `0xFF`), 16B-signature intatta, tabelle non spostate (indirizzi assoluti), nessun checksum noto da aggiornare (ma vedi il punto aperto in §3). Una patch non deve toccare il gestore `0xDC` né il ciclo di flash, da cui dipende `ifu`. Prima di flashare leggere §9.
 
 - **Tasti visibili all'host:** tabella `0x0D03`. Demo `dumps/EC0416_ctrl-caps-swap.BIN`: swap L-Ctrl `0x14`↔Caps `0x58`, byte `0x0D17`↔`0x0D5B`.
-- **Fn→LCtrl:** Fn è **fuori matrice** (pin dedicato, tipo T61 I/O18→GND, rif. github.com/thedalles77/USB_Laptop_Keyboard_Controller) e non è uno scancode. Non c'è logica di swap né flag BIOS (BRAM `0x2200h` non usata come setting). La patch `dumps/EC0416_fn-ctrl-swap.BIN` cambia 1 byte a `0x0C35` (caso `0x84` in `0x0C09`: `0x54→0x1D`).
-- **Limite:** non è confermato al 100% che `0x84` sia Fn. Nello schema della tastiera X201 (§7) Fn è `HOTKEY` sul contatto 1: seguendolo fino all'EC si identifica il pin. La direzione inversa (Ctrl fisico che fa da Fn) richiede la posizione matrice di Ctrl (driver banco1, indice `0x4D`).
-- **Livello Fn:** la patch tocca solo l'output scancode, a valle del flag del pin Fn, quindi Fn+PgUp non è influenzato.
+- **`dumps/EC0416_fn-ctrl-swap.BIN` è errata, non usarla.** Cambia il caso `0x84` in `0x0C09` (`0x54→0x1D`), che è il byte set 2 di Alt+SysRq. Fn è fuori matrice (§4), quindi la patch non lo tocca: trasforma Alt+SysRq in LCtrl. La verifica qui sotto conferma solo quel byte, non il suo significato.
+- **Fn e BIOS:** non c'è logica di swap né flag BIOS (BRAM `0x2200h` non usata come setting).
 
 Verifica di `EC0416.BIN` contro `EC0416_fn-ctrl-swap.BIN`:
 
@@ -140,6 +161,8 @@ Verifica di `EC0416.BIN` contro `EC0416_fn-ctrl-swap.BIN`:
 ```
 
 Emulazione di `0x0C09`: `0x84` → `0x1D`/`0x9D` make/break, stesso output di L-Ctrl (`0x14`); gli altri tasti provati (0x83, 0x14, 0x58, 0x76, 0x5A, 0x29, 0x61) restano invariati.
+
+Riferimento della matrice: [thinkpad-ec, `docs/table_matrix.txt`](https://github.com/hamishcoleman/thinkpad-ec/blob/master/docs/table_matrix.txt).
 
 ## 6. Lettura dell'EC
 
@@ -399,7 +422,7 @@ Gli indirizzi di questa sezione e dei paragrafi precedenti si riferiscono a `EC0
 | Comandi host | Stessi casi nello switch PMC2 (`0xF61E`, ora `0xF5F0`) |
 | Spazio EC | Stessi 141 indirizzi in `0x0400-0x05FF` |
 | Vettori e avvio | Reset uguale. Differiscono solo tre byte di indirizzo in `0x70-0x3FF` e `0x4A-0x4B` (`AF 5B`, vedi §3) |
-| Tastiera | Tabella `0x0D03` e routine `0x0C09` identiche e agli stessi indirizzi |
+| Tastiera | Tabelle `0x0D03` e `0x2EB9` e routine `0x0C09` identiche e agli stessi indirizzi |
 
 **Cosa cambia davvero.** Il confronto istruzione per istruzione, con gli indirizzi mascherati, dà 1542 blocchi diversi: 1181 sono solo rilocazioni, 361 sono strutturali, in parte dovuti al disassemblaggio lineare delle tabelle. Molte variabili XRAM sono spostate, per esempio di `-0x28` da `0x0823`.
 
@@ -451,6 +474,8 @@ Il pacchetto del produttore **non contiene istruzioni di recovery**. Queste sono
 | **EC tramite `EC_SPI1`** | Porta FSPI (§13) | Non è un piano di recovery finché non si chiarisce il test mode |
 
 **EC corrotto:** la boot ROM è intatta, ma non trova la 16B-signature. Sintomi: niente accensione, tastiera o ricarica, ventola al massimo. `ifu` non serve, perché richiede il firmware in esecuzione. Il chip è vivo, quindi l'ISP dovrebbe funzionare anche con flash illeggibile, se VSTBY è presente. Verificare sempre dopo la scrittura.
+
+**Dump con EC brickato:** l'ingresso ISP non dipende dal firmware, quindi la lettura dovrebbe funzionare, ma non è provata. Da sola non ripara nulla: mostra solo cosa è rimasto nella flash. La riparazione è `isp write`, ancora bloccata dai punti aperti di §7.
 
 **Chip morto elettricamente** (5 V, ESD): sostituire chip o scheda. Il rework LQFP si fa ad aria calda o drag soldering, senza reballing (§12).
 
