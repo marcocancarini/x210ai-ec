@@ -4,29 +4,29 @@ Reverse engineering del firmware EC della scheda **X210AI**, patch della tastier
 
 Il chip è un **ITE IT5571 rev. 2**: core **8051**, eFlash embedded da 128 KiB, package **LQFP-128** con piedini (14×14 mm, passo 0,4 mm). È quindi la variante `IT5571E-128`, non la VFBGA. Il package è visto in foto (§13): il marking completo va letto sul chip.
 
-Questa guida è l'unico documento del progetto. I materiali originali stanno in `inputs/`, i dump in `dumps/`, i tool in `tools/`.
+Questa guida è l'unico documento del progetto. I dump stanno in `dumps/` e i tool in `tools/`. I pacchetti originali stavano in `inputs/`, che non è nella repo né in questa cartella: i percorsi `inputs/` di §1 restano come riferimento agli hash. Le copie di `ifu.efi`, `Fpt.efi` e UEFI Shell sono in `chiavetta usb/`.
 
 ## Stato del progetto
 
 | Area | Stato |
 |---|---|
-| Firmware EC | `EC0416` analizzato, patch verificate staticamente (§2-§5). **Sulla scheda c'è la `V0.4.0`**, più recente: confrontata con `EC0416` (§9) |
+| Firmware EC | **Sulla scheda c'è `EC0416` (`V0.3.2`)**, flashata sopra la `V0.4.0` originale. Confronto in §9, patch `V0.4.0` con CRC corretto in §5 |
 | Lettura EC | **Riuscita con `ifu.efi /S 128 /k /j`**: due letture identiche (§6). Le altre vie non sono provate (§6, §7) |
-| Scrittura EC | Rischi documentati (§9). Con RP2040 è possibile, ma con punti aperti (§7) |
-| Immagine BIOS | Due letture identiche da 32 MiB in locale, non analizzate e fuori dalla repo (§1, §8, §10) |
+| Scrittura EC | **`ifu` ha flashato `EC0416` con successo**, immagini modificate mai provate (§9). Con RP2040 è possibile, ma con punti aperti (§7) |
+| Immagine BIOS | Due letture identiche da 32 MiB nella repo, non analizzate (§1, §8, §10) |
 | Brick segnalati | Meccanismo più probabile trovato nel codice di `ifu`, non riprodotto (§9) |
 | Recovery | Descritta, mai provata su questa scheda (§11) |
 | Porta EC_SPI1 | Pinout parziale da foto: 4 contatti su 10 sono FSPI. Accesso all'eFlash non documentato, test mode da chiarire (§13, §14) |
 
-**Eseguito sulla X210AI:** solo `ifu.efi` in lettura (§6). **Nessuna scrittura è stata provata.** `Fpt.efi` e il percorso di scrittura di `ifu` sono stati solo disassemblati.
+**Eseguito sulla X210AI:** `ifu.efi` in lettura (§6) e un flash di `EC0416` originale (§9). `Fpt.efi` è stato solo disassemblato.
 
 **Prossimi passi:**
 
 1. Cicalino sui 15 piedini verso il connettore tastiera, iniziando da KSO1 sui contatti 16 e 18 (§7).
 2. Cicalino sui contatti 1, 3, 7, 8, 9 e 10 di `EC_SPI1`: massa, EC 119, EC 100 e piedini SMBus (§13).
 3. Accesso al connettore tastiera: cavo di una tastiera X201 guasta o spina JAE AA01 a 40 posizioni, codice non ancora trovato (§7).
-4. Cablaggio RP2040, poi `isp id` e `isp read` con l'EC sano: il risultato va confrontato con il dump `V0.4.0`. Niente scritture prima (§7).
-5. Provare le patch `V0.4.0` solo dopo aver verificato la recovery (§5, §9).
+4. Cablaggio RP2040, poi `isp id` e `isp read` con l'EC sano: il risultato va confrontato con il firmware installato in quel momento (§1). Niente scritture prima (§7).
+5. Flashare `dumps/EC-V0.4.0-all-keys.bin`, meglio dopo aver verificato la recovery (§5, §9).
 
 ## Indice
 
@@ -66,13 +66,14 @@ Questa guida è l'unico documento del progetto. I materiali originali stanno in 
 
 | File | SHA256 | Note |
 |---|---|---|
-| `dumps/EC-V0.4.0-20250723-lettura1.bin`, `-lettura2.bin` | `9b8334bd5d5986ce97dfc5d8503fa643a97d8abb6c6166ce181c0525ec722311` | **Firmware installato sulla scheda**, letto il 2026-11-04. 131072 B, build `V0.4.0` 2025-07-23 18:11:04. Due letture identiche |
-| `dumps/EC-V0.4.0-iso-jis.bin` | `133564d2a2fdda1bf0f90fa39e1ed4f3b79eeba7821ecafc0d2e7107d9affeaf` | `V0.4.0` con tasti ISO e JIS (7 byte), mai provata |
-| `dumps/EC-V0.4.0-fn-ctrl-swap.bin` | `a0b07b248ef3e4713a98bc0f69402bcbe850de430981f7c08a28b77ebb6fac22` | `V0.4.0` con scambio Fn↔LCtrl (3 byte), mai provata |
-| `dumps/EC-V0.4.0-iso-jis-fn-ctrl-swap.bin` | `3dfe2965ba0221c617ed04be8497b4834375cc84cdb844b09fe7fefaf27b2bba` | Entrambe (10 byte), mai provata |
-| `dumps/EC0416.BIN` | `acaf8fed4b797f39d983849b916baaf61352832b337950fa9fb3225994cb6dca` | EC di aprile, **più vecchia della build installata**. 131072 B, build `V0.3.2` 2025-04-15 18:20:35, md5 `7392fa5138c906ac17c7049fa69514e7` |
-| `dumps/EC0416_ctrl-caps-swap.BIN` | `21f63a733dd5ee8b338ffefcda093ffec8d38c38138bc97c1e82a65a20acd406` | Patch demo L-Ctrl↔CapsLock (2 byte) |
-| `dumps/EC0416_fn-ctrl-swap.BIN` | `970431688f10aa160973d3f276c453e5cc86427a28a01ee34ef43ea17dfabee8` | **Errata, non usare:** cambia Alt+SysRq, non Fn (§5) |
+| `dumps/EC-V0.4.0-20250723-lettura1.bin`, `-lettura2.bin` | `9b8334bd5d5986ce97dfc5d8503fa643a97d8abb6c6166ce181c0525ec722311` | **Firmware originale della scheda**, letto il 2026-11-04. 131072 B, build `V0.4.0` 2025-07-23 18:11:04. Due letture identiche. Base delle patch e file di ritorno |
+| `dumps/EC-V0.4.0-all-keys.bin` | `fad3db0e3bfb30b3f120381fd00271e3861ac14b4d94ad7d3bcf37e3e7a4d4ab` | **File da flashare:** ISO, JIS, scambio Fn↔LCtrl, Back, Forward e ThinkVantage (16 byte + CRC), mai provata |
+| `dumps/EC-V0.4.0-iso-jis.bin` | `7ee70df0894832da7ed47dab8e2fda7674ea505c643ffb4b75d113f491471a74` | `V0.4.0` con tasti ISO e JIS (7 byte + CRC), mai provata |
+| `dumps/EC-V0.4.0-fn-ctrl-swap.bin` | `e1f1386daef06d7b51c5d65d8c1fc4764be7b33173d82a192db95b68f15be07f` | `V0.4.0` con scambio Fn↔LCtrl (3 byte + CRC), mai provata |
+| `dumps/EC-V0.4.0-iso-jis-fn-ctrl-swap.bin` | `a3f1ff4e1bdd374692f2854a7a8be4a48375938c5959f3e4643539e88675d57f` | Entrambe (10 byte + CRC), mai provata |
+| `dumps/EC0416.BIN` | `acaf8fed4b797f39d983849b916baaf61352832b337950fa9fb3225994cb6dca` | **Installata sulla scheda dal 2026-11-05**, più vecchia della `V0.4.0` originale. 131072 B, build `V0.3.2` 2025-04-15 18:20:35, md5 `7392fa5138c906ac17c7049fa69514e7` |
+| `dumps/EC0416_ctrl-caps-swap.BIN` | `21f63a733dd5ee8b338ffefcda093ffec8d38c38138bc97c1e82a65a20acd406` | Patch demo L-Ctrl↔CapsLock (2 byte). **CRC non aggiornato, non flashare** |
+| `dumps/EC0416_fn-ctrl-swap.BIN` | `970431688f10aa160973d3f276c453e5cc86427a28a01ee34ef43ea17dfabee8` | **Errata, non usare:** cambia Alt+SysRq, non Fn, e ha il CRC vecchio (§3, §5) |
 | `inputs/ec/MTLH-NB06-ec-250322/MTLH-NB06_E03-250322.BIN` | `151edd7a59cad1eb4a3d7b0827ee0937f73f0645a3cbf8d532f5e6bc0de5bbde` | EC vecchia, build 2025-03-22, md5 `4bbc1e54aad8cac51a3e0a5e5274ed28` |
 | `inputs/ec/X210AI-EC-updated-on-03-22.zip` | `b850c8941df6eecbea035aefe481eb1c50fe8d5da4ea9b333717fc7a7230bc4e` | Archivio originale di `MTLH-NB06-ec-250322/` |
 | `inputs/bios/X210AI0724BIOS.rar` | `a1090b7986e6e3cb2485333f73fd5f8d62822f64bedfe7cad5733e88ddd94663` | Solo strumenti, estratti in `inputs/bios/extracted/`. **Nessuna immagine BIOS** |
@@ -81,7 +82,7 @@ Questa guida è l'unico documento del progetto. I materiali originali stanno in 
 
 Sezioni del datasheet usate: `refs/DATASHEETS.md`.
 
-**Immagine BIOS.** `fb.nsh` chiama `MTLH-NB06_B0.2.bin`, che non è incluso nel pacchetto. In locale ci sono `Bios dumps/full.bin` e `full2.bin`: 32 MiB, identici (SHA256 `dd6e311622b8c61fe8c51de8fef8f3ff28b625dffc5097836f12f5cd5b884669`), con flash descriptor a `0x10` e volumi `_FVH`. Non sono nella repo e non sono stati analizzati.
+**Immagine BIOS.** `fb.nsh` chiama `MTLH-NB06_B0.2.bin`, che non è incluso nel pacchetto. In locale ci sono `Bios dumps/full.bin` e `full2.bin`: 32 MiB, identici (SHA256 `dd6e311622b8c61fe8c51de8fef8f3ff28b625dffc5097836f12f5cd5b884669`), con flash descriptor a `0x10` e volumi `_FVH`. Sono nella repo dal commit `21485db` e non sono stati analizzati.
 
 | File del pacchetto | Ruolo | Note |
 |---|---|---|
@@ -100,9 +101,10 @@ Sezioni del datasheet usate: `refs/DATASHEETS.md`.
 
 ## 3. Firme e checksum
 
-- **Nessuna firma crittografica trovata**: niente costanti SHA/RSA/MD5/CRC, somme non nulle, blocco `0x7F80` solo testo e non referenziato, reset `0x0070` non verifica la flash, e il firmware non legge da codice la zona `0x40-0x4F`.
+- **Nessuna firma crittografica trovata**: niente costanti SHA/RSA/MD5, blocco `0x7F80` solo testo e non referenziato, reset `0x0070` non verifica la flash, e il firmware non legge da codice la zona `0x40-0x4F`.
 - **16B-signature a `0x40`** (`A5…A4 95 85 12 26 E6 AA 00 55 55`): marcatore di power-on per localizzare la code base (datasheet, sezione 6.4.3.11.1, formato "implicit" → base `0x000000`). **Va preservata nelle patch** (offset validi `0x40-0xF0`).
-- **Punto aperto, byte `0x4A-0x4B`:** valgono `26 E6` in `EC0416` e `F9 0C` nella build vecchia, mentre datasheet e System76 hanno `5A 5A` fissi. Non corrispondono a somme a 8/16 bit, XOR o CRC-16 con polinomi noti sugli intervalli provati. Il firmware System76 con `5A 5A` avvia su IT5570, quindi un controllo della boot ROM è improbabile, ma **non escluso** per valori diversi. Nessuna patch risulta provata sull'hardware.
+- **CRC a `0x4A-0x4B`:** è un **CRC-16/CMS** big endian (polinomio `0x8005`, init `0xFFFF`, senza riflessione, senza XOR finale) su tutti i 128 KiB esclusi i 16 byte della firma `0x40-0x4F`. Trovato provando tutti i 65536 polinomi su 12 intervalli: è l'unico risultato e torna esattamente sulle tre build ufficiali (`F9 0C` del 22 marzo, `26 E6` di `EC0416`, `AF 5B` della `V0.4.0`). Va **ricalcolato dopo ogni modifica**: `tools/patch_keyboard.py` lo fa, e `--check` verifica un'immagine.
+- **Chi controlla il CRC:** non è noto. Il firmware non lo legge, quindi può essere la boot ROM o nessuno. Datasheet e System76 hanno `5A 5A` fissi, e System76 avvia su IT5570: forse è un valore che salta il controllo, ma non è verificato. Un CRC corretto è comunque la scelta prudente.
 - Protezione in scrittura: il firmware non scrive i registri P0BA-P3ZR.
 
 ## 4. Tastiera, ISO e JIS
@@ -115,11 +117,13 @@ Sezioni del datasheet usate: `refs/DATASHEETS.md`.
 - KBC 8042 (IRQ1/IRQ12, A20G): init `0x0A76`, dispatcher eventi `0x0D9C` (flag bit `0x30-0x3D`).
 - Flusso: KBS scan → tabella matrice → scancode set2 → conversione set1 → buffer KBC → porta `0x60` + IRQ1.
 - **ISO/JIS:** la tabella `0x0D03` copre tutti i set-2 necessari, ma **la matrice no**: le celle dei tasti ISO e JIS sono a `0x00`, e `0x8D77` scarta quel codice. Da qui il sintomo di `ù` e `<>` che non arrivano all'OS, in tutte le build viste.
-- **Confronto con ThinkPad:** la matrice coincide, trasposta, con la X220 di [thinkpad-ec](https://github.com/hamishcoleman/thinkpad-ec/blob/master/docs/table_matrix.txt): 88 celle occupate in comune e 52 tasti di scrittura su 52 con il codice atteso. Lì i codici sono numeri di tasto IBM, quindi quelli "sconosciuti" sono 14 Yen, 131 Muhenkan, 132 Henkan e 133 Kana. Differenze: LWin sta in `KSI2/KSO11` invece di `KSI3/KSO9`, e qui mancano ThinkVantage, Mic e PgBk/PgFd. Il confronto con una tastiera X201 reale non è stato fatto.
+- **Confronto con ThinkPad:** la matrice coincide, trasposta, con la X220 di [thinkpad-ec](https://github.com/hamishcoleman/thinkpad-ec/blob/master/docs/table_matrix.txt): 88 celle occupate in comune e 52 tasti di scrittura su 52 con il codice atteso. Lì i codici sono numeri di tasto IBM, quindi quelli "sconosciuti" sono 14 Yen, 131 Muhenkan, 132 Henkan e 133 Kana. Differenze: LWin sta in `KSI2/KSO11` invece di `KSI3/KSO9`, e il firmware originale non ha ThinkVantage, Mic e PgBk/PgFd. La patch `all-keys` aggiunge tutti questi tasti tranne Mic (§5).
+- **Confronto con X20x JIS:** l'adattatore [bulat-chu](https://github.com/bulat-chu/Thinkpad-X6x-X20x-keyboard-USB-Adapter) documenta la matrice reale di una tastiera X6x/X20x giapponese. Convertita con il suo `pinout.txt` e con `matrix_pins`, dà 49 tasti su 49 uguali al firmware e conferma Yen, Ro, Muhenkan, Henkan, Kana e la cella `KSI6/KSO7`, che lì è `]` e su ISO è `#`. Anche LWin in `KSI2/KSO11` coincide con il suo `table-main.txt`, che ha però L_Shift e R_Shift scambiati rispetto al suo `keymap.c`. La cella ISO `<>` (`KSI5/KSO1`) non esiste su una tastiera JIS: viene solo dalla X220, ma è libera.
+- **Tasti rilevati e scartati:** la scansione legge qualsiasi incrocio KSO/KSI, ma un codice `0x00` si ferma in `0x8E41` (`JZ` a `0x8E51`) e non arriva al KBC. Valeva anche per ThinkVantage (`KSI5/KSO10`) e Back/Forward (`KSI6/KSO11`, `KSI7/KSO11`). Dedotto dal codice: `evtest` non è stato eseguito.
 
 ## 5. Patch della tastiera
 
-**Patch per il firmware installato.** `tools/patch_keyboard.py` parte dal dump `V0.4.0`, ne controlla l'hash e i byte attesi, e genera i tre file `dumps/EC-V0.4.0-*.bin` (§1). **Verificate solo staticamente, mai flashate.** Se i byte `0x4A-0x4B` (§3) fossero un controllo, l'immagine modificata potrebbe non partire: prima serve la recovery (§9).
+**Patch `V0.4.0`.** `tools/patch_keyboard.py` parte dal dump `V0.4.0`, ne controlla l'hash e i byte attesi, ricalcola il CRC (§3) e genera i quattro file `dumps/EC-V0.4.0-*.bin` (§1). Ogni file è verificato per dimensione, vettore di reset, firma e CRC. **Mai flashate:** un'immagine modificata non è ancora stata provata sull'hardware.
 
 | Byte | Da → a | Effetto |
 |---|---|---|
@@ -132,14 +136,23 @@ Sezioni del datasheet usate: `refs/DATASHEETS.md`.
 | `0x2F2F` (`KSI7/KSO6`) | `00 → 13` | JIS Katakana/Hiragana |
 | `0x2EC8` (`KSI0/KSO15`) | `8C → 8E` | Il tasto LCtrl fa da Fn |
 | `0xC461`, `0xC468` | `8E → 8C` | Il tasto Fn fa da LCtrl |
+| `0x2F24` (`KSI6/KSO11`) | `00 → 87` | Back, solo in `all-keys` |
+| `0x2F34` (`KSI7/KSO11`) | `00 → 8F` | Forward, solo in `all-keys` |
+| `0x306E` | `5E → 38` | Codice `0x87`: da `E0 5E` a `E0 38`, Linux `KEY_BACK` |
+| `0x307E-0x307F` | `20 05 → 30 01` | Codice `0x8F`: da modificatore inutilizzato a `E0 30`, Linux `KEY_FORWARD` |
+| `0x2F13` (`KSI5/KSO10`) | `00 → 08` | ThinkVantage come F13 set 2, Linux `KEY_F13` |
+| `0x4A-0x4B` | `AF 5B → 3A 84` | CRC di `all-keys`. Negli altri file vale `F1 49` (ISO/JIS + scambio), `44 C4` (ISO/JIS), `1A D6` (scambio) |
 
-Le celle ISO/JIS erano vuote: se su una tastiera non c'è il tasto, non cambia nulla. Le posizioni vengono dalla X220 e vanno confermate sulla tastiera reale. RCtrl non cambia.
+I codici interni `0x87` e `0x8F` non sono usati da matrice, overlay o codice. Mappatura Linux verificata su `drivers/input/keyboard/atkbd.c`. Non è provata sulla scheda.
 
-**Patch `EC0416` (basate sulla `V0.3.2`):** flasharle riporterebbe indietro il firmware installato (§9).
+Le celle ISO/JIS erano vuote: se su una tastiera non c'è il tasto, non cambia nulla. Le posizioni sono confermate su una matrice X20x JIS, tranne `<>`, che viene dalla X220 (§4). RCtrl non cambia.
 
-**Regole:** dimensione fissa 128 KiB (pad `0xFF`), 16B-signature intatta, tabelle non spostate (indirizzi assoluti), nessun checksum noto da aggiornare (ma vedi il punto aperto in §3). Una patch non deve toccare il gestore `0xDC` né il ciclo di flash, da cui dipende `ifu`. Prima di flashare leggere §9.
+**Patch `EC0416` (basate sulla `V0.3.2`):** restano solo come storia, non vanno flashate (vedi sotto).
+
+**Regole:** dimensione fissa 128 KiB (pad `0xFF`), 16B-signature intatta tranne il CRC `0x4A-0x4B`, che sta al suo interno e va ricalcolato (§3), tabelle non spostate (indirizzi assoluti). Una patch non deve toccare il gestore `0xDC` né il ciclo di flash, da cui dipende `ifu`. Prima di flashare leggere §9.
 
 - **Tasti visibili all'host:** tabella `0x0D03`. Demo `dumps/EC0416_ctrl-caps-swap.BIN`: swap L-Ctrl `0x14`↔Caps `0x58`, byte `0x0D17`↔`0x0D5B`.
+- **Le patch `EC0416_*.BIN` hanno il CRC vecchio:** non flasharle.
 - **`dumps/EC0416_fn-ctrl-swap.BIN` è errata, non usarla.** Cambia il caso `0x84` in `0x0C09` (`0x54→0x1D`), che è il byte set 2 di Alt+SysRq. Fn è fuori matrice (§4), quindi la patch non lo tocca: trasforma Alt+SysRq in LCtrl. La verifica qui sotto conferma solo quel byte, non il suo significato.
 - **Fn e BIOS:** non c'è logica di swap né flag BIOS (BRAM `0x2200h` non usata come setting).
 
@@ -215,7 +228,7 @@ Ogni dump va controllato così, qualunque sia lo strumento:
 1. Dimensione 131072 byte.
 2. 16B-signature a `0x40` (§3).
 3. Due letture identiche.
-4. Confronto con `EC0416.BIN` o con la build vecchia (§1), se il firmware installato è lo stesso.
+4. Confronto con il file flashato per ultimo (§1): oggi `EC0416.BIN`, dopo il prossimo flash `EC-V0.4.0-all-keys.bin`.
 
 ## 7. Guida RP2040: ISP dal connettore tastiera
 
@@ -410,7 +423,7 @@ Attenzione ai nomi: entrambe le build si dichiarano `V0.3.2`, pur differendo per
 
 ### Confronto tra V0.4.0 e EC0416
 
-Gli indirizzi di questa sezione e dei paragrafi precedenti si riferiscono a `EC0416`, salvo dove indicato. Il flash viene eseguito dal firmware **in esecuzione**, quindi per `ifu` conta la `V0.4.0`. `EC0416` entra in gioco solo dopo il reset. `EC0416` è più vecchia di tre mesi: flasharla è un **downgrade**, non un aggiornamento.
+Gli indirizzi di questa sezione e dei paragrafi precedenti si riferiscono a `EC0416`, salvo dove indicato. Il flash viene eseguito dal firmware **in esecuzione**: quello di `EC0416` è stato fatto dalla `V0.4.0`, il prossimo lo farà `EC0416`. Il ciclo di flash è identico nelle due build (tabella sotto). `EC0416` è più vecchia di tre mesi: flasharla è un **downgrade**, non un aggiornamento.
 
 | Punto | Esito del confronto statico |
 |---|---|
@@ -430,16 +443,34 @@ Gli indirizzi di questa sezione e dei paragrafi precedenti si riferiscono a `EC0
 - Logica cambiata in più punti dei banchi 1 e 2, per esempio contatori `0x001D/0x001E` rimossi, condizione su `0x00B0` sostituita da `0xCE90`, costanti `0x32→0x26` (`0xDD83`) e `0x03→0x04` (`0xED71`).
 - **Il significato di queste modifiche non è stato decodificato:** non si sa cosa corregga la `V0.4.0`, né se il downgrade tocca ricarica, USB-C PD, ventola o accensione.
 
-**Conclusione.** Il confronto non mostra incompatibilità di pin o interfaccia e il percorso di `ifu` non cambia, ma non rende sicuro il flash. Restano valide tutte le debolezze sopra, la scrittura non è mai stata provata su questa scheda e la recovery ISP nemmeno. La lettura `/S` conferma solo ingresso `0xDC`, lettura e uscita `0xFC`.
+**Conclusione.** Il confronto non mostra incompatibilità di pin o interfaccia e il percorso di `ifu` non cambia. Restano valide tutte le debolezze sopra e la recovery non è provata.
+
+**Flash reale, 2026-11-05.** `ifu.efi EC0416.BIN 128` da UEFI Shell, sopra la `V0.4.0`: riferito riuscito, macchina funzionante. Con `EC0416` `ù` continua a non funzionare, come atteso: la matrice è la stessa (§4). L'hash del dump successivo al flash non è stato registrato e `evtest` non è stato fatto.
+
+**Prossimo flash: `all-keys`.** Non ancora eseguito. Il file riporta la scheda alla `V0.4.0` con le patch di §5, quindi toglie anche il downgrade.
+
+```fish
+sudo cp dumps/EC-V0.4.0-all-keys.bin /boot/efi/EFI/tools/X210KEY.BIN
+sudo sha256sum /boot/efi/EFI/tools/X210KEY.BIN /boot/efi/EFI/tools/V040.BIN
+sync
+```
+
+Gli hash devono iniziare con `fad3db0e3bfb` e `9b8334bd5d59`. Da UEFI Shell, sul volume della ESP e nella cartella `EFI\tools`, con il controllo della porta al punto 4 qui sotto:
+
+```
+ifu.efi X210KEY.BIN 128
+```
+
+Verifica con `ifu.efi /S 128 /k /j`, seguito da `reset -s`: il dump deve avere lo stesso hash del file flashato. Se l'EC parte ma qualcosa non va, si torna all'originale con `ifu.efi V040.BIN 128`. Se non parte, `ifu` non serve e la recovery non è pronta (§11).
 
 ### Come ridurre il rischio
 
 1. **Prima la recovery:** prova la via ISP in sola lettura (§7). Senza, un brick significa rework.
 2. Salva il firmware attuale con `ifu.efi /S 128 /k /j` (§6) e verifica il dump. Poi spegni: il flash va fatto da un avvio pulito.
 3. Controlla lo sha256 del file sulla chiavetta (§1) e usa sempre il parametro `128`.
-4. Dalla UEFI Shell, subito prima del flash, leggi lo stato con `mm 66 -w 1 -IO -n` (sintassi presa dall'help della shell, non ancora eseguita sulla scheda). Il bit 0 è il byte residuo, il bit 1 è un comando non ancora letto: si procede solo se l'ultima cifra è `0`, `4`, `8` o `C`. Se è dispari, leggi una volta `0x62` con `mm 62 -w 1 -IO -n` e ricontrolla. Non aggiungere mai un valore dopo l'indirizzo: `mm` scriverebbe sulla porta.
+4. Dalla UEFI Shell, subito prima del flash, leggi lo stato con `mm 66 -w 1 -IO -n` (eseguita sulla scheda: `0x00`). Il bit 0 è il byte residuo, il bit 1 è un comando non ancora letto: si procede solo se l'ultima cifra è `0`, `4`, `8` o `C`. Se è dispari, leggi una volta `0x62` con `mm 62 -w 1 -IO -n` e ricontrolla. Non aggiungere mai un valore dopo l'indirizzo: `mm` scriverebbe sulla porta.
 5. Usa l'alimentatore DC sul connettore dedicato e la batteria carica. Evita la sola USB-C.
-6. Avvia la UEFI Shell direttamente da USB e non fare altro sulla macchina.
+6. Avvia la UEFI Shell direttamente da USB o dalla ESP e non fare altro sulla macchina.
 7. Fotografa lo schermo. `EC ACK Fail` o `Verify Fail` indicano un flash non riuscito, anche se il tool termina normalmente.
 8. Non spegnere finché c'è avanzamento. Il riavvio finale è brusco ed è normale.
 
@@ -469,7 +500,7 @@ Il pacchetto del produttore **non contiene istruzioni di recovery**. Queste sono
 
 | Cosa si è rotto | Via | Stato |
 |---|---|---|
-| **EC** (eFlash nel chip) | ISP dal connettore tastiera (§7) + `dumps/EC-V0.4.0-20250723-lettura1.bin` | Metodo da datasheet, collegamenti da ricavare |
+| **EC** (eFlash nel chip) | `ifu` se l'EC parte, altrimenti ISP dal connettore tastiera (§7), con `dumps/EC-V0.4.0-20250723-lettura1.bin` | Metodo da datasheet, collegamenti da ricavare |
 | **BIOS** (chip SPI esterno) | Programmatore sul chip (§8) | Serve un dump verificato: quelli in `Bios dumps/` non sono ancora stati analizzati |
 | **EC tramite `EC_SPI1`** | Porta FSPI (§13) | Non è un piano di recovery finché non si chiarisce il test mode |
 
@@ -668,4 +699,4 @@ La prima scrittura arriva solo dopo la verifica del dump (§6). Riporta poi il p
 ## 15. Strumenti e convenzioni
 
 - `python3 tools/i8051.py <bin> 0 <start_hex> <end_hex>`: disassembler 8051 minimale, senza dipendenze. `tools/output/strings.txt` e `tools/output/key-regions.asm` sono artefatti generati.
-- Commit raggruppati per sessione. La cartella locale non è un repo git e `inputs/` non viene pubblicata. Hash e sezioni del datasheet in `refs/DATASHEETS.md`.
+- Commit raggruppati per sessione. La cartella locale è la repo git privata `marcocancarini/x210ai-ec` e `inputs/` non viene pubblicata. Hash e sezioni del datasheet in `refs/DATASHEETS.md`.
