@@ -18,6 +18,7 @@
 - §7.4 Keyboard Matrix Scan: base **`0x1D00h`** (KSOL/KSOH1/KSOCTRL/KSOH2/KSIR/KSICTRLR/KSIG*/KSOxLSDR), matrice 18×8
 - §7.5 GPIO base `0x1600h`; PMC base `0x1500h`
 - §7.24.3.1 **ISP via parallel port su connettore KBS** (DB25: KSO0-7=PD0-7, KSO8=ACK#, KSO9=BUSY, KSO10=PE, KSO12=SLCT, KSI0=STB#)
+- Table 5-19 piedini Parallel Port: PD[7:0] 36-43, ACK# 44, BUSY 45, PE 46, ERR# 51, SLCT 52, STB# 58, AFD# 59, INIT# 60, SLIN# 61; KSI4/KSI5 62/63
 - eSPI MAFS/SAFS: flash condivisa host↔EC, code-fetch switch via FLHCTRL5R
 - §7.23 **DBGR**: ISP e debug via DBGR/EPP o DBGR/SMB; §7.23.3.2 DBGR/SMB attivabile a caldo, uscita solo con reset
 - §7.4.4.6 **KSICTRLR** `0x1D05`: bit 4 OVRPPK disabilita DBGR/EPP; §7.7.4.26 **SLVISELR** `0x1C34`: bit 4 OVRSMDBG disabilita DBGR/SMB

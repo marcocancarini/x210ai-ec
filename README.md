@@ -6,26 +6,54 @@ core **8051**, package **LQFP-128** con piedini (14×14 mm, passo 0,4 mm), quind
 Questa guida è l'unico documento del progetto: contiene analisi, patch, dump/flash e
 recovery. I materiali originali stanno in `inputs/` (`bios/`, `ec/`, `datasheets/`), i tool in `tools/`, i dump in `dumps/`.
 
+## Stato del progetto
+
+- **Firmware EC:** analizzato, patch verificate staticamente (§1-§7, §12).
+- **Immagine BIOS:** **assente**, quindi il BIOS non è stato analizzato (§1, §18).
+- **Brick segnalati:** meccanismo più probabile individuato nel codice di `ifu`, non riprodotto (§18).
+- **Recovery:** procedure descritte ma **mai provate su questa scheda** (§13, §19).
+- **Porta EC_SPI1:** pinout sconosciuto (§16, §17).
+
+Nessun tool è stato eseguito su una X210AI: `ifu.efi`, `Fpt.efi` e i dump sono stati solo disassemblati.
+
 ## Indice
 
-1. [File e hash](#1-file-e-hash)
-2. [Architettura e mappa memoria](#2-architettura-e-mappa-memoria)
-3. [Firme e checksum (16B-signature)](#3-firme-e-checksum)
-4. [Tastiera PS/2: scansione e conversione scancode](#4-tastiera-ps2)
-5. [ISO / JIS: supporto nelle due versioni](#5-iso--jis)
-6. [Patch: rimappatura tasti e swap Fn↔Ctrl](#6-patch-rimappatura-tasti-e-swap-fnctrl)
-7. [Verifica delle patch (dimensione/logica)](#7-verifica-delle-patch)
-8. [Dump e flash via software interno](#8-dump-e-flash-via-software-interno)
-9. [Dump/flash hardware: XGecu T48 e CH341A (± mod 3.3V)](#9-dumpflash-hardware-t48-e-ch341a)
-10. [Scrivere il chip EC "direttamente"?](#10-scrivere-il-chip-ec-direttamente)
-11. [Database T48: ITE non supportato](#11-database-t48-ite-non-supportato)
-12. [Livello Fn / ThinkLight (Fn+PgUp)](#12-livello-fn--thinklight)
-13. [Se il flash dell'EC fallisce (brick) e recovery](#13-brick-e-recovery)
-14. [Comprare il chip IT5571 da terze parti](#14-chip-di-ricambio)
-15. [Strumenti e convenzioni](#15-strumenti-e-convenzioni)
-16. [Porta di debug EC_SPI1](#16-porta-di-debug-ec_spi1)
-17. [Guida: riconoscere il pinout di EC_SPI1](#17-guida-riconoscere-il-pinout-di-ec_spi1)
-18. [Flasher: rischi di ifu.efi](#18-flasher-rischi-di-ifuefi)
+**Materiali e firmware**
+
+- §1 [File e hash](#1-file-e-hash)
+- §2 [Architettura e mappa memoria](#2-architettura-e-mappa-memoria)
+- §3 [Firme e checksum (16B-signature)](#3-firme-e-checksum)
+- §4 [Tastiera PS/2: scansione e conversione scancode](#4-tastiera-ps2)
+- §5 [ISO / JIS: supporto nelle due versioni](#5-iso--jis)
+- §12 [Livello Fn / ThinkLight (Fn+PgUp)](#12-livello-fn--thinklight-fnpgup)
+
+**Patch**
+
+- §6 [Patch: rimappatura tasti e swap Fn↔Ctrl](#6-patch-rimappatura-tasti-e-swap-fnctrl)
+- §7 [Verifica delle patch (dimensione/logica)](#7-verifica-delle-patch)
+
+**Flash e rischi**
+
+- §8 [Dump e flash via software interno](#8-dump-e-flash-via-software-interno)
+- §18 [Flasher: rischi di ifu.efi](#18-flasher-rischi-di-ifuefi)
+
+**Recovery e accesso hardware**
+
+- §13 [Se il flash dell'EC fallisce (brick) e recovery](#13-brick-e-recovery)
+- §19 [Guida RP2040: ISP dal connettore tastiera](#19-guida-rp2040-isp-dal-connettore-tastiera)
+- §9 [Dump/flash hardware: XGecu T48 e CH341A (± mod 3.3V)](#9-dumpflash-hardware-t48-e-ch341a)
+- §10 [Scrivere il chip EC "direttamente"?](#10-scrivere-il-chip-ec-direttamente)
+- §11 [Database T48: ITE non supportato](#11-database-t48-ite-non-supportato)
+- §14 [Comprare il chip IT5571 da terze parti](#14-chip-di-ricambio)
+
+**Porta di debug**
+
+- §16 [Porta di debug EC_SPI1](#16-porta-di-debug-ec_spi1)
+- §17 [Guida: riconoscere il pinout di EC_SPI1](#17-guida-riconoscere-il-pinout-di-ec_spi1)
+
+**Varie**
+
+- §15 [Strumenti e convenzioni](#15-strumenti-e-convenzioni)
 
 ---
 
@@ -40,6 +68,7 @@ recovery. I materiali originali stanno in `inputs/` (`bios/`, `ec/`, `datasheets
 | `inputs/datasheets/IT5571E-128.pdf` | `a4e4afae8a157b7424401cf65c9dbecddce937b8b88a3dc1474124439bfc5753` | datasheet sintetico 29 pag |
 | `inputs/datasheets/IT5570_A_V0.3.1_U.pdf` | `01666ebe44ece4a436b5ffaad40c9570c17f0b3480862caf224953585c59102f` | IT5570 V0.3.1 (parente stretto di IT5571, chip ID 0x5571≈IT8571) |
 | `inputs/bios/X210AI0724BIOS.rar` | `a1090b7986e6e3cb2485333f73fd5f8d62822f64bedfe7cad5733e88ddd94663` | Pacchetto strumenti, estratto in `inputs/bios/extracted/`: Fpt.efi, fparts.txt, fb.nsh, UEFI Shell (`uefi-shell/`), tutorial. **Nessuna immagine BIOS** |
+| `inputs/ec/X210AI-EC-updated-on-03-22.zip` | `b850c8941df6eecbea035aefe481eb1c50fe8d5da4ea9b333717fc7a7230bc4e` | Archivio originale di `MTLH-NB06-ec-250322/`, contenuto identico |
 
 **Immagine BIOS assente.** Il pacchetto contiene solo gli strumenti: `fb.nsh` chiama `MTLH-NB06_B0.2.bin`, che non è incluso (verificato: nessun volume firmware in alcun file del progetto). Dettagli in §18.
 
@@ -109,7 +138,7 @@ Emulazione routine `0x0C09`: `0x84` → `0x1D`/`0x9D` make/break = stesso output
 
 ## 9. Dump/flash hardware: T48 e CH341A
 
-- Flash clippabile = solo il chip SPI BIOS (SOIC-8; chip da `inputs/bios/extracted/fparts.txt`: W25Q128, MX25L12873, N25Q128… 3.3V). Leggere il marking sul chip.
+- Flash clippabile = solo il chip SPI BIOS (SOIC-8; chip da `inputs/bios/extracted/fparts.txt`: W25Q128, MX25L12873, N25Q128… 3.3V). Package e tensione sono dedotti da quella lista, non dalla scheda: leggere il marking e controllare il datasheet del chip. Con una flash da 1,8 V serve un adattatore di livello.
 - **XGecu T48**: tensione 3.3V via software (no mod); comandi flashrom `-p xgecu-t48-spi` (se supportato) o app XGecu/MiniPro con VCC=3.3V.
 - **CH341A senza mod 3.3V**: linee a 5V → **pericoloso** su flash 3.3V; usare solo con chip 5V-tolerant o adattatore di livello. Comandi: `flashrom -p ch341a_spi -r/-w/-v`.
 - **CH341A con mod 3.3V**: tagliare pista/dissaldare regolatore 5V (78L05), alimentare VCC con 3.3V → poi è sicuro. Stessi comandi.
@@ -133,6 +162,16 @@ Lista ufficiale `T48_List.txt` V13.16 (37103 IC, mirror github.com/Kreeblah/XGec
 ## 13. Brick e recovery
 
 - Rischi noti del flasher in §18.
+- Il pacchetto del produttore **non contiene istruzioni di recovery**: quelle qui sotto sono note di progetto, mai provate su questa scheda.
+
+| Cosa si è rotto | Via | Stato |
+|---|---|---|
+| BIOS (chip SPI esterno) | Programmatore sul chip (§9) | Serve un'immagine: oggi non ne abbiamo una. Il dump va fatto **prima** di flashare |
+| EC (eFlash nel chip) | ISP dal connettore tastiera (§8, §19) | Metodo da datasheet, dump `EC0416.BIN` disponibile. Collegamenti da ricavare |
+| EC tramite `EC_SPI1` | Porta di debug (§16) | Non è una via di recovery finché il pinout è sconosciuto |
+
+`ifu` richiede il firmware EC in esecuzione: su una macchina con EC brickata non funziona.
+
 - Flash EC corrotto → boot ROM (ROM mascherata, intatta) non trova la 16B-signature → EC in modo ISP. Sintomi: no power-on / no tastiera / no ricarica / ventola al max.
 - **Recovery**: ISP via KBS + dump originale (`EC0416.BIN`) → riparte. Funziona anche con flash illeggibile, se il chip è vivo e VSTBY presente. Sempre verifica post-write. La porta EC_SPI1 è una possibile via in più solo se il pinout confermerà i segnali DBGR/SMB (§16): oggi non va considerata un piano di recovery.
 - Chip morto elettricamente (5V, ESD…) → sostituire chip (rework LQFP ad aria calda o drag soldering, senza reballing) o scheda.
@@ -190,7 +229,7 @@ Procedura completa in §17. Non esiste un pinout standard: lo decide il progetti
 
 ### Strumenti da valutare
 
-Nessuno è dichiarato compatibile con IT5571: partire sempre dalla sola lettura. La scelta dipende dalla via: **RP2040 per EPP** sul connettore tastiera (15 linee con handshake, c'è già un progetto), **FT232H per DBGR/SMB** e per l'ascolto SPI, se i segnali si raggiungono da EC_SPI1 o dai piedini dell'EC.
+Nessuno è dichiarato compatibile con IT5571: partire sempre dalla sola lettura. La scelta dipende dalla via: **RP2040 per EPP** sul connettore tastiera (15 linee con handshake, c'è già un progetto; collegamenti in §19), **FT232H per DBGR/SMB** e per l'ascolto SPI, se i segnali si raggiungono da EC_SPI1 o dai piedini dell'EC.
 
 | Via | Strumento | Stato |
 |---|---|---|
@@ -305,7 +344,7 @@ In ogni caso la prima scrittura arriva solo dopo due dump identici che corrispon
 
 ## 18. Flasher: rischi di ifu.efi
 
-**Stato:** ci sono segnalazioni di brick occasionali, non riprodotte qui. L'analisi statica non individua la causa di un caso specifico, ma mostra che `ifu` non ha margine d'errore: qualsiasi problema a metà scrittura lascia l'EC senza firmware avviabile. Nulla è stato eseguito: `ifu.efi`, `Fpt.efi` e i dump sono stati solo disassemblati.
+**Stato:** ci sono segnalazioni di brick occasionali, non riprodotte qui. L'analisi statica non prova la causa di un caso specifico, ma indica un meccanismo probabile (vedi sotto) e mostra che `ifu` non ha margine d'errore: qualsiasi problema a metà scrittura lascia l'EC senza firmware avviabile. Nulla è stato eseguito: `ifu.efi`, `Fpt.efi` e i dump sono stati solo disassemblati.
 
 ### Cosa fa ogni file
 
@@ -350,10 +389,33 @@ Finché il ciclo gira, l'EC fa solo questo. Ricarica, ventola e tastiera restano
 
 Attenzione invece ai nomi: entrambe le build si dichiarano `V0.3.2`, pur differendo per 46.608 byte. Solo la vecchia contiene `MTLH-NB06`. Per distinguerle usare data o sha256.
 
+### Meccanismo di brick più probabile
+
+Ipotesi principale, ricavata dal codice e non riprodotta: **un byte rimasto nel buffer della porta `0x62`**. La catena è deterministica una volta che il byte è presente, e spiegherebbe perché il problema è occasionale.
+
+1. `ifu` svuota il buffer del KBC (`0x2758`), ma non quello del PMC1 prima di `0xDC` (`0x4475-0x449A`).
+2. Dopo l'invio attende `IBF=0`, che si azzera appena il firmware legge il comando. Il `0x33` arriva solo dopo l'ingresso in Scratch ROM (`0x8018`), quindi `ifu` legge prima il byte vecchio.
+3. Stampa `EC ACK Fail.` e prosegue (`0x44A9`). Il `0x33` resta nel buffer: da qui ogni lettura restituisce il byte precedente.
+4. L'ID flash risulta sbagliato, ma nessun controllo ferma il tool. Il vendor `0xFF` della eFlash è ciò che seleziona la cancellazione a settori da 1 KiB (`0xD7`, `0x3173`). Con un altro vendor il tool usa la cancellazione `0x20` da 4 KiB e la scrittura a pagine (`0x3B00`).
+5. La cancellazione del primo blocco avviene comunque (`0x46E0`).
+6. La verifica `0x34D4` si ferma al primo byte diverso da `0xFF` (`0x35AD`). Il primo byte letto è quello in ritardo, quindi fallisce subito.
+7. `ifu` invia `0xFE` (`0x479C-0x47D3`): l'EC si riavvia con il settore di avvio cancellato. **Brick.**
+
+**Firma da cercare:** `EC ACK Fail.`, poi ` -- Verify Fail. counterN=0` subito dopo la prima cancellazione. Il tool termina in pochi secondi invece di scrivere tutto.
+
+La causa del byte residuo non è determinabile senza il BIOS: serve un accesso precedente alla porta EC la cui risposta non è stata letta.
+
+Lo stesso codice esclude altre spiegazioni:
+
+- **Watchdog EC:** il watchdog CPU e quello esterno sono attivati solo per il reset volontario (`0xD832`, `0x8100`). Il firmware non li avvia durante il funzionamento normale, quindi non scattano a metà flash.
+- **Selezione della eFlash:** `XRAM[0x9F]=0x4F` viene impostata all'avvio (`0x24B0` → `0x8C74`). `ifu` invia `0xDD/0xDE` solo per gli ID `0x8631`, `0x8632`, `0x8638`.
+
+Resta aperto un secondo rischio: nel percorso di flash (`0x2700-0x5200`) non ci sono `cli` né `RaiseTPL`. Eventuali timer del BIOS possono inserirsi tra i comandi. Dopo i comandi `0x02/0x03` il byte seguente sulla `0x66` diventa dato SPI, quindi un comando estraneo verrebbe inviato alla flash.
+
 ### Possibili cause dei brick (ipotesi)
 
 - Firmware BIOS/SMM che accede alle porte EC durante il flash. Non verificabile senza il BIOS della X210AI.
-- Un byte vecchio nel buffer d'uscita, che sposta le letture successive.
+- Un byte vecchio nel buffer d'uscita: vedi il meccanismo descritto sopra.
 - Alimentazione: l'EC è fermo mentre gestisce ricarica e USB-C PD, quindi un'alimentazione solo via USB-C è il caso più sospetto.
 - Blocco dell'EC, seguito da spegnimento forzato.
 - Errore isolato di cancellazione o programmazione, che il tool trasforma in reset su flash danneggiata.
@@ -362,6 +424,7 @@ Attenzione invece ai nomi: entrambe le build si dichiarano `V0.3.2`, pur differe
 
 1. **Prima di tutto la recovery:** prova la via ISP KBS (§8, §16) in sola lettura, con dump verificato. Senza questa, un brick significa rework.
 2. Controlla lo sha256 del file sulla chiavetta (§1) e usa sempre il parametro `128`.
+   Prima di lanciare `ifu`, leggi la porta `0x66` dalla UEFI Shell: se il bit 0 è a 1, leggi una volta `0x62` per svuotare il buffer. Sintassi attesa, non provata su questa shell: `mm 66 -IO -w 1 -n`.
 3. Alimentatore DC sul connettore dedicato e batteria carica. Evita la sola USB-C.
 4. Avvia la UEFI Shell direttamente da USB e non fare altro sulla macchina.
 5. Fotografa lo schermo. `EC ACK Fail` o `Verify Fail` vanno trattati come flash non riuscito, anche se il tool termina normalmente.
@@ -383,3 +446,68 @@ Attenzione invece ai nomi: entrambe le build si dichiarano `V0.3.2`, pur differe
 - **Requisito:** la UEFI Shell del pacchetto non è firmata, quindi va probabilmente disattivato il Secure Boot.
 
 Senza l'immagine non si possono verificare descriptor, regioni, ME, protezioni né come il BIOS usa l'EC.
+
+## 19. Guida RP2040: ISP dal connettore tastiera
+
+**Stato: non provata sull'IT5571.** Il progetto [ITE-EC-Pico-USB-Parallel-ISP](https://github.com/bernTP/ITE-EC-Pico-USB-Parallel-ISP) è testato solo su IT5261 (ThinkPad T14s). I segnali coincidono con il datasheet IT5570 (§7.24.3.1, Table 5-19, Table 5-21), ma la numerazione del connettore tastiera della T14s non vale qui. I collegamenti vanno ricavati sulla scheda.
+
+### Collegamenti
+
+Una resistenza da **1 kΩ in serie su ogni linea** (470 Ω-1 kΩ), 15 in totale.
+
+| Pico GPIO | Pin Pico | Segnale EC | Pin EC (LQFP-128) | Funzione |
+|---|---|---|---|---|
+| GP0-GP3 | 1, 2, 4, 5 | KSO0-KSO3 | 36-39 | PD0-PD3 |
+| GP4-GP7 | 6, 7, 9, 10 | KSO4-KSO7 | 40-43 | PD4-PD7 |
+| GP8 | 11 | KSI0 | 58 | STB# |
+| GP9 | 12 | KSI1 | 59 | AFD# |
+| GP10 | 14 | KSI2 | 60 | INIT# |
+| GP11 | 15 | KSI3 | 61 | SLIN# |
+| GP12 | 16 | KSI4 | 62 | Strap, tenuto basso |
+| GP13 | 17 | KSI5 | 63 | Strap, tenuto basso |
+| GP14 | 19 | KSO9 | 45 | BUSY |
+| GND | 3, 8, 13, 18 | Massa della scheda | Non dal connettore | Vite o schermo USB |
+
+La mappa dei GPIO sta in `firmware/hwconfig.h` del progetto: PD0-PD7 devono restare su 8 GPIO consecutivi.
+
+**Mai collegare `3V3` o `VBUS` del Pico alla scheda:** in comune c'è solo la massa.
+
+### Trovare i contatti
+
+1. Scheda spenta, senza batteria e senza tastiera.
+2. Multimetro in continuità: un puntale sul piedino dell'EC, l'altro sui contatti del connettore tastiera.
+3. Annotare il contatto di ognuno dei 15 segnali. L'orientamento può risultare specchiato.
+4. Con la scheda alimentata, misurare un KSI a riposo: circa 3,3 V. **Con 5 V fermarsi.**
+
+Saldare su una breakout del connettore, non sui piedini dell'EC (passo 0,4 mm).
+
+### Sola lettura
+
+1. Con BOOTSEL premuto, copiare `firmware/prebuilt/ite_pp_isp_pico.uf2` sul Pico.
+2. Sul PC Linux eseguire `host/setup_venv.sh` e installare le regole udev.
+3. Togliere la batteria e lasciare scollegato l'alimentatore. Non premere il tasto di accensione.
+4. Eseguire i comandi, con `isp` come abbreviazione di `host/.venv/bin/python host/ite_pp_isp.py`:
+
+```
+isp hello
+isp lines                 # prima senza alimentatore, poi con
+isp enter --mode powerup  # collegare l'alimentatore quando lo chiede
+isp id
+isp read -o x210ai-ec.bin -s 128 --no-exit
+isp safe
+```
+
+Leggere due volte, confrontare i dump e controllare la 16B-signature a `0x40` (§3). Tra un tentativo e l'altro spegnere e scaricare l'EC: il tool ammette un solo arresto della CPU per ciclo di alimentazione.
+
+### Differenze attese rispetto all'IT5261
+
+- **Chip ID:** il tool non lo blocca, ma il messaggio cita `52 61 02` come riferimento. Qui il valore sarà diverso.
+- **Flash ID:** se non riconosciuto, per leggere si può aggiungere `--ignore-flash-id`.
+- **Scrittura:** accettata solo con eFlash ID `ff ff fe`. Non è verificato che l'IT5571 lo restituisca.
+- **Area dati:** per 128 KiB potrebbe mancare la voce nel tool. In quel caso `write` riscriverebbe tutta la flash senza proteggere quell'area.
+
+**Non usare `write`** finché dump, ID e area dati non sono stati verificati su questo chip.
+
+### Con il chip BIOS
+
+In generale un RP2040 può leggere una flash SPI con `pico-serprog` e `flashrom`. Non è provato su questa scheda e lavora a 3,3 V: vedi §9 per la tensione del chip.
