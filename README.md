@@ -24,6 +24,7 @@ recovery. I materiali originali stanno in `inputs/`, i tool in `tools/`, i dump 
 14. [Comprare il chip IT5571 da terze parti](#14-chip-di-ricambio)
 15. [Strumenti e convenzioni](#15-strumenti-e-convenzioni)
 16. [Porta di debug EC_SPI1](#16-porta-di-debug-ec_spi1)
+17. [Guida: riconoscere il pinout di EC_SPI1](#17-guida-riconoscere-il-pinout-di-ec_spi1)
 
 ---
 
@@ -175,11 +176,7 @@ Il datasheet prevede ISP solo tramite DBGR, su **EPP (pin KBS)** o **SMBus** (§
 
 ### Come identificare il pinout
 
-1. **Senza alimentazione** (batteria staccata, alimentatore scollegato): controllare che il connettore ci sia, contare i contatti, annotare il passo.
-2. **Continuità** tra ogni contatto e i piedini della tabella, più VSS (1, 27, 49, 91, 104) e VSTBY (121, 114, 92). È il controllo decisivo e il package LQFP lo rende fattibile.
-3. Solo dopo, a **scheda in standby: misurare le tensioni** contatto per contatto. VFSPI può essere 1,8 V o 3,3 V.
-4. **Ascolto passivo** con analizzatore logico durante l'accensione, prima di pilotare qualsiasi linea.
-5. Primo accesso **solo in lettura**: due dump identici che corrispondano a `EC0416.BIN` (sha256 §1), altrimenti nessuna scrittura.
+Procedura completa in §17. Non esiste un pinout standard: lo decide il progettista della scheda.
 
 **Rischi**
 
@@ -200,3 +197,106 @@ Nessuno è dichiarato compatibile con IT5571: partire sempre dalla sola lettura.
 | DBGR/SMB | [`iteflash`, Chromium EC](https://chromium.googlesource.com/chromiumos/platform/ec/+/6555d8eefedd62af8f0b0e890cb3e696690a76cc/docs/ite-ec-reflashing.md) | Scritto per IT83xx; ingresso con forme d'onda speciali su clock e dati |
 
 Le procedure di alimentazione differiscono (il progetto Pico tiene l'alimentatore collegato senza batteria, la guida System76 vuole la macchina senza alimentazione): seguire quella dello strumento scelto, confrontandola con il requisito VSTBY del datasheet.
+
+## 17. Guida: riconoscere il pinout di EC_SPI1
+
+Obiettivo: sapere cosa porta ogni contatto prima di collegarci qualcosa. Le fasi 1-3 si fanno **senza alimentazione**; la 4 non pilota nessuna linea.
+
+**Servono:** multimetro con cicalino e prova diodi, puntali ad ago, calibro, lente o fotocamera macro, analizzatore logico compatibile con la tensione misurata, adattatore FPC-to-DIP con cavetto (fase 2).
+
+### Fase 1: passo e numero di contatti
+
+**Stima dalle foto:** **10 contatti, passo 0,5 mm**. È una stima da confermare sul pezzo prima di ordinare.
+
+| Misura | Risultato | Come |
+|---|---|---|
+| Scala | circa 12 px/mm | [foto vista dall'alto](refs/img/ec-spi1-connettore.png): corpo EC da 14 mm = circa 169 px |
+| Larghezza corpo connettore | circa 9,9 mm | stessa foto, 119 px |
+| Contatti | 10 (±1) | [ingrandimento](refs/img/ec-spi1-contatti.png): 10 terminali visibili |
+| Passo | circa 0,53 mm | terminali lunghi il 48% del corpo: 4,8 mm su 9 intervalli |
+
+Passi da 0,3 mm o 1,0 mm non sono compatibili con queste misure. **Un 12 contatti da 0,4 mm non è escluso del tutto**, se la foto nasconde dei terminali.
+
+**Misura sul pezzo:**
+
+1. Conta i terminali saldati, con lente o foto macro. Non contare a occhio nudo.
+2. Con il calibro misura dal centro del primo terminale al centro dell'ultimo.
+3. **Passo = distanza / (contatti − 1).** Con 10 contatti: 4,5 mm = passo 0,5; 3,6 mm = passo 0,4.
+4. Se il calibro non entra, fotografa dall'alto con un righello appoggiato alla stessa altezza, poi rapporta i pixel.
+5. Prova finale: un cavo FFC con il passo trovato è largo circa (contatti + 1) × passo, cioè circa 5,5 mm per 10 contatti da 0,5. Deve entrare nella fessura senza gioco evidente.
+
+Annota anche: posizione del pin 1 sulla serigrafia, tipo di blocco (sportellino basculante o a slitta) e se i contatti interni stanno sopra o sotto. Quest'ultimo dato decide il verso del cavetto e il tipo di FPC.
+
+### Fase 2: accesso ai contatti
+
+- Batteria principale staccata e alimentatore scollegato. Se i piedini dell'EC non si raggiungono dall'apertura del telaio, smonta la scheda.
+- Compra adattatore FPC-to-DIP e cavetto del passo confermato. Non infilare puntali nel connettore.
+- Il cavetto può invertire l'ordine. Prima del resto, verifica con il cicalino che il contatto 1 del connettore corrisponda al pin atteso dell'adattatore e **annota la corrispondenza**.
+
+### Fase 3: mappa con la continuità
+
+Nell'ordine:
+
+1. **Massa:** ogni contatto contro un foro vite dorato.
+2. **Candidati:** ogni contatto contro i piedini della tabella qui sotto.
+3. **Scansione:** per i contatti rimasti, fai scorrere il puntale lungo i quattro lati dell'EC finché suona, poi restringi al singolo piedino.
+4. **Altrove:** se non è sull'EC, prova il chip BIOS SOIC-8 e le piazzole vicine al connettore.
+
+| Gruppo | Segnale | Piedino EC | Note |
+|---|---|---|---|
+| Massa | VSS | 1, 27, 49, 91, 104 | |
+| Alimentazione | VSTBY / VCC / VFSPI | 121, 114, 92 / 11 / 106 | Se c'è, **non alimentarla da fuori** |
+| Reset | WRST# | 14 | |
+| FSPI | FSCK / FSCE# / FMOSI / FMISO | 105 / 101 / 102 / 103 | Strap test mode |
+| SMBus 0 | SMCLK0 / SMDAT0 | 87 / 88 | |
+| SMBus 1 | SMCLK1 / SMDAT1 | 115 / 116 | Attivo nel firmware (funzione alternata) |
+| SMBus 2 | SMCLK2 / SMDAT2 | 117 / 118 | |
+| UART | TXD / RXD | 17 / 16 | |
+| SSPI | SSCK / SMOSI / SMISO / SSCE0# / SSCE1# / SBUSY | 32 / 56 / 57 / 100 / 125 / 122 | SSCE0# (100) coincide con GPG2, strap test mode |
+
+**Come leggere le misure:**
+
+- Sotto circa 1 Ω: collegamento diretto.
+- Decine di ohm: probabile resistenza in serie, conta come collegato anche se il cicalino non suona.
+- Qualche kΩ verso un'alimentazione: probabile pull-up, tipico delle linee SMBus.
+- Niente da nessuna parte: contatto non collegato, oppure componente non montato nelle schede di serie. Cerca piazzole vuote lungo la pista.
+
+**Scheda da compilare** (aggiungi righe se i contatti sono di più):
+
+| Contatto | Pin adattatore | Ω verso massa | Prova diodi | Piedino EC / altro | Tensione standby | Segnale |
+|---|---|---|---|---|---|---|
+| 1 | | | | | | |
+| 2 | | | | | | |
+| 3 | | | | | | |
+| 4 | | | | | | |
+| 5 | | | | | | |
+| 6 | | | | | | |
+| 7 | | | | | | |
+| 8 | | | | | | |
+| 9 | | | | | | |
+| 10 | | | | | | |
+
+### Fase 4: conferma con la scheda in standby
+
+Solo con la scheda da compilare già piena.
+
+1. Collega l'alimentatore, macchina spenta. Tieni il puntale nero fisso sulla massa.
+2. **Misura la tensione** di ogni contatto, senza toccare i vicini. Stabilisce se le linee sono a 1,8 V o 3,3 V.
+3. Imposta la soglia dell'analizzatore su quella tensione e registra durante l'accensione, solo in ascolto.
+4. Decodifica con sigrok/PulseView:
+
+| Cosa si vede | Segnale probabile |
+|---|---|
+| Clock a raffiche, con una linea che scende durante il traffico | SPI |
+| Due linee a riposo alte, con start/stop e indirizzi | SMBus |
+| Una linea a riposo alta, con bit di durata costante | UART |
+| Tutto fermo | Nessuna attività all'accensione: non prova che la porta sia inutile |
+
+### Fase 5: cosa fare col risultato
+
+- **FSPI:** niente programmatore SPI collegato alla cieca. Il datasheet non descrive accesso esterno all'eFlash da questi pin.
+- **SMBus con collegamento all'EC:** via DBGR/SMB da valutare (§16), prima in sola lettura.
+- **UART:** utile come console, non per il flash.
+- **Non collegata all'EC, o connettore assente:** resta la via KBS (§8, §16).
+
+In ogni caso la prima scrittura arriva solo dopo due dump identici che corrispondono a `EC0416.BIN` (sha256 §1). Riporta poi il pinout nella §16.

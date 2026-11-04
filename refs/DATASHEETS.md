@@ -30,3 +30,4 @@
 - `ec-spi1-connettore.png`: connettore EC_SPI1 sopra il chip ITE LQFP
 - `scheda-porte-debug.png`: schema porte del produttore (debug port 10, 12, 20)
 - `ec-spi1-assemblato.png`: connettore su scheda assemblata nel telaio
+- `ec-spi1-contatti.png`: ingrandimento dei terminali usato per stimare numero di contatti e passo
