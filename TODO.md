@@ -1,13 +1,16 @@
 # TODO — X210AI EC (IT5571) — prossimi passi
 
-Stato: analisi statica completa (vedi README.md). Nessun tool eseguito su hardware reale.
+Stato: analisi statica completa (vedi README.md). Eseguito su hardware solo `ifu` in lettura; nessuna scrittura provata.
 Verifiche indipendenti rifatte il 2026-11-04: hash, patch (2 byte @0x0D17/0x0D5B, 1 byte @0x0C35),
 signature @0x40, firma @0x7F80, mappa banchi, tabella set2→set1 @0x0D03 — tutte confermate.
 
 ## Priorità
 
-- [ ] Dump EC software: `ifu.efi /S 128` (opzione nascosta, sola lettura) → confrontare con `dumps/EC0416.BIN` (size 131072, signature @0x40, 2 letture identiche)
-- [ ] Dump BIOS prima di qualsiasi flash: `fpt.efi -d full.bin` o `flashrom -p internal -r full.bin` (oggi nessuna immagine di recovery esiste)
+- [x] Dump EC software: `ifu.efi /S 128 /k /j` (sola lettura, `/S 128` da solo dà 0 byte). Risultato: firmware installato `V0.4.0` 2025-07-23, più recente di `EC0416` (`dumps/EC-V0.4.0-20250723-lettura*.bin`)
+- [ ] Verificare e analizzare `Bios dumps/full.bin` (32 MiB, 2 letture identiche) prima di considerarlo immagine di recovery
+- [ ] Annotare come si comporta la macchina a fine dump con `/j`: ritorno al prompt, tastiera, `reset -s`
+- [ ] Ricreare le patch tastiera sulla `V0.4.0`; non flashare `EC0416` né `EC0416_*.BIN` senza decidere il downgrade (README §9)
+- [ ] Decodificare cosa cambia tra `EC0416` e `V0.4.0` (driver SMBus, logica banchi 1 e 2)
 - [ ] Cicalino 15 segnali KSO/KSI dal connettore tastiera ai pin EC (tabella §7 README; KSO1 foto=contatto 16 vs schema 18 — ricontrollare) → chiude mappa EPP per RP2040
 - [ ] Misurare EC_SPI1 contatti 1, 3, 7, 8, 9, 10 (massa, EC 119 = GPG6, EC 100 = GPG2, SMBus 87/88, 115/116, 117/118); FSPI già mappata sui contatti 2,4,5,6
 - [ ] Identificare pin Fn (HOTKEY contatto 1 → pin EC) e confermare che il caso `0x84` a `0x0C31` sia davvero Fn

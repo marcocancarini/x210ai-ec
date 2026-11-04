@@ -10,23 +10,23 @@ Questa guida è l'unico documento del progetto. I materiali originali stanno in 
 
 | Area | Stato |
 |---|---|
-| Firmware EC | Analizzato, patch verificate staticamente (§2-§5) |
-| Lettura EC | Più vie individuate, nessuna provata su questa scheda (§6, §7) |
+| Firmware EC | `EC0416` analizzato, patch verificate staticamente (§2-§5). **Sulla scheda c'è la `V0.4.0`**, più recente: confrontata con `EC0416` (§9) |
+| Lettura EC | **Riuscita con `ifu.efi /S 128 /k /j`**: due letture identiche (§6). Le altre vie non sono provate (§6, §7) |
 | Scrittura EC | Rischi documentati (§9). Con RP2040 è possibile, ma con punti aperti (§7) |
-| Immagine BIOS | **Assente**: il BIOS non è stato analizzato (§1, §8, §10) |
+| Immagine BIOS | Due letture identiche da 32 MiB in locale, non analizzate e fuori dalla repo (§1, §8, §10) |
 | Brick segnalati | Meccanismo più probabile trovato nel codice di `ifu`, non riprodotto (§9) |
 | Recovery | Descritta, mai provata su questa scheda (§11) |
 | Porta EC_SPI1 | Pinout parziale da foto: 4 contatti su 10 sono FSPI. Accesso all'eFlash non documentato, test mode da chiarire (§13, §14) |
 
-**Nessun tool è stato eseguito su una X210AI.** `ifu.efi`, `Fpt.efi` e i dump sono stati solo disassemblati.
+**Eseguito sulla X210AI:** solo `ifu.efi` in lettura (§6). **Nessuna scrittura è stata provata.** `Fpt.efi` e il percorso di scrittura di `ifu` sono stati solo disassemblati.
 
 **Prossimi passi:**
 
-1. Dump software con `ifu.efi /S 128`, finché l'EC funziona (§6).
-2. Cicalino sui 15 piedini verso il connettore tastiera, iniziando da KSO1 sui contatti 16 e 18 (§7).
-3. Cicalino sui contatti 1, 3, 7, 8, 9 e 10 di `EC_SPI1`: massa, EC 119, EC 100 e piedini SMBus (§13).
-4. Accesso al connettore tastiera: cavo di una tastiera X201 guasta o spina JAE AA01 a 40 posizioni, codice non ancora trovato (§7).
-5. Cablaggio RP2040, poi `isp id` e `isp read` con l'EC sano. Niente scritture prima (§7).
+1. Cicalino sui 15 piedini verso il connettore tastiera, iniziando da KSO1 sui contatti 16 e 18 (§7).
+2. Cicalino sui contatti 1, 3, 7, 8, 9 e 10 di `EC_SPI1`: massa, EC 119, EC 100 e piedini SMBus (§13).
+3. Accesso al connettore tastiera: cavo di una tastiera X201 guasta o spina JAE AA01 a 40 posizioni, codice non ancora trovato (§7).
+4. Cablaggio RP2040, poi `isp id` e `isp read` con l'EC sano: il risultato va confrontato con il dump `V0.4.0`. Niente scritture prima (§7).
+5. Ricreare le patch tastiera sulla `V0.4.0` (§5).
 
 ## Indice
 
@@ -66,7 +66,8 @@ Questa guida è l'unico documento del progetto. I materiali originali stanno in 
 
 | File | SHA256 | Note |
 |---|---|---|
-| `dumps/EC0416.BIN` | `acaf8fed4b797f39d983849b916baaf61352832b337950fa9fb3225994cb6dca` | EC nuova, 131072 B, build `V0.3.2` 2025-04-15 18:20:35, md5 `7392fa5138c906ac17c7049fa69514e7` |
+| `dumps/EC-V0.4.0-20250723-lettura1.bin`, `-lettura2.bin` | `9b8334bd5d5986ce97dfc5d8503fa643a97d8abb6c6166ce181c0525ec722311` | **Firmware installato sulla scheda**, letto il 2026-11-04. 131072 B, build `V0.4.0` 2025-07-23 18:11:04. Due letture identiche |
+| `dumps/EC0416.BIN` | `acaf8fed4b797f39d983849b916baaf61352832b337950fa9fb3225994cb6dca` | EC di aprile, **più vecchia della build installata**. 131072 B, build `V0.3.2` 2025-04-15 18:20:35, md5 `7392fa5138c906ac17c7049fa69514e7` |
 | `dumps/EC0416_ctrl-caps-swap.BIN` | `21f63a733dd5ee8b338ffefcda093ffec8d38c38138bc97c1e82a65a20acd406` | Patch demo L-Ctrl↔CapsLock (2 byte) |
 | `dumps/EC0416_fn-ctrl-swap.BIN` | `970431688f10aa160973d3f276c453e5cc86427a28a01ee34ef43ea17dfabee8` | Patch Fn→LCtrl (1 byte) |
 | `inputs/ec/MTLH-NB06-ec-250322/MTLH-NB06_E03-250322.BIN` | `151edd7a59cad1eb4a3d7b0827ee0937f73f0645a3cbf8d532f5e6bc0de5bbde` | EC vecchia, build 2025-03-22, md5 `4bbc1e54aad8cac51a3e0a5e5274ed28` |
@@ -77,7 +78,7 @@ Questa guida è l'unico documento del progetto. I materiali originali stanno in 
 
 Sezioni del datasheet usate: `refs/DATASHEETS.md`.
 
-**Immagine BIOS assente.** `fb.nsh` chiama `MTLH-NB06_B0.2.bin`, che non è incluso: nessun file del progetto contiene volumi firmware, regione ME o marcatori BIOS.
+**Immagine BIOS.** `fb.nsh` chiama `MTLH-NB06_B0.2.bin`, che non è incluso nel pacchetto. In locale ci sono `Bios dumps/full.bin` e `full2.bin`: 32 MiB, identici (SHA256 `dd6e311622b8c61fe8c51de8fef8f3ff28b625dffc5097836f12f5cd5b884669`), con flash descriptor a `0x10` e volumi `_FVH`. Non sono nella repo e non sono stati analizzati.
 
 | File del pacchetto | Ruolo | Note |
 |---|---|---|
@@ -112,6 +113,8 @@ Sezioni del datasheet usate: `refs/DATASHEETS.md`.
 
 ## 5. Patch della tastiera
 
+**Vale solo per `EC0416`:** i file `EC0416_*.BIN` sono basati sulla `V0.3.2` e flasharli riporterebbe indietro il firmware installato (§9). Sulla `V0.4.0` i byte `0x0C35`, `0x0D17` e `0x0D5B` stanno agli stessi indirizzi, con gli stessi valori e lo stesso contesto, quindi le patch si possono ricreare sul dump. Non è ancora stato fatto.
+
 **Regole:** dimensione fissa 128 KiB (pad `0xFF`), 16B-signature intatta, tabelle non spostate (indirizzi assoluti), nessun checksum noto da aggiornare (ma vedi il punto aperto in §3). Una patch non deve toccare il gestore `0xDC` né il ciclo di flash, da cui dipende `ifu`. Prima di flashare leggere §9.
 
 - **Tasti visibili all'host:** tabella `0x0D03`. Demo `dumps/EC0416_ctrl-caps-swap.BIN`: swap L-Ctrl `0x14`↔Caps `0x58`, byte `0x0D17`↔`0x0D5B`.
@@ -142,11 +145,11 @@ Emulazione di `0x0C09`: `0x84` → `0x1D`/`0x9D` make/break, stesso output di L-
 
 L'eFlash è dentro il chip, quindi una clip SOIC o un programmatore SPI non la raggiungono: i pin FSPI servono solo per una flash esterna (datasheet Table 5-5). `flashrom -p internal` e `Fpt` leggono il BIOS, non l'EC.
 
-Nessuna via è stata provata sull'IT5571. Partire sempre dalla sola lettura.
+La via software è stata provata sulla scheda il 2026-11-04. Le altre no. Partire sempre dalla sola lettura.
 
 | Via | Strumento | Serve EC funzionante? | Stato |
 |---|---|---|---|
-| **Software** | `ifu.efi /S 128` | Sì | **Più semplice**: niente hardware. Vedi sotto |
+| **Software** | `ifu.efi /S 128 /k /j` | Sì | **Provata**: due letture identiche. Vedi sotto |
 | **EPP dal connettore tastiera** | RP2040 + [ITE-EC-Pico-USB-Parallel-ISP](https://github.com/bernTP/ITE-EC-Pico-USB-Parallel-ISP) | No | **Via consigliata per la recovery.** Provato solo su IT5261 (§7) |
 | **EPP dal connettore tastiera** | Arduino Mega 2560 + [system76/ec](https://github.com/system76/ec/blob/master/docs/flashing.md) | No | Documentato per IT5570. Mappa pin da adattare |
 | **EPP con porta parallela reale** | Cavo DB25 (datasheet, sezione 7.24.3.1) + tool ITE | No | Cavo documentato, tool ITE non disponibile |
@@ -162,15 +165,21 @@ La procedura di alimentazione cambia con lo strumento: il progetto Pico tiene l'
 `ifu.efi` ha un'opzione **non documentata** nell'help, trovata nel codice (`0x4DCA`, `0x5174`):
 
 ```
-ifu.efi /S 128
+ifu.efi /S 128 /k /j
 ```
 
-Salva 128 KiB in `ITEFW.bin` nella cartella corrente. La routine `0x422C` usa solo la lettura veloce `0x0B`, senza cancellazioni né scritture, quindi **non può causare il brick descritto in §9**.
+Maiuscole e minuscole contano. Salva 128 KiB in `ITEFW.bin` nella cartella corrente. La routine `0x422C` usa solo la lettura veloce `0x0B`, senza cancellazioni né scritture, quindi **non può causare il brick descritto in §9**.
 
-- Usa lo stesso ingresso `0xDC`: l'EC si ferma durante la lettura e alla fine viene riavviato con `0xFE`. Aspettarsi uno spegnimento brusco.
+**`/k /j` sono obbligatori.** Con il solo `/S 128` si ottiene un file da 0 byte, anche su volumi diversi (provato su chiavetta e partizione EFI). `ifu` crea il file (`0x519B`), legge (`0x526F`), invia `0xFE` (`0x5294`) e solo alla fine chiude il file (`0x5AFE` → `0x9F4C`): se il reset spegne la macchina, i dati non arrivano mai al disco.
+
+- `/j` invia `0xFC` invece di `0xFE`: l'EC salta a `0x0400` senza reset (`0x80C4`).
+- `/k` salta l'`0xAE` finale (`0x52A9`), inutile perché `/S` non invia `0xAD`, e la sua attesa senza timeout.
+- Il comportamento della macchina a fine dump non è stato annotato. L'EC riparte senza un vero reset: spegnere subito con `reset -s`.
+- Usa lo stesso ingresso `0xDC`: l'EC si ferma durante la lettura.
 - Se il tool si blocca non c'è timeout: serve togliere l'alimentazione, compresa la batteria.
 - Con un byte residuo sulla porta `0x62` (§9) il dump esce spostato di una posizione. Controllare dimensione e firma.
 - Non funziona su un EC brickato.
+- La partizione EFI è leggibile solo da root: da Linux copiare il dump con `sudo install -o $USER -g $USER -m 644`.
 
 ### Lettura con DBGR/SMB
 
@@ -295,7 +304,7 @@ Verificati nel codice del tool (`host/itepp/`).
 
 ## 8. Lettura del BIOS
 
-Il BIOS sta su un chip SPI esterno, quindi qui un programmatore funziona. Fare il dump **prima di qualsiasi flash**: oggi non esiste un'immagine da usare per la recovery.
+Il BIOS sta su un chip SPI esterno, quindi qui un programmatore funziona. Fare il dump **prima di qualsiasi flash**: le due letture in `Bios dumps/` (§1) vanno verificate prima di considerarle un'immagine di recovery.
 
 **Dalla macchina funzionante:**
 
@@ -376,10 +385,34 @@ La provenienza del byte non è determinabile senza il BIOS: serve un accesso pre
 
 Attenzione ai nomi: entrambe le build si dichiarano `V0.3.2`, pur differendo per 46.608 byte. Solo la vecchia contiene `MTLH-NB06`. Per distinguerle usare data o sha256.
 
+### Confronto tra V0.4.0 e EC0416
+
+Gli indirizzi di questa sezione e dei paragrafi precedenti si riferiscono a `EC0416`, salvo dove indicato. Il flash viene eseguito dal firmware **in esecuzione**, quindi per `ifu` conta la `V0.4.0`. `EC0416` entra in gioco solo dopo il reset. `EC0416` è più vecchia di tre mesi: flasharla è un **downgrade**, non un aggiornamento.
+
+| Punto | Esito del confronto statico |
+|---|---|
+| Ciclo di flash | Banco 1 identico da `0x8000` a `0x884B` |
+| Ingresso `0xDC` | Stessa catena e stessi byte, tranne gli indirizzi rilocati (`0xDC94` → `0xDC5E`) |
+| Variante PMC2 e uscita `0xFC`/`0xFE` | Uguali salvo rilocazione (`0xD9D3` → `0xD99D`, `0xDAB3` → `0xDA7D`) |
+| Protezioni e watchdog | Stessi registri in `0x1000-0x10FF` e `0x1E00-0x1FFF`: nessuna nuova protezione rilevata |
+| Pin | Tabella GPIO da 103 voci identica, spostata di `+0x1D` (`0x2660-0x2794` nella `V0.4.0`) |
+| Comandi host | Stessi casi nello switch PMC2 (`0xF61E`, ora `0xF5F0`) |
+| Spazio EC | Stessi 141 indirizzi in `0x0400-0x05FF` |
+| Vettori e avvio | Reset uguale. Differiscono solo tre byte di indirizzo in `0x70-0x3FF` e `0x4A-0x4B` (`AF 5B`, vedi §3) |
+| Tastiera | Tabella `0x0D03` e routine `0x0C09` identiche e agli stessi indirizzi |
+
+**Cosa cambia davvero.** Il confronto istruzione per istruzione, con gli indirizzi mascherati, dà 1542 blocchi diversi: 1181 sono solo rilocazioni, 361 sono strutturali, in parte dovuti al disassemblaggio lineare delle tabelle. Molte variabili XRAM sono spostate, per esempio di `-0x28` da `0x0823`.
+
+- Driver SMBus/I2C `0x1E00-0x2300` riscritto: `EC0416` usa i registri `0x1CB0-0x1CBA` in modo fisso, la `V0.4.0` passa da una tabella per canale (voci da 21 byte).
+- Logica cambiata in più punti dei banchi 1 e 2, per esempio contatori `0x001D/0x001E` rimossi, condizione su `0x00B0` sostituita da `0xCE90`, costanti `0x32→0x26` (`0xDD83`) e `0x03→0x04` (`0xED71`).
+- **Il significato di queste modifiche non è stato decodificato:** non si sa cosa corregga la `V0.4.0`, né se il downgrade tocca ricarica, USB-C PD, ventola o accensione.
+
+**Conclusione.** Il confronto non mostra incompatibilità di pin o interfaccia e il percorso di `ifu` non cambia, ma non rende sicuro il flash. Restano valide tutte le debolezze sopra, la scrittura non è mai stata provata su questa scheda e la recovery ISP nemmeno. La lettura `/S` conferma solo ingresso `0xDC`, lettura e uscita `0xFC`.
+
 ### Come ridurre il rischio
 
 1. **Prima la recovery:** prova la via ISP in sola lettura (§7). Senza, un brick significa rework.
-2. Salva il firmware attuale con `ifu.efi /S 128` (§6) e verifica il dump.
+2. Salva il firmware attuale con `ifu.efi /S 128 /k /j` (§6) e verifica il dump. Poi spegni: il flash va fatto da un avvio pulito.
 3. Controlla lo sha256 del file sulla chiavetta (§1) e usa sempre il parametro `128`.
 4. Dalla UEFI Shell leggi la porta `0x66`: se il bit 0 è a 1, leggi una volta `0x62` per svuotare il buffer. Sintassi attesa, non provata su questa shell: `mm 66 -IO -w 1 -n`.
 5. Usa l'alimentatore DC sul connettore dedicato e la batteria carica. Evita la sola USB-C.
@@ -389,7 +422,7 @@ Attenzione ai nomi: entrambe le build si dichiarano `V0.3.2`, pur differendo per
 
 ### Cosa manca per chiudere l'analisi
 
-- Immagine BIOS (§8).
+- Analisi delle immagini in `Bios dumps/` (§1, §8).
 - Tabelle ACPI, con `acpidump` sulla X210AI.
 - Dettagli di un brick reale: alimentazione, messaggi a schermo, stato prima del flash.
 
@@ -413,8 +446,8 @@ Il pacchetto del produttore **non contiene istruzioni di recovery**. Queste sono
 
 | Cosa si è rotto | Via | Stato |
 |---|---|---|
-| **EC** (eFlash nel chip) | ISP dal connettore tastiera (§7) + `EC0416.BIN` | Metodo da datasheet, collegamenti da ricavare |
-| **BIOS** (chip SPI esterno) | Programmatore sul chip (§8) | Serve un dump fatto **prima**: oggi non ne abbiamo uno |
+| **EC** (eFlash nel chip) | ISP dal connettore tastiera (§7) + `dumps/EC-V0.4.0-20250723-lettura1.bin` | Metodo da datasheet, collegamenti da ricavare |
+| **BIOS** (chip SPI esterno) | Programmatore sul chip (§8) | Serve un dump verificato: quelli in `Bios dumps/` non sono ancora stati analizzati |
 | **EC tramite `EC_SPI1`** | Porta FSPI (§13) | Non è un piano di recovery finché non si chiarisce il test mode |
 
 **EC corrotto:** la boot ROM è intatta, ma non trova la 16B-signature. Sintomi: niente accensione, tastiera o ricarica, ventola al massimo. `ifu` non serve, perché richiede il firmware in esecuzione. Il chip è vivo, quindi l'ISP dovrebbe funzionare anche con flash illeggibile, se VSTBY è presente. Verificare sempre dopo la scrittura.
