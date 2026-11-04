@@ -4,8 +4,16 @@ Stato: analisi statica completa (vedi README.md). Eseguito su hardware solo `ifu
 Verifiche indipendenti rifatte il 2026-11-04: hash, patch (2 byte @0x0D17/0x0D5B, 1 byte @0x0C35),
 signature @0x40, firma @0x7F80, mappa banchi, tabella set2→set1 @0x0D03 — tutte confermate.
 
-## Priorità
+## Sessione 2026-11-04 (hardware reale)
 
+- [x] Dump BIOS: `Bios dumps/full.bin` + `full2.bin`, 33554432 B (32 MiB), sha256 `dd6e3116…4669`
+  identici, flash descriptor `0x5AA5F00F` a 0x10 valido → **dump BIOS OK**, recovery BIOS coperta
+- [x] Analisi `chiavetta usb/ifu.efi` (ITE Flash Utility 2.3.1a, PE32+ DEBUG, sha256 `16c08273…8176`):
+  opzioni `/S`(nascosta) `/V /VB /VBF /BK /Mn /Bp /PB /T /k /j /O`; ramo /S a RVA 0x5174 → routine
+  lettura RVA 0x422c (fast read 0x0B, blocchi 32 KiB, fwrite su ITEFW.bin); **se size=0 salta tutto
+  e crea file vuoto** (jle a 0x43a2)
+- [x] Tentativi con `ifu.efi /S 128`: `ITEFW.bin` 0 byte (`EC versions/EC0400_dump1/2.bin`), `SPIDeviceID= FF FF FF FF`, ACK ok,
+  spegnimento brusco. Stato 0x66=0x00, alimentazione DC+batteria. Causa: reset `0xFE` prima di `fclose`, non `size=0`. La via software funziona con `/k /j`
 - [x] Dump EC software: `ifu.efi /S 128 /k /j` (sola lettura, `/S 128` da solo dà 0 byte). Risultato: firmware installato `V0.4.0` 2025-07-23, più recente di `EC0416` (`dumps/EC-V0.4.0-20250723-lettura*.bin`)
 - [ ] Verificare e analizzare `Bios dumps/full.bin` (32 MiB, 2 letture identiche) prima di considerarlo immagine di recovery
 - [ ] Annotare come si comporta la macchina a fine dump con `/j`: ritorno al prompt, tastiera, `reset -s`
@@ -15,7 +23,7 @@ signature @0x40, firma @0x7F80, mappa banchi, tabella set2→set1 @0x0D03 — tu
 - [ ] Cicalino 15 segnali KSO/KSI dal connettore tastiera ai pin EC (tabella §7 README; KSO1 foto=contatto 16 vs schema 18 — ricontrollare) → chiude mappa EPP per RP2040
 - [ ] Misurare EC_SPI1 contatti 1, 3, 7, 8, 9, 10 (massa, EC 119 = GPG6, EC 100 = GPG2, SMBus 87/88, 115/116, 117/118); FSPI già mappata sui contatti 2,4,5,6
 - [ ] Confermare con il cicalino che HOTKEY (contatto 1) arrivi al pin EC di `0x1608` bit 7. Il caso `0x84` a `0x0C31` non è Fn: è Alt+SysRq
-- [ ] Chiarire byte `0x4A-0x4B` (`26 E6` in EC0416, `F9 0C` nella build vecchia): checksum? Finché non si sa, le patch restano non provate su hardware
+- [ ] Chiarire byte `0x4A-0x4B` (`AF 5B` in V0.4.0, `26 E6` in EC0416, `F9 0C` nella build vecchia): checksum? Finché non si sa, le patch restano non provate su hardware
 - [ ] ISP via RP2040 in SOLA lettura: `isp hello / lines / enter --mode powerup / id / read -o x210ai-ec.bin -s 128 --no-exit` — mai `write` prima di verifica dump
 - [ ] Acquisire immagine BIOS mancante (`MTLH-NB06_B0.2.bin`) e `acpidump` dalla macchina → chiudere analisi causa brick in `ifu` (byte residuo su porta 0x62 → "EC ACK Fail" → cancellazione blocco 0 → "Verify Fail" → brick)
 

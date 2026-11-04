@@ -197,7 +197,7 @@ Maiuscole e minuscole contano. Salva 128 KiB in `ITEFW.bin` nella cartella corre
 
 - `/j` invia `0xFC` invece di `0xFE`: l'EC salta a `0x0400` senza reset (`0x80C4`).
 - `/k` salta l'`0xAE` finale (`0x52A9`), inutile perché `/S` non invia `0xAD`, e la sua attesa senza timeout.
-- Il comportamento della macchina a fine dump non è stato annotato. L'EC riparte senza un vero reset: spegnere subito con `reset -s`.
+- Con il solo `/S 128` è stato osservato uno spegnimento brusco. Con `/k /j` il comportamento a fine dump non è stato annotato: l'EC riparte senza un vero reset, quindi spegnere subito con `reset -s`.
 - Usa lo stesso ingresso `0xDC`: l'EC si ferma durante la lettura.
 - Se il tool si blocca non c'è timeout: serve togliere l'alimentazione, compresa la batteria.
 - Con un byte residuo sulla porta `0x62` (§9) il dump esce spostato di una posizione. Controllare dimensione e firma.
@@ -317,7 +317,7 @@ Verificare il dump (§6). Tra un tentativo e l'altro spegnere e scaricare l'EC: 
 Verificati nel codice del tool (`host/itepp/`).
 
 - **Dimensione flash:** è il punto più serio. Il tool la ricava da EC `0x1080`, che sul datasheet IT5570 è `FLHCTRL5R`, non un registro di dimensione documentato. In lettura `-s 128` la forza, ma **`write` non ha quell'opzione**: se il valore rilevato non è 128 KiB, il tool va modificato.
-- **Flash ID:** `write` accetta solo `ff ff fe`. Non è verificato che l'IT5571 lo restituisca. `ifu` ha un ramo per il vendor `0xFF` con cancellazione da 1 KiB (`0xD7`), compatibile con questa ipotesi. In lettura si può aggiungere `--ignore-flash-id`.
+- **Flash ID:** `write` accetta solo `ff ff fe`. Non è verificato che l'IT5571 lo restituisca: `ifu` sulla scheda ha stampato `SPIDeviceID= FF FF FF FF`, che va confrontato con `isp id`. `ifu` ha un ramo per il vendor `0xFF` con cancellazione da 1 KiB (`0xD7`), compatibile con questa ipotesi. In lettura si può aggiungere `--ignore-flash-id`.
 - **Programmazione:** il tool usa AAI word, `ifu` usa AAI byte (`0xAF`, `0x3644`). Il primo funziona su IT5261, ma non è provato qui.
 - **Protect path:** prima di cancellare, il tool azzera EC `0x20A0-0x20BF`. Quei registri non sono nell'elenco del datasheet IT5570 e il firmware non li referenzia direttamente. Valutare `--keep-protect-path`.
 - **Area dati:** `EC_DATA_AREA` ha una voce solo per 256 KiB, quindi a 128 KiB `write` tratta tutta la flash come codice. In `EC0416.BIN` e nella build vecchia gli ultimi 16 KiB sono vuoti, ma va controllato il dump reale.
