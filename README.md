@@ -414,7 +414,7 @@ Gli indirizzi di questa sezione e dei paragrafi precedenti si riferiscono a `EC0
 1. **Prima la recovery:** prova la via ISP in sola lettura (§7). Senza, un brick significa rework.
 2. Salva il firmware attuale con `ifu.efi /S 128 /k /j` (§6) e verifica il dump. Poi spegni: il flash va fatto da un avvio pulito.
 3. Controlla lo sha256 del file sulla chiavetta (§1) e usa sempre il parametro `128`.
-4. Dalla UEFI Shell leggi la porta `0x66`: se il bit 0 è a 1, leggi una volta `0x62` per svuotare il buffer. Sintassi attesa, non provata su questa shell: `mm 66 -IO -w 1 -n`.
+4. Dalla UEFI Shell, subito prima del flash, leggi lo stato con `mm 66 -w 1 -IO -n` (sintassi presa dall'help della shell, non ancora eseguita sulla scheda). Il bit 0 è il byte residuo, il bit 1 è un comando non ancora letto: si procede solo se l'ultima cifra è `0`, `4`, `8` o `C`. Se è dispari, leggi una volta `0x62` con `mm 62 -w 1 -IO -n` e ricontrolla. Non aggiungere mai un valore dopo l'indirizzo: `mm` scriverebbe sulla porta.
 5. Usa l'alimentatore DC sul connettore dedicato e la batteria carica. Evita la sola USB-C.
 6. Avvia la UEFI Shell direttamente da USB e non fare altro sulla macchina.
 7. Fotografa lo schermo. `EC ACK Fail` o `Verify Fail` indicano un flash non riuscito, anche se il tool termina normalmente.
