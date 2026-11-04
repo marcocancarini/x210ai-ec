@@ -32,6 +32,8 @@
 - `ec-connettore-tastiera.png`: EC e connettore tastiera BTB a 40 contatti (foto ridotta, 2000×1506)
 - `it5571-pinout-lqfp128.png`: pagina 9 di `IT5571E-128.pdf`, piedini LQFP-128 vista dall'alto (il documento è intestato IT5570E)
 - `ec-spi1-pinout.png`: pinout parziale annotato, ricavato da `PXL_20261104_101131198.MP.jpg`
+- `PXL_20261104_101131198.MP.jpg`, `PXL_20261104_101145837.jpg`: foto originali di connettore EC_SPI1 ed EC, usate per passo e piste
+- `PXL_20261104_104321709.MP_preview.jpeg`: misura col calibro della fila di terminali, 5,08 mm (display capovolto)
 - `ec-spi1-connettore.png`: connettore EC_SPI1 sopra il chip ITE LQFP
 - `scheda-porte-debug.png`: schema porte del produttore (debug port 10, 12, 20)
 - `ec-spi1-assemblato.png`: connettore su scheda assemblata nel telaio

@@ -20,6 +20,14 @@ Questa guida è l'unico documento del progetto. I materiali originali stanno in 
 
 **Nessun tool è stato eseguito su una X210AI.** `ifu.efi`, `Fpt.efi` e i dump sono stati solo disassemblati.
 
+**Prossimi passi:**
+
+1. Dump software con `ifu.efi /S 128`, finché l'EC funziona (§6).
+2. Cicalino sui 15 piedini verso il connettore tastiera, iniziando da KSO1 sui contatti 16 e 18 (§7).
+3. Cicalino sui contatti 1, 3, 7, 8, 9 e 10 di `EC_SPI1`: massa, EC 119, EC 100 e piedini SMBus (§13).
+4. Accesso al connettore tastiera: cavo di una tastiera X201 guasta o spina JAE AA01 a 40 posizioni, codice non ancora trovato (§7).
+5. Cablaggio RP2040, poi `isp id` e `isp read` con l'EC sano. Niente scritture prima (§7).
+
 ## Indice
 
 **Firmware EC**
