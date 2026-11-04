@@ -16,7 +16,7 @@ Questa guida è l'unico documento del progetto. I materiali originali stanno in 
 | Immagine BIOS | **Assente**: il BIOS non è stato analizzato (§1, §8, §10) |
 | Brick segnalati | Meccanismo più probabile trovato nel codice di `ifu`, non riprodotto (§9) |
 | Recovery | Descritta, mai provata su questa scheda (§11) |
-| Porta EC_SPI1 | Pinout sconosciuto, non è una via di lettura confermata (§13, §14) |
+| Porta EC_SPI1 | Pinout parziale da foto: 4 contatti su 10 sono FSPI. Accesso all'eFlash non documentato, test mode da chiarire (§13, §14) |
 
 **Nessun tool è stato eseguito su una X210AI.** `ifu.efi`, `Fpt.efi` e i dump sono stati solo disassemblati.
 
@@ -108,7 +108,7 @@ Sezioni del datasheet usate: `refs/DATASHEETS.md`.
 
 - **Tasti visibili all'host:** tabella `0x0D03`. Demo `dumps/EC0416_ctrl-caps-swap.BIN`: swap L-Ctrl `0x14`↔Caps `0x58`, byte `0x0D17`↔`0x0D5B`.
 - **Fn→LCtrl:** Fn è **fuori matrice** (pin dedicato, tipo T61 I/O18→GND, rif. github.com/thedalles77/USB_Laptop_Keyboard_Controller) e non è uno scancode. Non c'è logica di swap né flag BIOS (BRAM `0x2200h` non usata come setting). La patch `dumps/EC0416_fn-ctrl-swap.BIN` cambia 1 byte a `0x0C35` (caso `0x84` in `0x0C09`: `0x54→0x1D`).
-- **Limite:** non è confermato al 100% che `0x84` sia Fn: serve lo schema del connettore tastiera. La direzione inversa (Ctrl fisico che fa da Fn) richiede la posizione matrice di Ctrl (driver banco1, indice `0x4D`).
+- **Limite:** non è confermato al 100% che `0x84` sia Fn. Nello schema della tastiera X201 (§7) Fn è `HOTKEY` sul contatto 1: seguendolo fino all'EC si identifica il pin. La direzione inversa (Ctrl fisico che fa da Fn) richiede la posizione matrice di Ctrl (driver banco1, indice `0x4D`).
 - **Livello Fn:** la patch tocca solo l'output scancode, a valle del flag del pin Fn, quindi Fn+PgUp non è influenzato.
 
 Verifica di `EC0416.BIN` contro `EC0416_fn-ctrl-swap.BIN`:
@@ -209,6 +209,42 @@ La mappa dei GPIO sta in `firmware/hwconfig.h` del progetto: PD0-PD7 devono rest
 
 **Mai collegare `3V3` o `VBUS` del Pico alla scheda:** in comune c'è solo la massa.
 
+### Connettore tastiera
+
+![EC e connettore tastiera](refs/img/ec-connettore-tastiera.png)
+
+Il connettore è il **11** dello [schema del produttore](refs/img/scheda-porte-debug.png): un board-to-board per tastiera **ThinkPad X201**, 40 contatti su 2 file da 20, passo 0,5 mm. Serigrafia letta da foto: `BTB_R…`. Non è un FPC, quindi una breakout FFC non entra.
+
+Il riferimento è lo [schema dell'adattatore X201](https://github.com/bulat-chu/Thinkpad-X6x-X20x-keyboard-USB-Adapter), che usa il connettore JAE `AA01B-S040VA1`. Nel suo simbolo 41-44 sono a massa: i segnali sono 40. **Descrive la tastiera, non la X210AI.**
+
+- **Numerazione:** contatti pari sulla fila verso l'EC, con `2` a sinistra e `40` a destra (EC a destra del connettore). Il pallino indica il contatto 1 sull'altra fila.
+- **Ipotesi di mappa:** `DRVn` della tastiera = `KSOn` dell'EC, `SENSEn` = `KSIn`.
+- **Verifica da foto:** le piste di KSO0-KSO4 portano ai contatti 22, 16, 14, 10, 2. Lo schema dà 22, 18, 14, 10, 2. Quattro su cinque coincidono, il KSO1 differisce di un contatto. Per i KSI non c'è nessun riscontro.
+
+| Segnale EC | Pin EC | Contatto | GPIO Pico |
+|---|---|---|---|
+| KSO0 | 36 | 22 | GP0 |
+| KSO1 | 37 | 18 (foto: 16) | GP1 |
+| KSO2 | 38 | 14 | GP2 |
+| KSO3 | 39 | 10 | GP3 |
+| KSO4 | 40 | 2 | GP4 |
+| KSO5 | 41 | 4 | GP5 |
+| KSO6 | 42 | 8 | GP6 |
+| KSO7 | 43 | 12 | GP7 |
+| KSI0 | 58 | 5 | GP8 |
+| KSI1 | 59 | 13 | GP9 |
+| KSI2 | 60 | 9 | GP10 |
+| KSI3 | 61 | 7 | GP11 |
+| KSI4 | 62 | 11 | GP12 |
+| KSI5 | 63 | 3 | GP13 |
+| KSO9 | 45 | 20 | GP14 |
+
+**Ogni riga va confermata col cicalino prima di saldare.**
+
+**Da non collegare:** nello schema il 38 è +5 V e il 35 è +3,3 V, il 36 è la massa del tasto Fn (`HOTKEY` sul contatto 1), 31 e 34 sono massa. 37, 39 e 40 sono il TrackPoint a 5 V. Sulla X210AI vanno misurati: l'adattatore fornisce queste alimentazioni da sé.
+
+**Accesso ai contatti:** l'adattatore monta una presa come quella della scheda, quindi non si innesta qui. Serve la spina JAE AA01 a 40 posizioni, il cui codice non è stato trovato, oppure il cavo piatto di una tastiera X201 guasta.
+
 ### Trovare i contatti
 
 1. Scheda spenta, senza batteria e senza tastiera.
@@ -216,7 +252,7 @@ La mappa dei GPIO sta in `firmware/hwconfig.h` del progetto: PD0-PD7 devono rest
 3. Annotare il contatto di ognuno dei 15 segnali. L'orientamento può risultare specchiato.
 4. Con la scheda alimentata, misurare un KSI a riposo: circa 3,3 V. **Con 5 V fermarsi.**
 
-Saldare su una breakout del connettore, non sui piedini dell'EC (passo 0,4 mm).
+Non saldare sui piedini dell'EC (passo 0,4 mm). Le vie sono i candidati da valutare: filo smaltato sottile, ancorato alla scheda, se risultano scoperte. In alternativa serve il connettore corrispondente con una breakout su misura, o i terminali del connettore. Con la tastiera scollegata nessun altro pilota queste linee.
 
 ### Sola lettura
 
@@ -371,7 +407,7 @@ Il pacchetto del produttore **non contiene istruzioni di recovery**. Queste sono
 |---|---|---|
 | **EC** (eFlash nel chip) | ISP dal connettore tastiera (§7) + `EC0416.BIN` | Metodo da datasheet, collegamenti da ricavare |
 | **BIOS** (chip SPI esterno) | Programmatore sul chip (§8) | Serve un dump fatto **prima**: oggi non ne abbiamo uno |
-| **EC tramite `EC_SPI1`** | Porta di debug (§13) | Non è un piano di recovery finché il pinout è sconosciuto |
+| **EC tramite `EC_SPI1`** | Porta FSPI (§13) | Non è un piano di recovery finché non si chiarisce il test mode |
 
 **EC corrotto:** la boot ROM è intatta, ma non trova la 16B-signature. Sintomi: niente accensione, tastiera o ricarica, ventola al massimo. `ifu` non serve, perché richiede il firmware in esecuzione. Il chip è vivo, quindi l'ISP dovrebbe funzionare anche con flash illeggibile, se VSTBY è presente. Verificare sempre dopo la scrittura.
 
@@ -385,22 +421,68 @@ Il pacchetto del produttore **non contiene istruzioni di recovery**. Queste sono
 
 ## 13. Porta di debug EC_SPI1
 
-![Connettore EC_SPI1 sopra il chip ITE](refs/img/ec-spi1-connettore.png)
+![Pinout EC_SPI1 ricavato dalle foto](refs/img/ec-spi1-pinout.png)
 
-**Connettore individuato, pinout sconosciuto.** Nessun documento pubblico trovato descrive i segnali, quindi non è dimostrato che da qui si possa leggere o scrivere l'EC. Le vie di lettura confermate dal datasheet sono in §6 e non dipendono da questa porta.
+**Pinout parziale, ricavato dalle foto del 2026-11-04.** Quattro contatti sono l'interfaccia FSPI dell'EC, gli altri sei restano da misurare. Nessuna misura elettrica è stata fatta.
 
-- Connettore FPC a passo fine, serigrafia `EC_SPI1`, subito sopra l'EC, sul lato opposto alla RAM. Serigrafia letta da foto a bassa risoluzione.
-- Nello [schema del produttore](refs/img/scheda-porte-debug.png) i connettori **10, 12 e 20** sono "Debug port will be removed in the bulk". Per posizione EC_SPI1 è il **12**: le schede di serie **potrebbero non averlo**.
-- Sulla [scheda assemblata](refs/img/ec-spi1-assemblato.png) il connettore è montato e si raggiunge dall'apertura nel telaio. In basso a destra c'è la serigrafia `ESPI` vicino a un altro connettore, forse il 10. Il 20 non è identificato.
-- Non esiste un pinout standard: lo decide il progettista della scheda.
+| Contatto | Segnale | Da dove viene | Stato |
+|---|---|---|---|
+| 1 | Alimentazione? | Pista larga, il tratto vicino al contatto è coperto dal triangolo | Da misurare |
+| 2 | **FSCE#** | EC 101 | Pista seguita |
+| 3 | GND? | Via subito sotto il contatto | Da misurare |
+| 4 | **FMOSI** | EC 102 | Pista seguita |
+| 5 | **FMISO** | EC 103 | Pista seguita |
+| 6 | **FSCK** | EC 105, con una via sulla pista | Pista seguita |
+| 7 | ? | Nessuna pista visibile | Da misurare |
+| 8 | ? | Via subito sotto il contatto | Da misurare |
+| 9 | ? | Piazzola dorata destra, poi verso EC 108 o 109 | Da misurare |
+| 10 | ? | Piazzola dorata sinistra, poi via vicino a EC 125 | Da misurare |
+
+Il contatto 1 è sul lato del triangolo, il 10 sul lato della serigrafia `10`. Il pinout vale sul connettore della scheda: un cavetto FFC può invertire l'ordine.
+
+**Perché la numerazione è affidabile:**
+
+- Le foto mostrano 32 piedini per lato, quindi un LQFP-128, e un piedino 97 accanto all'angolo in alto a destra.
+- Le tacche serigrafate attorno al chip cadono ogni 5 piedini: misurate su 105, 110, 115 in alto e 90, 95 a destra. Solo questa rotazione del chip le fa cadere su multipli di 5.
+- Le quattro piste arrivano su posizioni 101, 102, 103 e 105, con un buco sul 104, che è VSS.
+- Il datasheet colloca sullo stesso lato FSCE#, FMOSI, FMISO, VSS e FSCK, in quest'ordine.
+
+**Limiti delle foto:**
+
+- I contatti 9 e 10 entrano nelle piazzole sotto la serigrafia: l'abbinamento in tabella è il più probabile, non visibile.
+- La pista del contatto 9 sparisce sotto la serigrafia del chip: EC 108 è `AC_IN#`, EC 109 è `LID_SW#`. Nessuno dei due è un segnale di debug.
+- La pista larga del contatto 1 arriva a un componente vicino ai piedini 97-100. Un resistore su GPG2 (EC 100) avrebbe senso, perché il datasheet lo vuole in pull-up se FSPI è in uso (Table 5-20). Non è verificato.
+- Il lato inferiore della scheda non è stato fotografato: le vie dei contatti 3, 6, 8 e 10 proseguono lì o su strati interni.
+
+**Conseguenze:**
+
+- Nel funzionamento normale FSPI è il bus verso una flash esterna, con l'EC come master: FSCK e FSCE# sono sue uscite (Table 5-5).
+- Nessun accesso esterno all'eFlash da FSPI è documentato, ma **non è escluso**.
+- **Test mode, punto aperto:** FSCK, FMISO, FMOSI e FSCE# sono anche strap del test mode (Table 5-21), insieme a GPG6 (EC 119) e GPG2 (EC 100). Il datasheet ne cita solo l'ingresso, senza protocollo né funzione. Se i contatti ignoti portassero anche GPG6 e GPG2, il connettore avrebbe tutti gli strap, e una funzione di fabbrica diventerebbe un'ipotesi seria.
+- Un programmatore SPI collegato alla cieca non ha un protocollo noto da seguire, e rischia di pilotare linee contro l'EC.
+- Il firmware non scrive `FLHCTRL5R` `0x1080`. Il suo unico accesso a `FLHCTRL6R` `0x1081` è a `0xDC22`, non analizzato.
+- Ascoltare FSPI non pilota nulla, ma se l'EC legge dall'eFlash queste linee possono restare ferme.
+- Da misurare sui contatti 7, 8, 9 e 10: EC 119, EC 100 e i piedini SMBus. Le piste visibili di 9 e 10 non portano a SMBus.
+
+**Dal disegno del produttore:**
+
+- Nello [schema](refs/img/scheda-porte-debug.png) i connettori **10, 12 e 20** sono "Debug port will be removed in the bulk". Per posizione EC_SPI1 è il **12**, ma sulla scheda fotografata è montato.
+- Sulla [scheda assemblata](refs/img/ec-spi1-assemblato.png) si raggiunge dall'apertura nel telaio. La serigrafia in basso a destra si legge `ESPI_DEBUG1`.
+
+### Piedini dell'EC
+
+![Piedini LQFP-128, vista dall'alto](refs/img/it5571-pinout-lqfp128.png)
+
+Datasheet `IT5571E-128.pdf`, pagina 9, intestata IT5570E. Nelle prime foto (`EC_SPI1` in alto) il chip è orientato come nella figura, con l'angolo smussato del pin 1 in alto a sinistra.
 
 ### Cosa può portare
 
-Il datasheet prevede ISP solo via DBGR, su **EPP (pin KBS)** o **SMBus** (sezione 7.23): nessuno dei due è SPI. Il nome non garantisce quindi che la porta serva a programmare. Piedini da LQFP-128, Table 4-1.
+
+Il datasheet prevede ISP solo via DBGR, su **EPP (pin KBS)** o **SMBus** (sezione 7.23): nessuno dei due è SPI. FSPI è confermata dalle piste, le altre righe valgono solo per i contatti ancora ignoti. Piedini da LQFP-128, Table 4-1.
 
 | Ipotesi | Piedini EC | Indizi da `EC0416` | Se confermata |
 |---|---|---|---|
-| **FSPI** (flash esterna) | FSCK 105, FSCE# 101, FMOSI 102, FMISO 103, VFSPI 106 | Nessuno: pin dedicati, fuori dalla tabella GPIO | Nome compatibile, ma nessun accesso esterno all'eFlash descritto: un programmatore SPI può non vedere nulla |
+| **FSPI** (flash esterna) | FSCK 105, FSCE# 101, FMOSI 102, FMISO 103, VFSPI 106 | Nessuno: pin dedicati, fuori dalla tabella GPIO | **Confermata per i contatti 2, 4, 5 e 6.** VFSPI non verificato. Nessun accesso esterno all'eFlash descritto |
 | **DBGR/SMB** | SMCLK0/SMDAT0 87/88, SMCLK1/SMDAT1 115/116, SMCLK2/SMDAT2 117/118 | Non disabilitato | Il caso utile: ISP e debug (§6) |
 | **UART** | TXD 17, RXD 16 | Non verificato | Solo console, se il firmware la usa |
 | **SSPI** (master verso periferiche) | SSCK 32, SMOSI 56, SMISO 57, SSCE0# 100, SSCE1# 125, SBUSY 122 | Improbabile: nessun accesso a `0x2600-0x2604`, SSCK/SMOSI/SMISO GPIO in uscita, SSCE# in ingresso | Nessun ISP |
@@ -427,26 +509,18 @@ Obiettivo: sapere cosa porta ogni contatto prima di collegarci qualcosa. Le fasi
 
 ### Fase 1: passo e numero di contatti
 
-**Stima dalle foto: 10 contatti (±1), passo 0,5 mm.** Da confermare sul pezzo prima di ordinare.
+**Confermato: 10 contatti, passo 0,5 mm.** Va bene un adattatore FFC 10 pin da 0,5 mm.
 
 | Misura | Risultato | Come |
 |---|---|---|
-| Scala | circa 12 px/mm | [foto dall'alto](refs/img/ec-spi1-connettore.png): corpo EC da 14 mm = circa 169 px |
-| Larghezza connettore | circa 9,9 mm | Stessa foto, 119 px |
-| Contatti | 10 visibili | [ingrandimento](refs/img/ec-spi1-contatti.png) |
-| Passo | circa 0,53 mm | Terminali lunghi il 48% del corpo: 4,8 mm su 9 intervalli |
+| Contatti | 10 | Foto macro, stesso conteggio su due scatti |
+| Scala | 59,7 px/mm | Foto a 3072×4080: 32 piedini EC da 0,40 mm |
+| Passo | 0,497 mm | Distanza media tra i terminali nella stessa foto |
+| Larghezza fila terminali | 5,08 mm | Calibro digitale, foto con display capovolto |
 
-Passi da 0,3 mm o 1,0 mm non sono compatibili. **Un 12 contatti da 0,4 mm non è escluso del tutto.**
+Il calibro è coerente: 9 passi da 0,5 mm più la larghezza di un terminale danno circa 4,8 mm, e le ganasce non sono perfettamente a contatto. Un FFC è largo circa (contatti + 1) × passo, quindi 5,5 mm.
 
-Sul pezzo:
-
-1. Conta i terminali saldati con lente o macro.
-2. Misura col calibro dal centro del primo al centro dell'ultimo.
-3. **Passo = distanza / (contatti − 1).** Con 10 contatti: 4,5 mm = passo 0,5; 3,6 mm = passo 0,4.
-4. Se il calibro non entra, fotografa dall'alto con un righello alla stessa altezza.
-5. Prova finale: un FFC è largo circa (contatti + 1) × passo. Deve entrare senza gioco evidente.
-
-Annota anche pin 1, tipo di blocco (basculante o a slitta) e contatti sopra o sotto: decidono verso e tipo di cavetto.
+Il pin 1 è sul lato del triangolo. Restano da annotare il tipo di blocco (basculante o a slitta) e i contatti sopra o sotto: decidono verso e tipo di cavetto.
 
 ### Fase 2: accesso ai contatti
 
@@ -486,23 +560,25 @@ Il package a piedini aiuta: ogni segnale si raggiunge col puntale sul piedino, c
 
 | Contatto | Pin adattatore | Ω verso massa | Prova diodi | Piedino EC / altro | Tensione standby | Segnale |
 |---|---|---|---|---|---|---|
-| 1 | | | | | | |
-| 2 | | | | | | |
-| 3 | | | | | | |
-| 4 | | | | | | |
-| 5 | | | | | | |
-| 6 | | | | | | |
+| 1 | | | | | | Alimentazione? |
+| 2 | | | | 101 (da foto) | | FSCE# |
+| 3 | | | | | | GND? |
+| 4 | | | | 102 (da foto) | | FMOSI |
+| 5 | | | | 103 (da foto) | | FMISO |
+| 6 | | | | 105 (da foto) | | FSCK |
 | 7 | | | | | | |
 | 8 | | | | | | |
-| 9 | | | | | | |
+| 9 | | | | 108 o 109? | | |
 | 10 | | | | | | |
+
+Le due piazzole dorate sotto il connettore si provano col puntale, senza adattatore: sono il modo più semplice per abbinare i contatti 9 e 10.
 
 ### Fase 4: conferma in standby
 
 Solo con la scheda già compilata.
 
 1. Collega l'alimentatore, macchina spenta, puntale nero fisso sulla massa.
-2. **Misura la tensione** di ogni contatto, senza toccare i vicini: 1,8 V o 3,3 V.
+2. **Misura la tensione** di ogni contatto, senza toccare i vicini: 1,8 V o 3,3 V. Il contatto 1 e il piedino EC 106 indicano il livello di VFSPI.
 3. Imposta quella soglia sull'analizzatore e registra l'accensione, solo in ascolto.
 4. Decodifica con sigrok/PulseView:
 
@@ -515,7 +591,8 @@ Solo con la scheda già compilata.
 
 ### Fase 5: cosa fare col risultato
 
-- **FSPI:** niente programmatore SPI alla cieca.
+- **FSPI (contatti 2, 4, 5, 6):** niente programmatore SPI alla cieca, solo ascolto.
+- **GPG6 e GPG2 sui contatti ignoti:** tutti gli strap del test mode sono sul connettore. Cercare il protocollo prima di pilotare qualsiasi linea.
 - **SMBus collegato all'EC:** valutare DBGR/SMB (§6), prima in sola lettura.
 - **UART:** utile come console, non per il flash.
 - **Non collegata all'EC, o connettore assente:** resta la via KBS (§7).

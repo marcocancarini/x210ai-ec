@@ -23,12 +23,20 @@
 - §7.23 **DBGR**: ISP e debug via DBGR/EPP o DBGR/SMB; §7.23.3.2 DBGR/SMB attivabile a caldo, uscita solo con reset
 - §7.4.4.6 **KSICTRLR** `0x1D05`: bit 4 OVRPPK disabilita DBGR/EPP; §7.7.4.26 **SLVISELR** `0x1C34`: bit 4 OVRSMDBG disabilita DBGR/SMB
 - Table 5-21 strap: `KSI[5,4,2,1]=0011b` = ingresso DBGR/EPP; `FSCK, GPG6, FMISO, FMOSI, FSCE#, GPG2` = ingresso test mode
+- Table 5-20 GPG2 (pull-up se FSPI è in uso); §6.4.4.51-52 FLHCTRL5R/6R (sorgente del fetch)
 - Table 5-5 FSPI, Table 5-6 SSPI, Table 4-1 piedini LQFP-128, §7.21.5 SSPI base `0x2600h`, §7.5.3.28 GPCRn (`GPMD`: 00 alternate, 01 output, 10 input)
 - LQFP 128 Outline Dimensions: corpo 14×14 mm, passo 0,40 mm, ingombro 16×16 mm
 
 ## Immagini della scheda (`refs/img/`)
 
+- `ec-connettore-tastiera.png`: EC e connettore tastiera BTB a 40 contatti (foto ridotta, 2000×1506)
+- `it5571-pinout-lqfp128.png`: pagina 9 di `IT5571E-128.pdf`, piedini LQFP-128 vista dall'alto (il documento è intestato IT5570E)
+- `ec-spi1-pinout.png`: pinout parziale annotato, ricavato da `PXL_20261104_101131198.MP.jpg`
 - `ec-spi1-connettore.png`: connettore EC_SPI1 sopra il chip ITE LQFP
 - `scheda-porte-debug.png`: schema porte del produttore (debug port 10, 12, 20)
 - `ec-spi1-assemblato.png`: connettore su scheda assemblata nel telaio
 - `ec-spi1-contatti.png`: ingrandimento dei terminali usato per stimare numero di contatti e passo
+
+## Riferimenti esterni
+
+- Tastiera ThinkPad X201: https://github.com/bulat-chu/Thinkpad-X6x-X20x-keyboard-USB-Adapter (`Scheme-PCB/Green/Thinkpad_X201_kbd_USB-C-Scheme.pdf`, connettore J6 `AA01B-S040VA1`)
