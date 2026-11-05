@@ -15,8 +15,8 @@ defop(0x00,0x00,'NOP'); defop(0x01,0x07,'AJMP','addr11',2)
 defop(0x02,0x02,'LJMP','addr16',3); defop(0x03,0x03,'RR','A'); defop(0x04,0x04,'INC','A')
 defop(0x05,0x05,'INC','d',2); defop(0x06,0x07,'INC','r',1)
 defop(0x08,0x0F,'INC','r',1); defop(0x10,0x10,'JBC','b_rel',3); defop(0x11,0x11,'ACALL','addr11',2)
-defop(0x12,0x12,'LCALL','addr16',3)
-defop(0x18,0x1F,'DJNZ','r_rel',2); defop(0x20,0x20,'JB','b_rel',3); defop(0x21,0x21,'AJMP','addr11',2)
+defop(0x12,0x12,'LCALL','addr16',3); defop(0x13,0x13,'RRC','A'); defop(0x14,0x14,'DEC','A')
+defop(0x15,0x15,'DEC','d',2); defop(0x16,0x1F,'DEC','r',1); defop(0x20,0x20,'JB','b_rel',3); defop(0x21,0x21,'AJMP','addr11',2)
 defop(0x22,0x22,'RET'); defop(0x23,0x23,'RL','A'); defop(0x24,0x24,'ADD','A_i',2); defop(0x25,0x25,'ADD','A_d',2)
 defop(0x26,0x27,'ADD','A_r',1); defop(0x28,0x2F,'ADD','A_r',1); defop(0x30,0x30,'JNB','b_rel',3)
 defop(0x31,0x31,'ACALL','addr11',2); defop(0x32,0x32,'RETI'); defop(0x33,0x33,'RLC','A'); defop(0x34,0x34,'ADDC','A_i',2)
@@ -39,7 +39,7 @@ defop(0xA0,0xA0,'ORL','C_b',2); defop(0xA1,0xA1,'AJMP','addr11',2); defop(0xA2,0
 defop(0xA4,0xA4,'MUL','AB'); defop(0xA5,0xA5,'RESERVED'); defop(0xA6,0xA7,'MOV','r_d',2); defop(0xA8,0xAF,'MOV','r_d',2)
 defop(0xB0,0xB0,'ANL','C_b',2); defop(0xB1,0xB1,'ACALL','addr11',2); defop(0xB2,0xB2,'CPL','b',2)
 defop(0xB3,0xB3,'CPL','C'); defop(0xB4,0xB4,'CJNE','A_i_rel',3); defop(0xB5,0xB5,'CJNE','A_d_rel',3)
-defop(0xB6,0xB7,'CJNE','r_i_rel',2); defop(0xB8,0xBF,'CJNE','r_i_rel',2)
+defop(0xB6,0xB7,'CJNE','r_i_rel',3); defop(0xB8,0xBF,'CJNE','r_i_rel',3)
 defop(0xC0,0xC0,'PUSH','d',2); defop(0xC1,0xC1,'AJMP','addr11',2); defop(0xC2,0xC2,'CLR','b',2); defop(0xC3,0xC3,'CLR','C')
 defop(0xC4,0xC4,'SWAP','A'); defop(0xC5,0xC5,'XCH','A_d',2); defop(0xC6,0xC7,'XCH','A_r',1); defop(0xC8,0xCF,'XCH','A_r',1)
 defop(0xD0,0xD0,'POP','d',2); defop(0xD1,0xD1,'ACALL','addr11',2); defop(0xD2,0xD2,'SETB','b',2); defop(0xD3,0xD3,'SETB','C')
@@ -48,6 +48,10 @@ defop(0xE0,0xE0,'MOVX','A_@DPTR'); defop(0xE1,0xE1,'AJMP','addr11',2); defop(0xE
 defop(0xE4,0xE4,'CLR','A'); defop(0xE5,0xE5,'MOV','A_d',2); defop(0xE6,0xE7,'MOV','A_r',1); defop(0xE8,0xEF,'MOV','A_r',1)
 defop(0xF0,0xF0,'MOVX','@DPTR_A'); defop(0xF1,0xF1,'ACALL','addr11',2); defop(0xF2,0xF3,'MOVX','@r_A',1)
 defop(0xF4,0xF4,'CPL','A'); defop(0xF5,0xF5,'MOV','d_A',2); defop(0xF6,0xF7,'MOV','r_A',1); defop(0xF8,0xFF,'MOV','r_A',1)
+
+def reg(op):
+    # opcodes with low nibble 6 or 7 use indirect @R0/@R1, the others R0-R7
+    return f'@R{op & 1}' if op & 0xF in (6, 7) else f'R{op & 7}'
 
 def disasm(data, base, start, end, out):
     pc = start
@@ -81,7 +85,7 @@ def disasm(data, base, start, end, out):
         elif f == 'i':
             args = f'#0x{raw[1]:02X}'
         elif f == 'r':
-            args = f'R{op & 7}'
+            args = f'{reg(op)}'
         elif f == 'A':
             args = 'A'
         elif f == 'C':
@@ -91,7 +95,7 @@ def disasm(data, base, start, end, out):
         elif f == 'A_d':
             args = f'A, 0x{raw[1]:02X}'
         elif f == 'A_r':
-            args = f'A, R{op & 7}'
+            args = f'A, {reg(op)}'
         elif f == 'd_A':
             args = f'0x{raw[1]:02X}, A'
         elif f == 'd_i':
@@ -99,16 +103,16 @@ def disasm(data, base, start, end, out):
         elif f == 'd_d':
             args = f'0x{raw[2]:02X}, 0x{raw[1]:02X}'
         elif f == 'd_r':
-            args = f'0x{raw[1]:02X}, R{op & 7}'
+            args = f'0x{raw[1]:02X}, {reg(op)}'
         elif f == 'r_i':
-            args = f'R{op & 7}, #0x{raw[1]:02X}'
+            args = f'{reg(op)}, #0x{raw[1]:02X}'
         elif f == 'r_d':
-            args = f'R{op & 7}, 0x{raw[1]:02X}'
+            args = f'{reg(op)}, 0x{raw[1]:02X}'
         elif f == 'r_A':
-            args = f'R{op & 7}, A'
+            args = f'{reg(op)}, A'
         elif f == 'r_rel':
             r = raw[1] if raw[1] < 128 else raw[1]-256
-            args = f'R{op & 7}, 0x{(pc+2+r)&0xFFFF:04X}'
+            args = f'{reg(op)}, 0x{(pc+2+r)&0xFFFF:04X}'
         elif f == 'd_rel':
             r = raw[2] if raw[2] < 128 else raw[2]-256
             args = f'0x{raw[1]:02X}, 0x{(pc+3+r)&0xFFFF:04X}'
@@ -117,10 +121,10 @@ def disasm(data, base, start, end, out):
             args = f'A, #0x{raw[1]:02X}, 0x{(pc+3+r)&0xFFFF:04X}'
         elif f == 'A_d_rel':
             r = raw[2] if raw[2] < 128 else raw[2]-256
-            args = f'0x{raw[1]:02X}, 0x{(pc+3+r)&0xFFFF:04X}'
+            args = f'A, 0x{raw[1]:02X}, 0x{(pc+3+r)&0xFFFF:04X}'
         elif f == 'r_i_rel':
-            r = raw[1] if raw[1] < 128 else raw[1]-256
-            args = f'R{op & 7}, #0x{raw[1]:02X}, 0x{(pc+2+r)&0xFFFF:04X}'
+            r = raw[2] if raw[2] < 128 else raw[2]-256
+            args = f'{reg(op)}, #0x{raw[1]:02X}, 0x{(pc+3+r)&0xFFFF:04X}'
         elif f == 'DPTR_i':
             args = f'#0x{(raw[1]<<8)|raw[2]:04X}'
         elif f == 'b_C':

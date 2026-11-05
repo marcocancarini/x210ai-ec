@@ -1,10 +1,10 @@
 # Riferimenti datasheet e file sorgente dell'analisi
 
-## File di riferimento (locali, non versionati — hash per tracciabilità)
+## File di riferimento (hash per tracciabilità)
 
 | File | SHA256 | Note |
 |---|---|---|
-| `dumps/EC0416.BIN` | `acaf8fed4b797f39d983849b916baaf61352832b337950fa9fb3225994cb6dca` | dump EC 128 KiB (in `dumps/`) |
+| `firmware/original/EC0416.BIN` | `acaf8fed4b797f39d983849b916baaf61352832b337950fa9fb3225994cb6dca` | dump EC 128 KiB (nella repo) |
 | `inputs/datasheets/IT5571E-128.pdf` (29 pag.) | `a4e4afae8a157b7424401cf65c9dbecddce937b8b88a3dc1474124439bfc5753` | datasheet sintetico IT5571E-128 (features: 8051, eSPI MAFS, LPC, KBC 8042, PS/2 ×2, KBS 18×8, ISP via KBS/parallel port, 128K eFlash) |
 | `inputs/datasheets/IT5570_A_V0.3.1_U.pdf` | `01666ebe44ece4a436b5ffaad40c9570c17f0b3480862caf224953585c59102f` | datasheet IT5570 A-version V0.3.1 (archive.org) — parente stretto di IT5571 (chip ID 0x5571 ≈ IT8571) |
 | `inputs/bios/X210AI0724BIOS.rar` | `a1090b7986e6e3cb2485333f73fd5f8d62822f64bedfe7cad5733e88ddd94663` | pacchetto strumenti, estratto in `inputs/bios/extracted/`: `Fpt.efi`, `fparts.txt`, `fb.nsh`, `uefi-shell/`, tutorial docx (`ifu.efi xx.bin 128` per EC). Nessuna immagine BIOS |
@@ -31,9 +31,9 @@
 
 - `ec-connettore-tastiera.png`: EC e connettore tastiera BTB a 40 contatti (foto ridotta, 2000×1506)
 - `it5571-pinout-lqfp128.png`: pagina 9 di `IT5571E-128.pdf`, piedini LQFP-128 vista dall'alto (il documento è intestato IT5570E)
-- `ec-spi1-pinout.png`: pinout parziale annotato, ricavato da `PXL_20261104_101131198.MP.jpg`
-- `PXL_20261104_101131198.MP.jpg`, `PXL_20261104_101145837.jpg`: foto originali di connettore EC_SPI1 ed EC, usate per passo e piste
-- `PXL_20261104_104321709.MP_preview.jpeg`: misura col calibro della fila di terminali, 5,08 mm (display capovolto)
+- `ec-spi1-pinout.png`: pinout parziale annotato, ricavato da `refs/photos/PXL_20261104_101131198.MP.jpg`
+- `refs/photos/PXL_20261104_101131198.MP.jpg`, `refs/photos/PXL_20261104_101145837.jpg`: foto originali di connettore EC_SPI1 ed EC, usate per passo e piste
+- `refs/photos/PXL_20261104_104321709.MP_preview.jpeg`: misura col calibro della fila di terminali, 5,08 mm (display capovolto)
 - `ec-spi1-connettore.png`: connettore EC_SPI1 sopra il chip ITE LQFP
 - `scheda-porte-debug.png`: schema porte del produttore (debug port 10, 12, 20)
 - `ec-spi1-assemblato.png`: connettore su scheda assemblata nel telaio
