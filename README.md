@@ -10,9 +10,9 @@ Questa guida è l'unico documento del progetto. I dump stanno in `dumps/` e i to
 
 | Area | Stato |
 |---|---|
-| Firmware EC | **Sulla scheda c'è `EC0416` (`V0.3.2`)**, flashata sopra la `V0.4.0` originale. Confronto in §9, patch `V0.4.0` con CRC corretto in §5 |
+| Firmware EC | **Sulla scheda c'è `EC-V0.4.0-iso-jis-fn-ctrl-swap.bin`**, flashata sopra `iso-jis`: ISO e scambio Fn↔LCtrl riferiti funzionanti, hash del dump non registrato. Confronto in §9, patch `V0.4.0` con CRC corretto in §5 |
 | Lettura EC | **Riuscita con `ifu.efi /S 128 /k /j`**: due letture identiche (§6). Le altre vie non sono provate (§6, §7) |
-| Scrittura EC | **`ifu` ha flashato `EC0416` con successo**, immagini modificate mai provate (§9). Con RP2040 è possibile, ma con punti aperti (§7) |
+| Scrittura EC | **`ifu` ha flashato `EC0416`, `iso-jis` e `iso-jis-fn-ctrl-swap` con successo**: un'immagine con CRC ricalcolato parte sulla scheda (§9). Il codice aggiunto in `all-keys` non è mai stato provato. Con RP2040 è possibile, ma con punti aperti (§7) |
 | Immagine BIOS | Due letture identiche da 32 MiB nella repo, non analizzate (§1, §8, §10) |
 | Brick segnalati | Meccanismo più probabile trovato nel codice di `ifu`, non riprodotto (§9) |
 | Recovery | Descritta, mai provata su questa scheda (§11) |
@@ -67,11 +67,11 @@ Questa guida è l'unico documento del progetto. I dump stanno in `dumps/` e i to
 | File | SHA256 | Note |
 |---|---|---|
 | `dumps/EC-V0.4.0-20250723-lettura1.bin`, `-lettura2.bin` | `9b8334bd5d5986ce97dfc5d8503fa643a97d8abb6c6166ce181c0525ec722311` | **Firmware originale della scheda**, letto il 2026-11-04. 131072 B, build `V0.4.0` 2025-07-23 18:11:04. Due letture identiche. Base delle patch e file di ritorno |
-| `dumps/EC-V0.4.0-all-keys.bin` | `d96e1b3e6a4f0fd1a3ea288b234afae3ad41dcb460b40419300df3ea40005894` | **File da flashare:** ISO, JIS, scambio Fn↔LCtrl, Back, Forward, ThinkVantage, pull-up e rilascio di Fn (98 byte + CRC), mai provata |
-| `dumps/EC-V0.4.0-iso-jis.bin` | `7ee70df0894832da7ed47dab8e2fda7674ea505c643ffb4b75d113f491471a74` | `V0.4.0` con tasti ISO e JIS (7 byte + CRC), mai provata |
+| `dumps/EC-V0.4.0-all-keys.bin` | `d96e1b3e6a4f0fd1a3ea288b234afae3ad41dcb460b40419300df3ea40005894` | ISO, JIS, scambio Fn↔LCtrl, Back, Forward, ThinkVantage, pull-up e rilascio di Fn (98 byte + CRC), mai provata |
+| `dumps/EC-V0.4.0-iso-jis.bin` | `7ee70df0894832da7ed47dab8e2fda7674ea505c643ffb4b75d113f491471a74` | `V0.4.0` con tasti ISO e JIS (7 byte + CRC). ISO riferita funzionante, JIS non provata. File di ritorno sicuro |
 | `dumps/EC-V0.4.0-fn-ctrl-swap.bin` | `e1f1386daef06d7b51c5d65d8c1fc4764be7b33173d82a192db95b68f15be07f` | `V0.4.0` con scambio Fn↔LCtrl (3 byte + CRC), mai provata |
-| `dumps/EC-V0.4.0-iso-jis-fn-ctrl-swap.bin` | `a3f1ff4e1bdd374692f2854a7a8be4a48375938c5959f3e4643539e88675d57f` | Entrambe (10 byte + CRC), mai provata |
-| `dumps/EC0416.BIN` | `acaf8fed4b797f39d983849b916baaf61352832b337950fa9fb3225994cb6dca` | **Installata sulla scheda dal 2026-11-05**, più vecchia della `V0.4.0` originale. 131072 B, build `V0.3.2` 2025-04-15 18:20:35, md5 `7392fa5138c906ac17c7049fa69514e7` |
+| `dumps/EC-V0.4.0-iso-jis-fn-ctrl-swap.bin` | `a3f1ff4e1bdd374692f2854a7a8be4a48375938c5959f3e4643539e88675d57f` | **Installata sulla scheda:** entrambe (10 byte + CRC). ISO e scambio riferiti funzionanti, JIS non provata |
+| `dumps/EC0416.BIN` | `acaf8fed4b797f39d983849b916baaf61352832b337950fa9fb3225994cb6dca` | Installata il 2026-11-05 e poi sostituita, più vecchia della `V0.4.0` originale. 131072 B, build `V0.3.2` 2025-04-15 18:20:35, md5 `7392fa5138c906ac17c7049fa69514e7` |
 | `dumps/EC0416_ctrl-caps-swap.BIN` | `21f63a733dd5ee8b338ffefcda093ffec8d38c38138bc97c1e82a65a20acd406` | Patch demo L-Ctrl↔CapsLock (2 byte). **CRC non aggiornato, non flashare** |
 | `dumps/EC0416_fn-ctrl-swap.BIN` | `970431688f10aa160973d3f276c453e5cc86427a28a01ee34ef43ea17dfabee8` | **Errata, non usare:** cambia Alt+SysRq, non Fn, e ha il CRC vecchio (§3, §5) |
 | `inputs/ec/MTLH-NB06-ec-250322/MTLH-NB06_E03-250322.BIN` | `151edd7a59cad1eb4a3d7b0827ee0937f73f0645a3cbf8d532f5e6bc0de5bbde` | EC vecchia, build 2025-03-22, md5 `4bbc1e54aad8cac51a3e0a5e5274ed28` |
@@ -124,7 +124,7 @@ Sezioni del datasheet usate: `refs/DATASHEETS.md`.
 
 ## 5. Patch della tastiera
 
-**Patch `V0.4.0`.** `tools/patch_keyboard.py` parte dal dump `V0.4.0`, ne controlla l'hash e i byte attesi, ricalcola il CRC (§3) e genera i quattro file `dumps/EC-V0.4.0-*.bin` (§1). Ogni file è verificato per dimensione, vettore di reset, firma e CRC: questi controlli non dicono nulla sulla correttezza del codice. **Mai flashate:** un'immagine modificata non è ancora stata provata sull'hardware.
+**Patch `V0.4.0`.** `tools/patch_keyboard.py` parte dal dump `V0.4.0`, ne controlla l'hash e i byte attesi, ricalcola il CRC (§3) e genera i quattro file `dumps/EC-V0.4.0-*.bin` (§1). Ogni file è verificato per dimensione, vettore di reset, firma e CRC: questi controlli non dicono nulla sulla correttezza del codice. Sono state flashate `iso-jis` e `iso-jis-fn-ctrl-swap`, che funzionano: `fn-ctrl-swap` e `all-keys` non sono provate sull'hardware.
 
 | Byte | Da → a | Effetto |
 |---|---|---|
@@ -319,9 +319,9 @@ Il riferimento è lo [schema dell'adattatore X201](https://github.com/bulat-chu/
 
 | Tratto | Fonte | Stato |
 |---|---|---|
-| Contatto 1 → EC piedino 3 (GPH7) | Firmware e datasheet per il piedino, schema X201 per il contatto | Probabile, pista non visibile nelle foto |
-| Contatto 36 → massa | Schema X201 | Da misurare, nascosto dal connettore |
-| Pull-up esterno | Il firmware originale lascia il pull-up interno spento | Probabile, non visto |
+| Contatto 1 → EC piedino 3 (GPH7) | Firmware e datasheet per il piedino, schema X201 per il contatto | **Confermato dal funzionamento:** col tasto scambiato Fn fisico fa da Ctrl. Il contatto preciso non è misurato |
+| Contatto 36 → massa | Schema X201 | **Confermato dal funzionamento**, altrimenti il tasto non si chiuderebbe. Non misurato |
+| Pull-up esterno | Il firmware lascia il pull-up interno spento e il tasto funziona | Molto probabile, non visto |
 
 Nelle foto la tacca serigrafata marca il piedino 1, poi 5, 10, 15. I primi due componenti della fila vicino all'angolo (uno scuro, uno color ocra) sono separati dagli altri da due barre di serigrafia e potrebbero essere un filtro RC con pull-up: è solo un'ipotesi.
 
@@ -476,7 +476,11 @@ Gli indirizzi di questa sezione e dei paragrafi precedenti si riferiscono a `EC0
 
 **Flash reale, 2026-11-05.** `ifu.efi EC0416.BIN 128` da UEFI Shell, sopra la `V0.4.0`: riferito riuscito, macchina funzionante. Con `EC0416` `ù` continua a non funzionare, come atteso: la matrice è la stessa (§4). L'hash del dump successivo al flash non è stato registrato e `evtest` non è stato fatto.
 
-**Prossimo flash: `all-keys`.** Non ancora eseguito. Il file riporta la scheda alla `V0.4.0` con le patch di §5, quindi toglie anche il downgrade.
+**Flash di `iso-jis`, 2026-11-05.** Riuscito sopra `EC0416`, tastiera ISO funzionante. Il CRC ricalcolato non blocca l'avvio.
+
+**Flash di `iso-jis-fn-ctrl-swap`, 2026-11-05.** Riuscito sopra `iso-jis`, scambio Fn↔LCtrl funzionante.
+
+**`all-keys`, non ancora eseguito.** Aggiunge codice (§5), a differenza delle altre patch.
 
 ```fish
 sudo cp dumps/EC-V0.4.0-all-keys.bin /boot/efi/EFI/tools/X210KEY.BIN

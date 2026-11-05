@@ -19,13 +19,16 @@ signature @0x40, firma @0x7F80, mappa banchi, tabella set2→set1 @0x0D03 — tu
 - [ ] Annotare come si comporta la macchina a fine dump con `/j`: ritorno al prompt, tastiera, `reset -s`
 - [x] Patch tastiera `V0.4.0` (ISO/JIS, Fn↔LCtrl, Back, Forward, ThinkVantage, pull-up e rilascio di Fn): `tools/patch_keyboard.py`, verifica statica ed emulata, mai sull'hardware
 - [x] Flash `EC0416` con `ifu`: riuscito sulla scheda; registrare l'hash del dump successivo
+- [x] Flash `EC-V0.4.0-iso-jis.bin` e poi `EC-V0.4.0-iso-jis-fn-ctrl-swap.bin` con `ifu`: riusciti, ISO e scambio Fn↔LCtrl funzionanti; registrare l'hash del dump
+- [ ] Provare i tasti JIS su una tastiera giapponese
 - [ ] Flashare `dumps/EC-V0.4.0-all-keys.bin` (README §9), meglio dopo la recovery ISP; mai `EC0416_*.BIN` (CRC vecchio)
-- [ ] Dopo il flash: registrare l'hash del dump e provare `ù`, `<>`, Fn, L-Ctrl, Back, Forward e ThinkVantage
+- [ ] Dopo il flash di `all-keys`: registrare l'hash del dump e provare Back, Forward, ThinkVantage e il rilascio di Fn
 - [ ] Decidere se i dump BIOS devono restare nella repo: possono contenere dati della macchina
 - [ ] Decodificare cosa cambia tra `EC0416` e `V0.4.0` (driver SMBus, logica banchi 1 e 2)
 - [ ] Cicalino 15 segnali KSO/KSI dal connettore tastiera ai pin EC (tabella §7 README; KSO1 foto=contatto 16 vs schema 18 — ricontrollare) → chiude mappa EPP per RP2040
 - [ ] Misurare EC_SPI1 contatti 1, 3, 7, 8, 9, 10 (massa, EC 119 = GPG6, EC 100 = GPG2, SMBus 87/88, 115/116, 117/118); FSPI già mappata sui contatti 2,4,5,6
-- [ ] Confermare con il cicalino che HOTKEY (contatto 1) arrivi al piedino 3 dell'EC, GPH7 (`0x1608` bit 7), misurare se la scheda ha già un pull-up e se il contatto 36 è a massa (README §7). Il caso `0x84` a `0x0C31` non è Fn: è Alt+SysRq
+- [x] HOTKEY arriva a GPH7 e il contatto 36 è a massa: confermato dallo scambio funzionante, senza misure. Il caso `0x84` a `0x0C31` non è Fn: è Alt+SysRq
+- [ ] Misurare se la scheda ha un pull-up esterno sulla linea HOTKEY
 - [x] Byte `0x4A-0x4B`: CRC-16/CMS su tutta l'immagine esclusa la firma, confermato su tre build (README §3)
 - [ ] Capire se il CRC viene controllato dalla boot ROM
 - [ ] ISP via RP2040 in SOLA lettura: `isp hello / lines / enter --mode powerup / id / read -o x210ai-ec.bin -s 128 --no-exit` — mai `write` prima di verifica dump
