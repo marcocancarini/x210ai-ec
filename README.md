@@ -290,7 +290,7 @@ Una resistenza da **1 kΩ in serie su ogni linea** (470 Ω-1 kΩ), 15 in totale.
 | GP14 | 19 | KSO9 | 45 | BUSY |
 | GND | 3, 8, 13, 18 | Massa della scheda | Non dal connettore | Vite o schermo USB |
 
-La mappa dei GPIO sta in `firmware/hwconfig.h` del progetto RP2040 del progetto: PD0-PD7 devono restare su 8 GPIO consecutivi.
+La mappa dei GPIO sta in `firmware/hwconfig.h` del progetto RP2040: PD0-PD7 devono restare su 8 GPIO consecutivi.
 
 **Mai collegare `3V3` o `VBUS` del Pico alla scheda:** in comune c'è solo la massa.
 
