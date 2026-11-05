@@ -21,8 +21,8 @@ signature @0x40, firma @0x7F80, mappa banchi, tabella set2→set1 @0x0D03 — tu
 - [x] Flash `EC0416` con `ifu`: riuscito sulla scheda; registrare l'hash del dump successivo
 - [x] Flash `EC-V0.4.0-iso-jis.bin` e poi `EC-V0.4.0-iso-jis-fn-ctrl-swap.bin` con `ifu`: riusciti, ISO e scambio Fn↔LCtrl funzionanti; registrare l'hash del dump
 - [ ] Provare i tasti JIS su una tastiera giapponese
-- [ ] Flashare `dumps/EC-V0.4.0-all-keys.bin` (README §9), meglio dopo la recovery ISP; mai `EC0416_*.BIN` (CRC vecchio)
-- [ ] Dopo il flash di `all-keys`: registrare l'hash del dump e provare Back, Forward, ThinkVantage e il rilascio di Fn
+- [x] Flash `dumps/EC-V0.4.0-all-keys.bin`: riuscito; `<>`, `ù`, Back, Forward, ThinkVantage e Fn fisico come Ctrl verificati con `evtest`. Mai `EC0416_*.BIN` (CRC vecchio)
+- [ ] Dopo `all-keys`: registrare l'hash del dump (`d96e1b3e6a4f…`), provare il rilascio di Fn prima del tasto e le altre combinazioni con Fn
 - [ ] Decidere se i dump BIOS devono restare nella repo: possono contenere dati della macchina
 - [ ] Decodificare cosa cambia tra `EC0416` e `V0.4.0` (driver SMBus, logica banchi 1 e 2)
 - [ ] Cicalino 15 segnali KSO/KSI dal connettore tastiera ai pin EC (tabella §7 README; KSO1 foto=contatto 16 vs schema 18 — ricontrollare) → chiude mappa EPP per RP2040

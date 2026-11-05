@@ -10,9 +10,9 @@ Questa guida è l'unico documento del progetto. I dump stanno in `dumps/` e i to
 
 | Area | Stato |
 |---|---|
-| Firmware EC | **Sulla scheda c'è `EC-V0.4.0-iso-jis-fn-ctrl-swap.bin`**, flashata sopra `iso-jis`: ISO e scambio Fn↔LCtrl riferiti funzionanti, hash del dump non registrato. Confronto in §9, patch `V0.4.0` con CRC corretto in §5 |
+| Firmware EC | **Sulla scheda c'è `EC-V0.4.0-all-keys.bin`**, flashata sopra `iso-jis-fn-ctrl-swap`: tasti verificati con `evtest` su tastiera ISO (§9), JIS da provare, hash del dump non registrato. Confronto in §9, patch `V0.4.0` con CRC corretto in §5 |
 | Lettura EC | **Riuscita con `ifu.efi /S 128 /k /j`**: due letture identiche (§6). Le altre vie non sono provate (§6, §7) |
-| Scrittura EC | **`ifu` ha flashato `EC0416`, `iso-jis` e `iso-jis-fn-ctrl-swap` con successo**: un'immagine con CRC ricalcolato parte sulla scheda (§9). Il codice aggiunto in `all-keys` non è mai stato provato. Con RP2040 è possibile, ma con punti aperti (§7) |
+| Scrittura EC | **`ifu` ha flashato `EC0416`, `iso-jis`, `iso-jis-fn-ctrl-swap` e `all-keys` con successo**: immagini con CRC ricalcolato e codice aggiunto partono sulla scheda (§9). Il fix del rilascio di Fn non è ancora provato sull'hardware. Con RP2040 è possibile, ma con punti aperti (§7) |
 | Immagine BIOS | Due letture identiche da 32 MiB nella repo, non analizzate (§1, §8, §10) |
 | Brick segnalati | Meccanismo più probabile trovato nel codice di `ifu`, non riprodotto (§9) |
 | Recovery | Descritta, mai provata su questa scheda (§11) |
@@ -67,10 +67,10 @@ Questa guida è l'unico documento del progetto. I dump stanno in `dumps/` e i to
 | File | SHA256 | Note |
 |---|---|---|
 | `dumps/EC-V0.4.0-20250723-lettura1.bin`, `-lettura2.bin` | `9b8334bd5d5986ce97dfc5d8503fa643a97d8abb6c6166ce181c0525ec722311` | **Firmware originale della scheda**, letto il 2026-11-04. 131072 B, build `V0.4.0` 2025-07-23 18:11:04. Due letture identiche. Base delle patch e file di ritorno |
-| `dumps/EC-V0.4.0-all-keys.bin` | `d96e1b3e6a4f0fd1a3ea288b234afae3ad41dcb460b40419300df3ea40005894` | ISO, JIS, scambio Fn↔LCtrl, Back, Forward, ThinkVantage, pull-up e rilascio di Fn (98 byte + CRC), mai provata |
+| `dumps/EC-V0.4.0-all-keys.bin` | `d96e1b3e6a4f0fd1a3ea288b234afae3ad41dcb460b40419300df3ea40005894` | ISO, JIS, scambio Fn↔LCtrl, Back, Forward, ThinkVantage, pull-up e rilascio di Fn (98 byte + CRC). **Installata sulla scheda**, tasti ISO verificati con `evtest` |
 | `dumps/EC-V0.4.0-iso-jis.bin` | `7ee70df0894832da7ed47dab8e2fda7674ea505c643ffb4b75d113f491471a74` | `V0.4.0` con tasti ISO e JIS (7 byte + CRC). ISO riferita funzionante, JIS non provata. File di ritorno sicuro |
 | `dumps/EC-V0.4.0-fn-ctrl-swap.bin` | `e1f1386daef06d7b51c5d65d8c1fc4764be7b33173d82a192db95b68f15be07f` | `V0.4.0` con scambio Fn↔LCtrl (3 byte + CRC), mai provata |
-| `dumps/EC-V0.4.0-iso-jis-fn-ctrl-swap.bin` | `a3f1ff4e1bdd374692f2854a7a8be4a48375938c5959f3e4643539e88675d57f` | **Installata sulla scheda:** entrambe (10 byte + CRC). ISO e scambio riferiti funzionanti, JIS non provata |
+| `dumps/EC-V0.4.0-iso-jis-fn-ctrl-swap.bin` | `a3f1ff4e1bdd374692f2854a7a8be4a48375938c5959f3e4643539e88675d57f` | ISO/JIS e scambio (10 byte + CRC). ISO e scambio riferiti funzionanti, JIS non provata. File di ritorno sicuro |
 | `dumps/EC0416.BIN` | `acaf8fed4b797f39d983849b916baaf61352832b337950fa9fb3225994cb6dca` | Installata il 2026-11-05 e poi sostituita, più vecchia della `V0.4.0` originale. 131072 B, build `V0.3.2` 2025-04-15 18:20:35, md5 `7392fa5138c906ac17c7049fa69514e7` |
 | `dumps/EC0416_ctrl-caps-swap.BIN` | `21f63a733dd5ee8b338ffefcda093ffec8d38c38138bc97c1e82a65a20acd406` | Patch demo L-Ctrl↔CapsLock (2 byte). **CRC non aggiornato, non flashare** |
 | `dumps/EC0416_fn-ctrl-swap.BIN` | `970431688f10aa160973d3f276c453e5cc86427a28a01ee34ef43ea17dfabee8` | **Errata, non usare:** cambia Alt+SysRq, non Fn, e ha il CRC vecchio (§3, §5) |
@@ -120,11 +120,11 @@ Sezioni del datasheet usate: `refs/DATASHEETS.md`.
 - **Confronto con ThinkPad:** la matrice coincide, trasposta, con la X220 di [thinkpad-ec](https://github.com/hamishcoleman/thinkpad-ec/blob/master/docs/table_matrix.txt): 88 celle occupate in comune e 52 tasti di scrittura su 52 con il codice atteso. Lì i codici sono numeri di tasto IBM, quindi quelli "sconosciuti" sono 14 Yen, 131 Muhenkan, 132 Henkan e 133 Kana. Differenze: LWin sta in `KSI2/KSO11` invece di `KSI3/KSO9`, e il firmware originale non ha ThinkVantage, Mic e PgBk/PgFd. La patch `all-keys` aggiunge tutti questi tasti tranne Mic (§5).
 - **Confronto con X20x JIS:** l'adattatore [bulat-chu](https://github.com/bulat-chu/Thinkpad-X6x-X20x-keyboard-USB-Adapter) documenta la matrice reale di una tastiera X6x/X20x giapponese. Convertita con il suo `pinout.txt` e con `matrix_pins`, dà 49 tasti su 49 uguali al firmware e conferma Yen, Ro, Muhenkan, Henkan, Kana e la cella `KSI6/KSO7`, che lì è `]` e su ISO è `#`. Anche LWin in `KSI2/KSO11` coincide con il suo `table-main.txt`, che ha però L_Shift e R_Shift scambiati rispetto al suo `keymap.c`. La cella ISO `<>` (`KSI5/KSO1`) non esiste su una tastiera JIS: viene solo dalla X220, ma è libera.
 - **Rilascio di Fn:** la routine `0x8CFA` riceve l'evento, lo salva in `0x080E` e non lo usa: sceglie la variante Fn guardando Fn al momento del rilascio. Rilasciare Fn prima del tasto, o premerlo dopo, manda il rilascio di un altro tasto: Fn+F2 emette `E0 1F 4B` (Win+L) e poi `F0 06`, lasciando Win e L premuti. Vale per 18 tasti ed è nel firmware originale. La mappa XRAM `0x00E0-0x00EF` letta da `0x8CFA` viene solo azzerata.
-- **Tasti rilevati e scartati:** la scansione legge qualsiasi incrocio KSO/KSI, ma un codice `0x00` si ferma in `0x8E41` (`JZ` a `0x8E51`) e non arriva al KBC. Valeva anche per ThinkVantage (`KSI5/KSO10`) e Back/Forward (`KSI6/KSO11`, `KSI7/KSO11`). Dedotto dal codice: `evtest` non è stato eseguito.
+- **Tasti rilevati e scartati:** la scansione legge qualsiasi incrocio KSO/KSI, ma un codice `0x00` si ferma in `0x8E41` (`JZ` a `0x8E51`) e non arriva al KBC. Valeva anche per ThinkVantage (`KSI5/KSO10`) e Back/Forward (`KSI6/KSO11`, `KSI7/KSO11`). Dedotto dal codice e confermato con `evtest`: gli stessi tasti arrivano a Linux una volta scritte le celle (§9).
 
 ## 5. Patch della tastiera
 
-**Patch `V0.4.0`.** `tools/patch_keyboard.py` parte dal dump `V0.4.0`, ne controlla l'hash e i byte attesi, ricalcola il CRC (§3) e genera i quattro file `dumps/EC-V0.4.0-*.bin` (§1). Ogni file è verificato per dimensione, vettore di reset, firma e CRC: questi controlli non dicono nulla sulla correttezza del codice. Sono state flashate `iso-jis` e `iso-jis-fn-ctrl-swap`, che funzionano: `fn-ctrl-swap` e `all-keys` non sono provate sull'hardware.
+**Patch `V0.4.0`.** `tools/patch_keyboard.py` parte dal dump `V0.4.0`, ne controlla l'hash e i byte attesi, ricalcola il CRC (§3) e genera i quattro file `dumps/EC-V0.4.0-*.bin` (§1). Ogni file è verificato per dimensione, vettore di reset, firma e CRC: questi controlli non dicono nulla sulla correttezza del codice. Sono state flashate `iso-jis`, `iso-jis-fn-ctrl-swap` e `all-keys`, che funzionano. Solo `fn-ctrl-swap` non è provata sull'hardware.
 
 | Byte | Da → a | Effetto |
 |---|---|---|
@@ -147,7 +147,7 @@ Sezioni del datasheet usate: `refs/DATASHEETS.md`.
 | `0x5600-0x564D` | `FF → codice` | Salva Fn alla pressione nella mappa `0x00E0` e lo riusa al rilascio, solo in `all-keys` |
 | `0x4A-0x4B` | `AF 5B → 79 1C` | CRC di `all-keys`. Negli altri file vale `F1 49` (ISO/JIS + scambio), `44 C4` (ISO/JIS), `1A D6` (scambio) |
 
-I codici interni `0x87` e `0x8F` non sono usati da matrice, overlay o codice. Mappatura Linux verificata su `drivers/input/keyboard/atkbd.c`, compresi i tasti JIS: Yen 124, Ro 89, Muhenkan 94, Henkan 92, Katakana/Hiragana 93. Non è provata sulla scheda.
+I codici interni `0x87` e `0x8F` non sono usati da matrice, overlay o codice. Mappatura Linux verificata su `drivers/input/keyboard/atkbd.c`, compresi i tasti JIS: Yen 124, Ro 89, Muhenkan 94, Henkan 92, Katakana/Hiragana 93. Con `evtest` sulla scheda arrivano Back, Forward e F13; i tasti JIS sono ancora da provare.
 
 **Verifica con emulatore 8051.** Esegue il codice reale del firmware con le periferiche simulate. Risultati su `all-keys`:
 
@@ -480,7 +480,22 @@ Gli indirizzi di questa sezione e dei paragrafi precedenti si riferiscono a `EC0
 
 **Flash di `iso-jis-fn-ctrl-swap`, 2026-11-05.** Riuscito sopra `iso-jis`, scambio Fn↔LCtrl funzionante.
 
-**`all-keys`, non ancora eseguito.** Aggiunge codice (§5), a differenza delle altre patch.
+**Flash di `all-keys`, 2026-11-05.** Riuscito sopra `iso-jis-fn-ctrl-swap`: il codice aggiunto a `0x5600` non impedisce l'avvio. È l'unica patch con codice nuovo (§5). Hash del dump non registrato.
+
+Verifica con `evtest` su `/dev/input/event3`, tastiera ISO:
+
+| Tasto | Riga ricevuta |
+|---|---|
+| `<>` | `code 86 (KEY_102ND)`, scrive `<` |
+| `ù` | `code 43 (KEY_BACKSLASH)`, scrive `ù` |
+| Back | `code 158 (KEY_BACK)` |
+| Forward | `code 159 (KEY_FORWARD)` |
+| ThinkVantage | `code 183 (KEY_F13)` |
+| Fn fisico | `code 29 (KEY_LEFTCTRL)`, Ctrl+C funziona |
+
+Fn+F2 riferito funzionante. Ogni pressione ha il suo rilascio. **Non ancora provati:** rilascio di Fn prima del tasto, tasti JIS, le altre combinazioni con Fn.
+
+La procedura di flash resta valida per riscrivere `all-keys`:
 
 ```fish
 sudo cp dumps/EC-V0.4.0-all-keys.bin /boot/efi/EFI/tools/X210KEY.BIN
