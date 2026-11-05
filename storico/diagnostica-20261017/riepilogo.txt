@@ -1,0 +1,34 @@
+== Diagnostica X210Ai — sab 17 ott 2026, 16:06:31, CEST
+Kernel: 7.2.9-2-cachyos
+Kernel lockdown: [none] integrity confidentiality
+(se lockdown è [integrity] o [confidentiality], flashrom e rdmsr verranno bloccati:
+ disattiva temporaneamente Secure Boot e rilancia)
+
+== Firmware
+BIOS:   American Megatrends International, LLC. 0.5 (07/21/2025)
+Scheda: Default string Default string
+
+== Boot Guard (interpretazione indicativa, la verifico poi sull'immagine)
+MSR 0x13A = 0x30000006f
+  - la CPU supporta Boot Guard
+  - Measured Boot attivo
+  - VERIFIED BOOT ATTIVO -> la regione BIOS NON va modificata
+
+Tabelle ACPI salvate (acpi.dat)
+
+== Flash SPI (flashrom, sola lettura)
+Chipset specific features (descriptor regions, protected ranges, write protection) are
+Found Programmer flash chip "Opaque flash chip" (32768 kB, Programmer-specific) on internal.
+vendor="Programmer" name="Opaque flash chip"
+Regione BIOS letta -> bios_region.bin
+Flash completa letta -> full_dump.bin
+
+== Embedded Controller
+RAM dell'EC salvata (ec_ram.bin) — solo lettura, write_support resta disattivato
+superiotool non installato (facoltativo, dall'AUR): servirebbe a leggere il modello del chip EC
+
+== Test tasti
+Eventi tastiera registrati: 12
+
+Fatto. Archivio creato: x210ai-diag-20261017-160631.tar.gz
+e anche il file MTLH-NB06_B0.2.bin del pacchetto BIOS del produttore.

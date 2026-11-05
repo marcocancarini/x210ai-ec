@@ -1,0 +1,242 @@
+# dmidecode 3.7
+Getting SMBIOS data from sysfs.
+SMBIOS 3.6.0 present.
+
+Handle 0x0000, DMI type 0, 26 bytes
+Platform Firmware Information
+	Vendor: American Megatrends International, LLC.
+	Version: 0.5
+	Release Date: 07/21/2025
+	Address: 0xF0000
+	Runtime Size: 64 KiB
+	ROM Size: 0 MiB
+	Characteristics:
+		PCI is supported
+		Firmware is upgradeable
+		Firmware shadowing is allowed
+		Boot from CD is supported
+		Selectable boot is supported
+		Firmware ROM is socketed
+		EDD is supported
+		ACPI is supported
+		BIOS boot specification is supported
+		Targeted content distribution is supported
+		UEFI is supported
+	Platform Firmware Revision: 0.5
+	Embedded Controller Firmware Revision: 0.4
+
+Handle 0x0001, DMI type 1, 27 bytes
+System Information
+	Manufacturer: Default string
+	Product Name: Default string
+	Version: Default string
+	Serial Number: Default string
+	UUID: 03000200-0400-0500-0006-000700080009
+	Wake-up Type: Power Switch
+	SKU Number: Default string
+	Family: Default string
+
+Handle 0x0002, DMI type 2, 15 bytes
+Base Board Information
+	Manufacturer: Default string
+	Product Name: Default string
+	Version: Default string
+	Serial Number: Default string
+	Asset Tag: Default string
+	Features:
+		Board is a hosting board
+		Board is replaceable
+	Location In Chassis: Default string
+	Chassis Handle: 0x0003
+	Type: Motherboard
+	Contained Object Handles: 0
+
+Handle 0x0009, DMI type 10, 6 bytes
+On Board Device Information
+	Type: Unknown
+	Status: Enabled
+	Description: Device 1
+
+Handle 0x000B, DMI type 12, 5 bytes
+System Configuration Options
+	Option 1: Default string
+
+Handle 0x000C, DMI type 13, 22 bytes
+Firmware Language Information
+	Language Description Format: Long
+	Installable Languages: 1
+		en|US|iso8859-1
+	Currently Installed Language: en|US|iso8859-1
+
+Handle 0x000D, DMI type 32, 11 bytes
+System Boot Information
+	Status: No errors detected
+
+Handle 0x0027, DMI type 41, 11 bytes
+Onboard Device
+	Reference Designation: Onboard - Other
+	Type: Other
+	Status: Enabled
+	Type Instance: 1
+	Bus Address: 0000:00:1f.4
+
+Handle 0x0028, DMI type 41, 11 bytes
+Onboard Device
+	Reference Designation: Onboard - Other
+	Type: Other
+	Status: Enabled
+	Type Instance: 2
+	Bus Address: 0000:00:00.0
+
+Handle 0x0029, DMI type 41, 11 bytes
+Onboard Device
+	Reference Designation: Onboard - Other
+	Type: Other
+	Status: Enabled
+	Type Instance: 3
+	Bus Address: 0000:00:00.0
+
+Handle 0x002A, DMI type 41, 11 bytes
+Onboard Device
+	Reference Designation: Onboard - Other
+	Type: Other
+	Status: Enabled
+	Type Instance: 4
+	Bus Address: 0000:00:00.0
+
+Handle 0x002B, DMI type 41, 11 bytes
+Onboard Device
+	Reference Designation: Onboard - Other
+	Type: Other
+	Status: Enabled
+	Type Instance: 5
+	Bus Address: 0000:00:00.0
+
+Handle 0x002C, DMI type 41, 11 bytes
+Onboard Device
+	Reference Designation: Onboard - Video
+	Type: Video
+	Status: Enabled
+	Type Instance: 1
+	Bus Address: 0000:00:02.0
+
+Handle 0x002D, DMI type 41, 11 bytes
+Onboard Device
+	Reference Designation: Onboard - Other
+	Type: Other
+	Status: Enabled
+	Type Instance: 6
+	Bus Address: 0000:00:04.0
+
+Handle 0x002E, DMI type 41, 11 bytes
+Onboard Device
+	Reference Designation: Onboard - Other
+	Type: Other
+	Status: Enabled
+	Type Instance: 7
+	Bus Address: 0000:00:08.0
+
+Handle 0x002F, DMI type 41, 11 bytes
+Onboard Device
+	Reference Designation: Onboard - Other
+	Type: Other
+	Status: Enabled
+	Type Instance: 8
+	Bus Address: 0000:00:0a.0
+
+Handle 0x0030, DMI type 41, 11 bytes
+Onboard Device
+	Reference Designation: Onboard - Other
+	Type: Other
+	Status: Enabled
+	Type Instance: 9
+	Bus Address: 0000:00:0b.0
+
+Handle 0x0031, DMI type 41, 11 bytes
+Onboard Device
+	Reference Designation: Onboard - Other
+	Type: Other
+	Status: Enabled
+	Type Instance: 10
+	Bus Address: 0000:00:0d.0
+
+Handle 0x0032, DMI type 41, 11 bytes
+Onboard Device
+	Reference Designation: Onboard - Other
+	Type: Other
+	Status: Enabled
+	Type Instance: 11
+	Bus Address: 0000:00:0d.2
+
+Handle 0x0033, DMI type 41, 11 bytes
+Onboard Device
+	Reference Designation: Onboard - Other
+	Type: Other
+	Status: Enabled
+	Type Instance: 12
+	Bus Address: 0000:00:0d.3
+
+Handle 0x0034, DMI type 41, 11 bytes
+Onboard Device
+	Reference Designation: Onboard - Other
+	Type: Other
+	Status: Enabled
+	Type Instance: 13
+	Bus Address: 0000:00:14.0
+
+Handle 0x0035, DMI type 41, 11 bytes
+Onboard Device
+	Reference Designation: Onboard - Other
+	Type: Other
+	Status: Enabled
+	Type Instance: 14
+	Bus Address: 0000:00:14.2
+
+Handle 0x0036, DMI type 41, 11 bytes
+Onboard Device
+	Reference Designation: Onboard - Other
+	Type: Other
+	Status: Enabled
+	Type Instance: 15
+	Bus Address: 0000:00:16.0
+
+Handle 0x0037, DMI type 41, 11 bytes
+Onboard Device
+	Reference Designation: Onboard - SATA
+	Type: SATA Controller
+	Status: Enabled
+	Type Instance: 1
+	Bus Address: 0000:00:17.0
+
+Handle 0x0038, DMI type 41, 11 bytes
+Onboard Device
+	Reference Designation: Onboard - Other
+	Type: Other
+	Status: Enabled
+	Type Instance: 16
+	Bus Address: 0000:00:1f.0
+
+Handle 0x0039, DMI type 41, 11 bytes
+Onboard Device
+	Reference Designation: Onboard - Sound
+	Type: Sound
+	Status: Enabled
+	Type Instance: 1
+	Bus Address: 0000:00:1f.3
+
+Handle 0x003A, DMI type 41, 11 bytes
+Onboard Device
+	Reference Designation: Onboard - Other
+	Type: Other
+	Status: Enabled
+	Type Instance: 17
+	Bus Address: 0000:00:1f.4
+
+Handle 0x003B, DMI type 41, 11 bytes
+Onboard Device
+	Reference Designation: Onboard - Other
+	Type: Other
+	Status: Enabled
+	Type Instance: 18
+	Bus Address: 0000:00:1f.5
+

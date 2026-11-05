@@ -4,6 +4,10 @@ Stato al 2026-11-05: sulla scheda c'è `EC-V0.4.0-all-keys.bin`, con tasti ISO e
 
 ## Da fare
 
+### Repo
+
+- [ ] Tagliare da `storico/` le parti inutili (`storico/README.md`)
+
 ### Firmware
 
 - [ ] Registrare l'hash del dump di `all-keys`: deve iniziare con `d96e1b3e6a4f`, poi salvarlo in `dumps/ec/`
@@ -21,7 +25,8 @@ Stato al 2026-11-05: sulla scheda c'è `EC-V0.4.0-all-keys.bin`, con tasti ISO e
 
 - [ ] Decidere se `dumps/bios/` deve restare nella repo: i dump possono contenere dati della macchina, e toglierli richiede di riscrivere la cronologia
 - [ ] Analizzare `dumps/bios/BIOS-X210AI-20261104-lettura1.bin` (32 MiB, due letture identiche) prima di considerarlo immagine di recovery
-- [ ] Trovare `MTLH-NB06_B0.2.bin` e fare un `acpidump` della macchina, per chiudere l'analisi del brick in `ifu`: byte residuo su porta 0x62 → `EC ACK Fail` → cancellazione del blocco 0 → `Verify Fail`
+- [ ] Capire perché `storico/diagnostica-20261017/full_dump.bin` differisce da `dumps/bios/`
+- [ ] Trovare `MTLH-NB06_B0.2.bin` e usare `storico/diagnostica-20261017/acpi.dat`, per chiudere l'analisi del brick in `ifu`: byte residuo su porta 0x62 → `EC ACK Fail` → cancellazione del blocco 0 → `Verify Fail`
 
 ## Fatto
 

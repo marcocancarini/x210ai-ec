@@ -1,0 +1,39 @@
+a=open('dumps/EC-V0.4.0-20250723-lettura1.bin','rb').read()
+base=0x2EB9
+S2={0x76:'Esc',0x05:'F1',0x06:'F2',0x04:'F3',0x0c:'F4',0x03:'F5',0x0b:'F6',0x83:'F7',0x0a:'F8',0x01:'F9',0x09:'F10',0x78:'F11',0x07:'F12',0x0e:'`',0x16:'1',0x1e:'2',0x26:'3',0x25:'4',0x2e:'5',0x36:'6',0x3d:'7',0x3e:'8',0x46:'9',0x45:'0',0x4e:'-',0x55:'=',0x66:'BkSp',0x0d:'Tab',0x15:'Q',0x1d:'W',0x24:'E',0x2d:'R',0x2c:'T',0x35:'Y',0x3c:'U',0x43:'I',0x44:'O',0x4d:'P',0x54:'[',0x5b:']',0x5d:'#\\',0x58:'Caps',0x1c:'A',0x1b:'S',0x23:'D',0x2b:'F',0x34:'G',0x33:'H',0x3b:'J',0x42:'K',0x4b:'L',0x4c:';',0x52:"'",0x5a:'Enter',0x12:'LSh',0x59:'RSh',0x1a:'Z',0x22:'X',0x21:'C',0x2a:'V',0x32:'B',0x31:'N',0x3a:'M',0x41:',',0x49:'.',0x4a:'/',0x14:'LCtrl',0x11:'LAlt',0x29:'Space',0x61:'ISO<>',0x51:'JIS_Ro',0x6a:'JIS_Yen',0x13:'JIS_Kana',0x67:'JIS_Muhen',0x64:'JIS_Henk',0x7e:'ScrLk',0x77:'NumLk',0x7c:'KP*',0x7b:'KP-',0x79:'KP+',0x71:'KP.',0x70:'KP0',0x69:'KP1',0x72:'KP2',0x7a:'KP3',0x6b:'KP4',0x73:'KP5',0x74:'KP6',0x6c:'KP7',0x75:'KP8',0x7d:'KP9'}
+T3060={}
+for i in range(0x40):
+    T3060[0x80+i]=(a[0x3060+2*i],a[0x3060+2*i+1])
+def low(c):
+    if c==0: return ''
+    if c<0x80: return S2.get(c,'s%02X'%c)
+    if c<0x9C:
+        v,k=T3060[c]; return {0:'raw%02X'%v,1:'E0%02X'%v}.get(k,'c%d:%02X'%(k,v))
+    return '?%02X'%c
+def resolve(c):
+    if c>=0xE0:
+        i=(c-0xE0)*2; return 'E%X:'%(c-0xE0)+'/'.join(res2(a[0x3046+i+j]) for j in (0,1))
+    if c>=0x9C: return res2(c)
+    return low(c)
+def res2(c):
+    if c<0x9C: return low(c)
+    if c>=0xE0: return '!%02X'%c
+    i=c-0x9C; f,h,l=a[0x2FE3+3*i:0x2FE3+3*i+3]; p=(h<<8)|l
+    n=4 if f&0x10 else 2
+    return '{'+','.join(low(a[p+j]) if a[p+j]<0x9c else '%02X'%a[p+j] for j in range(n))+'}'
+print('     '+''.join('%-11d'%c for c in range(16)))
+for r in range(8):
+    print('r%d   '%r+''.join('%-11s'%(resolve(a[base+r*16+c])[:10]) for c in range(16)))
+print()
+used=[(r,c) for r in range(8) for c in range(16) if a[base+r*16+c]]
+print('used',len(used),'empty',128-len(used))
+print('full raw');
+for r in range(8): print(r,a[base+r*16:base+r*16+16].hex(' '))
+print('3060:',[(hex(k),'%02x,%d'%v) for k,v in T3060.items() if k<0x9c])
+all_=set()
+for r in range(8):
+    for c in range(16):
+        v=a[base+r*16+c]; all_.add(v)
+print('ISO/JIS in matrix direct',[hex(x) for x in (0x61,0x51,0x6a,0x13,0x67,0x64) if x in all_])
+# overlay search for those bytes in 0x2F81-0x3060
+print('overlay',[hex(i) for i in range(0x2F51,0x3060) if a[i] in (0x61,0x51,0x6a,0x13,0x67,0x64)])

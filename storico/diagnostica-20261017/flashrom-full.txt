@@ -1,0 +1,9 @@
+flashrom v1.8.0 (git:v1.8.0) on Linux 7.2.9-2-cachyos (x86_64)
+flashrom is free software, get the source code at https://flashrom.org
+
+Opened /dev/mtd0 successfully
+Using the Linux MTD interface, the host controller is claimed by a kernel driver.
+Chipset specific features (descriptor regions, protected ranges, write protection) are
+not available on this path. Unbind the driver to use them.
+Found Programmer flash chip "Opaque flash chip" (32768 kB, Programmer-specific) on internal.
+Reading flash... done.

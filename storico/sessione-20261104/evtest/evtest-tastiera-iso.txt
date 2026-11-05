@@ -1,0 +1,63 @@
+❯ sudo evtest /dev/input/event3 | grep --line-buffered EV_KEY
+Swipe your finger across the fingerprint reader
+Failed to match fingerprint
+Swipe your finger across the fingerprint reader
+Failed to match fingerprint
+Swipe your finger across the fingerprint reader
+  Event type 1 (EV_KEY)
+Event: time 1793841067.612914, type 1 (EV_KEY), code 29 (KEY_LEFTCTRL), value 1
+Event: time 1793841067.714987, type 1 (EV_KEY), code 29 (KEY_LEFTCTRL), value 0
+Event: time 1793841069.677152, type 1 (EV_KEY), code 125 (KEY_LEFTMETA), value 1
+Event: time 1793841069.780549, type 1 (EV_KEY), code 125 (KEY_LEFTMETA), value 0
+Event: time 1793841070.270577, type 1 (EV_KEY), code 56 (KEY_LEFTALT), value 1
+Event: time 1793841070.382787, type 1 (EV_KEY), code 56 (KEY_LEFTALT), value 0
+Event: time 1793841072.359625, type 1 (EV_KEY), code 158 (KEY_BACK), value 1
+Event: time 1793841072.453070, type 1 (EV_KEY), code 158 (KEY_BACK), value 0
+Event: time 1793841073.025525, type 1 (EV_KEY), code 159 (KEY_FORWARD), value 1
+Event: time 1793841073.113903, type 1 (EV_KEY), code 159 (KEY_FORWARD), value 0
+Event: time 1793841074.715174, type 1 (EV_KEY), code 59 (KEY_F1), value 1
+^[OPEvent: time 1793841074.812424, type 1 (EV_KEY), code 59 (KEY_F1), value 0
+Event: time 1793841075.591252, type 1 (EV_KEY), code 60 (KEY_F2), value 1
+^[OQEvent: time 1793841075.713400, type 1 (EV_KEY), code 60 (KEY_F2), value 0
+Event: time 1793841076.261836, type 1 (EV_KEY), code 61 (KEY_F3), value 1
+^[OREvent: time 1793841076.354064, type 1 (EV_KEY), code 61 (KEY_F3), value 0
+Event: time 1793841076.782475, type 1 (EV_KEY), code 62 (KEY_F4), value 1
+^[OSEvent: time 1793841076.874584, type 1 (EV_KEY), code 62 (KEY_F4), value 0
+Event: time 1793841078.409128, type 1 (EV_KEY), code 183 (KEY_F13), value 1
+Event: time 1793841078.606083, type 1 (EV_KEY), code 183 (KEY_F13), value 0
+Event: time 1793841079.039403, type 1 (EV_KEY), code 183 (KEY_F13), value 1
+Event: time 1793841079.156690, type 1 (EV_KEY), code 183 (KEY_F13), value 0
+Event: time 1793841079.765562, type 1 (EV_KEY), code 183 (KEY_F13), value 1
+Event: time 1793841079.877386, type 1 (EV_KEY), code 183 (KEY_F13), value 0
+Event: time 1793841080.155930, type 1 (EV_KEY), code 183 (KEY_F13), value 1
+Event: time 1793841080.302689, type 1 (EV_KEY), code 183 (KEY_F13), value 0
+Event: time 1793841080.516294, type 1 (EV_KEY), code 183 (KEY_F13), value 1
+Event: time 1793841080.663201, type 1 (EV_KEY), code 183 (KEY_F13), value 0
+Event: time 1793841080.756323, type 1 (EV_KEY), code 183 (KEY_F13), value 1
+Event: time 1793841080.848324, type 1 (EV_KEY), code 183 (KEY_F13), value 0
+Event: time 1793841082.993414, type 1 (EV_KEY), code 183 (KEY_F13), value 1
+Event: time 1793841083.115499, type 1 (EV_KEY), code 183 (KEY_F13), value 0
+Event: time 1793841083.179583, type 1 (EV_KEY), code 183 (KEY_F13), value 1
+Event: time 1793841083.275601, type 1 (EV_KEY), code 183 (KEY_F13), value 0
+Event: time 1793841087.918582, type 1 (EV_KEY), code 86 (KEY_102ND), value 1
+<Event: time 1793841087.985725, type 1 (EV_KEY), code 86 (KEY_102ND), value 0
+Event: time 1793841088.439279, type 1 (EV_KEY), code 86 (KEY_102ND), value 1
+<Event: time 1793841088.506486, type 1 (EV_KEY), code 86 (KEY_102ND), value 0
+Event: time 1793841090.284893, type 1 (EV_KEY), code 43 (KEY_BACKSLASH), value 1
+ùEvent: time 1793841090.367013, type 1 (EV_KEY), code 43 (KEY_BACKSLASH), value 0
+Event: time 1793841090.610357, type 1 (EV_KEY), code 43 (KEY_BACKSLASH), value 1
+ùEvent: time 1793841090.677356, type 1 (EV_KEY), code 43 (KEY_BACKSLASH), value 0
+Event: time 1793841091.185456, type 1 (EV_KEY), code 43 (KEY_BACKSLASH), value 1
+ùEvent: time 1793841091.252675, type 1 (EV_KEY), code 43 (KEY_BACKSLASH), value 0
+Event: time 1793841098.060062, type 1 (EV_KEY), code 158 (KEY_BACK), value 1
+Event: time 1793841098.148403, type 1 (EV_KEY), code 158 (KEY_BACK), value 0
+Event: time 1793841098.540499, type 1 (EV_KEY), code 159 (KEY_FORWARD), value 1
+Event: time 1793841098.648927, type 1 (EV_KEY), code 159 (KEY_FORWARD), value 0
+Event: time 1793841099.601575, type 1 (EV_KEY), code 158 (KEY_BACK), value 1
+Event: time 1793841099.719804, type 1 (EV_KEY), code 158 (KEY_BACK), value 0
+Event: time 1793841099.846873, type 1 (EV_KEY), code 159 (KEY_FORWARD), value 1
+Event: time 1793841099.960204, type 1 (EV_KEY), code 159 (KEY_FORWARD), value 0
+Event: time 1793841103.973887, type 1 (EV_KEY), code 29 (KEY_LEFTCTRL), value 1
+Event: time 1793841104.058978, type 1 (EV_KEY), code 46 (KEY_C), value 1
+^C⏎                                                                                        
+~ 45s

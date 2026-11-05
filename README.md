@@ -13,9 +13,10 @@ Il chip è un **ITE IT5571 rev. 2**: core **8051**, eFlash embedded da 128 KiB, 
 | `tools/` | `patch_keyboard.py`, disassembler `i8051.py`, emulatore `emulator/` |
 | `usb-tools/` | `ifu.efi`, `Fpt.efi`, UEFI Shell |
 | `refs/` | Immagini, foto e note sul datasheet |
+| [`storico/`](storico/README.md) | Tutti i dati usati nel progetto, da sfoltire |
 | [`TODO.md`](TODO.md) | Cosa resta da fare |
 
-I pacchetti originali stavano in `inputs/`, che non è nella repo né in questa cartella: i percorsi `inputs/` di §1 restano come riferimento agli hash.
+I percorsi `inputs/` di §1 restano come riferimento agli hash: quasi tutti quei file ora sono in `storico/`.
 
 ## Stato del progetto
 

@@ -1,0 +1,1 @@
+ifu.efi MTLH-NB06_E03-250322.BIN 128
