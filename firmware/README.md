@@ -2,7 +2,7 @@
 
 Tutte le versioni del firmware EC, con istruzioni di flash e conferma. Tutti i file sono da 131072 byte (128 KiB). Gli hash completi sono in [`SHA256SUMS`](SHA256SUMS): dalla cartella `firmware/` si controllano con `sha256sum -c SHA256SUMS`.
 
-**Sulla scheda c'è `EC-V0.4.0-all-keys.bin`**. Tasti confermati, ma l'hash del dump dopo il flash non è ancora registrato.
+**Sulla scheda c'è `EC-V0.4.0-all-keys.bin`**. Tasti e combinazioni con Fn confermati, ma l'hash del dump dopo il flash non è ancora registrato.
 
 ## Versioni
 
@@ -12,15 +12,15 @@ Tutte le versioni del firmware EC, con istruzioni di flash e conferma. Tutti i f
 | `patched/EC-V0.4.0-iso-jis-fn-ctrl-swap.bin` | ISO, JIS, scambio Fn↔L-Ctrl | `X210SWAP.BIN` | `a3f1ff4e1bdd` | Funzionante |
 | `patched/EC-V0.4.0-iso-jis.bin` | Solo ISO e JIS | `X210KEY.BIN` | `7ee70df08948` | Funzionante |
 | `patched/EC-V0.4.0-fn-ctrl-swap.bin` | Solo scambio Fn↔L-Ctrl | `X210FN.BIN` | `e1f1386daef0` | Mai flashata |
-| `original/EC-V0.4.0-20250723-lettura1.bin` | Firmware originale della scheda, build `V0.4.0` | `V040.BIN` | `9b8334bd5d59` | Originale, due letture identiche |
-| `original/EC0416.BIN` | Build `V0.3.2`, più vecchia della `V0.4.0` | `EC0416.BIN` | `acaf8fed4b79` | Funzionante, tasti ISO assenti |
+| [`../dumps/ec/EC-V0.4.0-20250723-lettura1.bin`](../dumps/README.md) | Firmware originale della scheda, build `V0.4.0` | `V040.BIN` | `9b8334bd5d59` | Originale, due letture identiche |
+| `vendor/EC0416.BIN` | Build `V0.3.2`, più vecchia della `V0.4.0` | `EC0416.BIN` | `acaf8fed4b79` | Funzionante, tasti ISO assenti |
 | `obsolete/EC0416_fn-ctrl-swap.BIN` | Patch errata: cambia Alt+SysRq, non Fn | - | `970431688f10` | **Non flashare** |
 | `obsolete/EC0416_ctrl-caps-swap.BIN` | Demo L-Ctrl↔Caps, CRC vecchio | - | `21f63a733dd5` | **Non flashare** |
 
 Le quattro immagini in `patched/` si rigenerano dal dump originale:
 
 ```fish
-python3 tools/patch_keyboard.py firmware/original/EC-V0.4.0-20250723-lettura1.bin firmware/patched
+python3 tools/patch_keyboard.py dumps/ec/EC-V0.4.0-20250723-lettura1.bin firmware/patched
 ```
 
 ## Cosa cambia in ogni versione
@@ -47,7 +47,7 @@ Il flash è sempre un rischio, e la recovery RP2040 non è pronta: se l'EC non r
 sudo mkdir -p /boot/efi/EFI/tools
 sudo cp usb-tools/ifu.efi /boot/efi/EFI/tools/ifu.efi
 sudo cp firmware/patched/EC-V0.4.0-all-keys.bin /boot/efi/EFI/tools/X210ALL.BIN
-sudo cp firmware/original/EC-V0.4.0-20250723-lettura1.bin /boot/efi/EFI/tools/V040.BIN
+sudo cp dumps/ec/EC-V0.4.0-20250723-lettura1.bin /boot/efi/EFI/tools/V040.BIN
 sudo stat -c '%s' /boot/efi/EFI/tools/X210ALL.BIN
 sudo sha256sum /boot/efi/EFI/tools/X210ALL.BIN /boot/efi/EFI/tools/V040.BIN
 sync
@@ -118,7 +118,7 @@ sudo evtest /dev/input/event3 | grep --line-buffered EV_KEY
 
 **3. Rilascio di Fn**, solo `all-keys`: premi Fn, poi F2, lascia prima Fn e poi F2. Non deve restare premuto nulla. Confermato sulla scheda.
 
-**Combinazioni con Fn ricavate dal firmware, non ancora provate:**
+**4. Combinazioni con Fn**, ricavate dal firmware. Tutte confermate funzionanti sulla scheda:
 
 | Combinazione | Atteso |
 |---|---|
@@ -128,7 +128,7 @@ sudo evtest /dev/input/event3 | grep --line-buffered EV_KEY
 | Fn + F4 | `KEY_SLEEP`: può sospendere la macchina |
 | Fn + ScrLk | `KEY_NUMLOCK`: premilo due volte, con Num Lock attivo alcune lettere diventano numeri |
 | Fn + PrtSc | Alt+SysRq: non aggiungere altri tasti |
-| Fn + F3, F5, F8, F9, F12, PgUp, Home, End | Nessuna riga su `event3`: effetto da verificare |
+| Fn + F3, F5, F8, F9, F12, PgUp, Home, End | Nessuno scancode dal firmware, si valuta la funzione |
 
 ## Tornare indietro
 
@@ -150,6 +150,6 @@ Tutti eseguiti il 2026-11-05 con `ifu`, dalla ESP.
 | 1 | `EC0416.BIN` sopra `V0.4.0` | Riuscito. `ù` ancora assente: la matrice è la stessa |
 | 2 | `EC-V0.4.0-iso-jis.bin` | Riuscito. Tastiera ISO funzionante, il CRC ricalcolato non blocca l'avvio |
 | 3 | `EC-V0.4.0-iso-jis-fn-ctrl-swap.bin` | Riuscito. Scambio funzionante, quindi linea di Fn e contatto 36 sono collegati |
-| 4 | `EC-V0.4.0-all-keys.bin` | Riuscito. Il codice aggiunto parte, tasti confermati su ISO e JIS, rilascio di Fn confermato |
+| 4 | `EC-V0.4.0-all-keys.bin` | Riuscito. Il codice aggiunto parte, tasti confermati su ISO e JIS, rilascio di Fn e combinazioni con Fn confermati |
 
 Gli esiti sono riferiti dopo le prove sulla scheda. Nessuno di questi flash ha ancora un dump con hash registrato.

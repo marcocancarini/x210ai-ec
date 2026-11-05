@@ -11,7 +11,7 @@ import sys
 from cpu8051 import CPU
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..')
-ORIGINAL = os.path.join(ROOT, 'firmware', 'original', 'EC-V0.4.0-20250723-lettura1.bin')
+ORIGINAL = os.path.join(ROOT, 'dumps', 'ec', 'EC-V0.4.0-20250723-lettura1.bin')
 PATCHED = os.path.join(ROOT, 'firmware', 'patched')
 RETURN = 0xDEAD
 MATRIX = 0x2EB9

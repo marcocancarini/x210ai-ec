@@ -8,10 +8,10 @@ Il chip è un **ITE IT5571 rev. 2**: core **8051**, eFlash embedded da 128 KiB, 
 
 | Percorso | Contenuto |
 |---|---|
-| [`firmware/`](firmware/README.md) | Originali, immagini patchate, versioni da non usare, hash |
+| [`firmware/`](firmware/README.md) | Versione del produttore, immagini patchate, versioni da non usare, hash |
+| [`dumps/`](dumps/README.md) | Letture di EC e BIOS dalla scheda, con hash |
 | `tools/` | `patch_keyboard.py`, disassembler `i8051.py`, emulatore `emulator/` |
 | `usb-tools/` | `ifu.efi`, `Fpt.efi`, UEFI Shell |
-| `bios-dumps/` | Due letture del BIOS, non analizzate |
 | `refs/` | Immagini, foto e note sul datasheet |
 | [`TODO.md`](TODO.md) | Cosa resta da fare |
 
@@ -21,7 +21,7 @@ I pacchetti originali stavano in `inputs/`, che non è nella repo né in questa 
 
 | Area | Stato |
 |---|---|
-| Firmware EC | **Sulla scheda c'è `EC-V0.4.0-all-keys.bin`**, tasti confermati su tastiere ISO e JIS, rilascio di Fn confermato ([storico](firmware/README.md#storico-dei-flash)), hash del dump non registrato. Confronto in §9, patch `V0.4.0` con CRC corretto in §5 |
+| Firmware EC | **Sulla scheda c'è `EC-V0.4.0-all-keys.bin`**, tasti su tastiere ISO e JIS, rilascio e combinazioni con Fn confermati ([storico](firmware/README.md#storico-dei-flash)), hash del dump non registrato. Confronto in §9, patch `V0.4.0` con CRC corretto in §5 |
 | Lettura EC | **Riuscita con `ifu.efi /S 128 /k /j`**: due letture identiche (§6). Le altre vie non sono provate (§6, §7) |
 | Scrittura EC | **`ifu` ha flashato `EC0416`, `iso-jis`, `iso-jis-fn-ctrl-swap` e `all-keys` con successo**: immagini con CRC ricalcolato e codice aggiunto partono sulla scheda (§9). Con RP2040 è possibile, ma con punti aperti (§7) |
 | Immagine BIOS | Due letture identiche da 32 MiB nella repo, non analizzate (§1, §8, §10) |
@@ -33,8 +33,8 @@ I pacchetti originali stavano in `inputs/`, che non è nella repo né in questa 
 
 **Prossimi passi:**
 
-1. Registrare l'hash del dump di `all-keys` e provare le altre combinazioni con Fn ([conferma](firmware/README.md#conferma)).
-2. Decidere se tenere i dump BIOS nella repo (§1).
+1. Registrare l'hash del dump di `all-keys` ([conferma](firmware/README.md#conferma)).
+2. Decidere se tenere i dump BIOS nella repo ([dump](dumps/README.md)).
 3. Cicalino sui 15 piedini verso il connettore tastiera, iniziando da KSO1 sui contatti 16 e 18 (§7).
 4. Accesso al connettore tastiera: cavo di una tastiera X201 guasta o spina JAE AA01 a 40 posizioni, codice non ancora trovato (§7).
 5. Cablaggio RP2040, poi `isp id` e `isp read` con l'EC sano: il risultato va confrontato con il firmware installato in quel momento (§1). Niente scritture prima (§7).
@@ -79,12 +79,12 @@ I pacchetti originali stavano in `inputs/`, che non è nella repo né in questa 
 
 | File | SHA256 | Note |
 |---|---|---|
-| `firmware/original/EC-V0.4.0-20250723-lettura1.bin`, `-lettura2.bin` | `9b8334bd5d5986ce97dfc5d8503fa643a97d8abb6c6166ce181c0525ec722311` | **Firmware originale della scheda**, letto il 2026-11-04. 131072 B, build `V0.4.0` 2025-07-23 18:11:04. Due letture identiche. Base delle patch e file di ritorno |
+| `dumps/ec/EC-V0.4.0-20250723-lettura1.bin`, `-lettura2.bin` | `9b8334bd5d5986ce97dfc5d8503fa643a97d8abb6c6166ce181c0525ec722311` | **Firmware originale della scheda**, letto il 2026-11-04. 131072 B, build `V0.4.0` 2025-07-23 18:11:04. Due letture identiche. Base delle patch e file di ritorno |
 | `firmware/patched/EC-V0.4.0-all-keys.bin` | `d96e1b3e6a4f0fd1a3ea288b234afae3ad41dcb460b40419300df3ea40005894` | ISO, JIS, scambio Fn↔LCtrl, Back, Forward, ThinkVantage, pull-up e rilascio di Fn (98 byte + CRC). **Installata sulla scheda**, tasti ISO e JIS e rilascio di Fn confermati |
 | `firmware/patched/EC-V0.4.0-iso-jis.bin` | `7ee70df0894832da7ed47dab8e2fda7674ea505c643ffb4b75d113f491471a74` | `V0.4.0` con tasti ISO e JIS (7 byte + CRC). ISO confermata, JIS confermata su `all-keys` con le stesse celle. File di ritorno |
 | `firmware/patched/EC-V0.4.0-fn-ctrl-swap.bin` | `e1f1386daef06d7b51c5d65d8c1fc4764be7b33173d82a192db95b68f15be07f` | `V0.4.0` con scambio Fn↔LCtrl (3 byte + CRC), mai provata |
 | `firmware/patched/EC-V0.4.0-iso-jis-fn-ctrl-swap.bin` | `a3f1ff4e1bdd374692f2854a7a8be4a48375938c5959f3e4643539e88675d57f` | ISO/JIS e scambio (10 byte + CRC). ISO e scambio confermati, JIS confermata su `all-keys` con le stesse celle. File di ritorno |
-| `firmware/original/EC0416.BIN` | `acaf8fed4b797f39d983849b916baaf61352832b337950fa9fb3225994cb6dca` | Installata il 2026-11-05 e poi sostituita, più vecchia della `V0.4.0` originale. 131072 B, build `V0.3.2` 2025-04-15 18:20:35, md5 `7392fa5138c906ac17c7049fa69514e7` |
+| `firmware/vendor/EC0416.BIN` | `acaf8fed4b797f39d983849b916baaf61352832b337950fa9fb3225994cb6dca` | Installata il 2026-11-05 e poi sostituita, più vecchia della `V0.4.0` originale. 131072 B, build `V0.3.2` 2025-04-15 18:20:35, md5 `7392fa5138c906ac17c7049fa69514e7` |
 | `firmware/obsolete/EC0416_ctrl-caps-swap.BIN` | `21f63a733dd5ee8b338ffefcda093ffec8d38c38138bc97c1e82a65a20acd406` | Patch demo L-Ctrl↔CapsLock (2 byte). **CRC non aggiornato, non flashare** |
 | `firmware/obsolete/EC0416_fn-ctrl-swap.BIN` | `970431688f10aa160973d3f276c453e5cc86427a28a01ee34ef43ea17dfabee8` | **Errata, non usare:** cambia Alt+SysRq, non Fn, e ha il CRC vecchio (§3, §5) |
 | `inputs/ec/MTLH-NB06-ec-250322/MTLH-NB06_E03-250322.BIN` | `151edd7a59cad1eb4a3d7b0827ee0937f73f0645a3cbf8d532f5e6bc0de5bbde` | EC vecchia, build 2025-03-22, md5 `4bbc1e54aad8cac51a3e0a5e5274ed28` |
@@ -95,7 +95,7 @@ I pacchetti originali stavano in `inputs/`, che non è nella repo né in questa 
 
 Sezioni del datasheet usate: `refs/DATASHEETS.md`.
 
-**Immagine BIOS.** `fb.nsh` chiama `MTLH-NB06_B0.2.bin`, che non è incluso nel pacchetto. In locale ci sono `bios-dumps/full.bin` e `full2.bin`: 32 MiB, identici (SHA256 `dd6e311622b8c61fe8c51de8fef8f3ff28b625dffc5097836f12f5cd5b884669`), con flash descriptor a `0x10` e volumi `_FVH`. Sono nella repo dal commit `21485db` e non sono stati analizzati.
+**Immagine BIOS.** `fb.nsh` chiama `MTLH-NB06_B0.2.bin`, che non è incluso nel pacchetto. In `dumps/bios/` ci sono due letture: 32 MiB, identici (SHA256 `dd6e311622b8c61fe8c51de8fef8f3ff28b625dffc5097836f12f5cd5b884669`), con flash descriptor a `0x10` e volumi `_FVH`. Sono nella repo dal commit `21485db` e non sono stati analizzati.
 
 | File del pacchetto | Ruolo | Note |
 |---|---|---|
@@ -382,7 +382,7 @@ Verificati nel codice del tool (`host/itepp/`).
 
 ## 8. Lettura del BIOS
 
-Il BIOS sta su un chip SPI esterno, quindi qui un programmatore funziona. Fare il dump **prima di qualsiasi flash**: le due letture in `bios-dumps/` (§1) vanno verificate prima di considerarle un'immagine di recovery.
+Il BIOS sta su un chip SPI esterno, quindi qui un programmatore funziona. Fare il dump **prima di qualsiasi flash**: le due letture in `dumps/bios/` (§1) vanno verificate prima di considerarle un'immagine di recovery.
 
 **Dalla macchina funzionante:**
 
@@ -502,7 +502,7 @@ Gli indirizzi di questa sezione e dei paragrafi precedenti si riferiscono a `EC0
 
 ### Cosa manca per chiudere l'analisi
 
-- Analisi delle immagini in `bios-dumps/` (§1, §8).
+- Analisi delle immagini in `dumps/bios/` (§1, §8).
 - Tabelle ACPI, con `acpidump` sulla X210AI.
 - Dettagli di un brick reale: alimentazione, messaggi a schermo, stato prima del flash.
 
@@ -526,8 +526,8 @@ Il pacchetto del produttore **non contiene istruzioni di recovery**. Queste sono
 
 | Cosa si è rotto | Via | Stato |
 |---|---|---|
-| **EC** (eFlash nel chip) | `ifu` se l'EC parte, altrimenti ISP dal connettore tastiera (§7), con `firmware/original/EC-V0.4.0-20250723-lettura1.bin` | Metodo da datasheet, collegamenti da ricavare |
-| **BIOS** (chip SPI esterno) | Programmatore sul chip (§8) | Serve un dump verificato: quelli in `bios-dumps/` non sono ancora stati analizzati |
+| **EC** (eFlash nel chip) | `ifu` se l'EC parte, altrimenti ISP dal connettore tastiera (§7), con `dumps/ec/EC-V0.4.0-20250723-lettura1.bin` | Metodo da datasheet, collegamenti da ricavare |
+| **BIOS** (chip SPI esterno) | Programmatore sul chip (§8) | Serve un dump verificato: quelli in `dumps/bios/` non sono ancora stati analizzati |
 | **EC tramite `EC_SPI1`** | Porta FSPI (§13) | Non è un piano di recovery finché non si chiarisce il test mode |
 
 **EC corrotto:** la boot ROM è intatta, ma non trova la 16B-signature. Sintomi: niente accensione, tastiera o ricarica, ventola al massimo. `ifu` non serve, perché richiede il firmware in esecuzione. Il chip è vivo, quindi l'ISP dovrebbe funzionare anche con flash illeggibile, se VSTBY è presente. Verificare sempre dopo la scrittura.

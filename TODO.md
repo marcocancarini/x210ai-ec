@@ -1,13 +1,12 @@
 # TODO — X210AI EC (IT5571)
 
-Stato al 2026-11-05: sulla scheda c'è `EC-V0.4.0-all-keys.bin`, con tasti ISO e JIS, scambio Fn↔L-Ctrl, Back, Forward, ThinkVantage e rilascio di Fn confermati. Versioni e procedure in [`firmware/README.md`](firmware/README.md), analisi in [`README.md`](README.md).
+Stato al 2026-11-05: sulla scheda c'è `EC-V0.4.0-all-keys.bin`, con tasti ISO e JIS, scambio Fn↔L-Ctrl, Back, Forward, ThinkVantage, rilascio di Fn e combinazioni con Fn confermati. Versioni e procedure in [`firmware/README.md`](firmware/README.md), analisi in [`README.md`](README.md).
 
 ## Da fare
 
 ### Firmware
 
-- [ ] Registrare l'hash del dump di `all-keys`: deve iniziare con `d96e1b3e6a4f`
-- [ ] Provare le altre combinazioni con Fn (`firmware/README.md`, sezione Conferma)
+- [ ] Registrare l'hash del dump di `all-keys`: deve iniziare con `d96e1b3e6a4f`, poi salvarlo in `dumps/ec/`
 - [ ] Decodificare cosa cambia tra `EC0416` e `V0.4.0` (driver SMBus, logica banchi 1 e 2)
 - [ ] Capire se il CRC viene controllato dalla boot ROM
 
@@ -20,8 +19,8 @@ Stato al 2026-11-05: sulla scheda c'è `EC-V0.4.0-all-keys.bin`, con tasti ISO e
 
 ### BIOS
 
-- [ ] Decidere se `bios-dumps/` deve restare nella repo: i dump possono contenere dati della macchina, e toglierli richiede di riscrivere la cronologia
-- [ ] Analizzare `bios-dumps/full.bin` (32 MiB, due letture identiche) prima di considerarlo immagine di recovery
+- [ ] Decidere se `dumps/bios/` deve restare nella repo: i dump possono contenere dati della macchina, e toglierli richiede di riscrivere la cronologia
+- [ ] Analizzare `dumps/bios/BIOS-X210AI-20261104-lettura1.bin` (32 MiB, due letture identiche) prima di considerarlo immagine di recovery
 - [ ] Trovare `MTLH-NB06_B0.2.bin` e fare un `acpidump` della macchina, per chiudere l'analisi del brick in `ifu`: byte residuo su porta 0x62 → `EC ACK Fail` → cancellazione del blocco 0 → `Verify Fail`
 
 ## Fatto
@@ -33,7 +32,7 @@ Stato al 2026-11-05: sulla scheda c'è `EC-V0.4.0-all-keys.bin`, con tasti ISO e
 - [x] Patch `V0.4.0` con `tools/patch_keyboard.py` e verifica con `tools/emulator/`
 - [x] Quattro flash riusciti con `ifu`: `EC0416`, `iso-jis`, `iso-jis-fn-ctrl-swap`, `all-keys`
 - [x] Tasti ISO e JIS, Back, Forward e ThinkVantage confermati con `evtest`
-- [x] Rilascio di Fn prima del tasto confermato sulla scheda
+- [x] Rilascio di Fn prima del tasto e combinazioni con Fn confermati sulla scheda
 - [x] HOTKEY arriva a GPH7 e il contatto 36 è a massa: dedotto dallo scambio funzionante, senza misure
 
 ## Regole di sicurezza (README §5, §6, §9)
