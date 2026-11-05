@@ -10,7 +10,7 @@ Questa guida è l'unico documento del progetto. I dump stanno in `dumps/` e i to
 
 | Area | Stato |
 |---|---|
-| Firmware EC | **Sulla scheda c'è `EC-V0.4.0-all-keys.bin`**, flashata sopra `iso-jis-fn-ctrl-swap`: tasti verificati con `evtest` su tastiera ISO (§9), JIS da provare, hash del dump non registrato. Confronto in §9, patch `V0.4.0` con CRC corretto in §5 |
+| Firmware EC | **Sulla scheda c'è `EC-V0.4.0-all-keys.bin`**, flashata sopra `iso-jis-fn-ctrl-swap`: tasti verificati con `evtest` su tastiere ISO e JIS (§9), hash del dump non registrato. Confronto in §9, patch `V0.4.0` con CRC corretto in §5 |
 | Lettura EC | **Riuscita con `ifu.efi /S 128 /k /j`**: due letture identiche (§6). Le altre vie non sono provate (§6, §7) |
 | Scrittura EC | **`ifu` ha flashato `EC0416`, `iso-jis`, `iso-jis-fn-ctrl-swap` e `all-keys` con successo**: immagini con CRC ricalcolato e codice aggiunto partono sulla scheda (§9). Il fix del rilascio di Fn non è ancora provato sull'hardware. Con RP2040 è possibile, ma con punti aperti (§7) |
 | Immagine BIOS | Due letture identiche da 32 MiB nella repo, non analizzate (§1, §8, §10) |
@@ -67,7 +67,7 @@ Questa guida è l'unico documento del progetto. I dump stanno in `dumps/` e i to
 | File | SHA256 | Note |
 |---|---|---|
 | `dumps/EC-V0.4.0-20250723-lettura1.bin`, `-lettura2.bin` | `9b8334bd5d5986ce97dfc5d8503fa643a97d8abb6c6166ce181c0525ec722311` | **Firmware originale della scheda**, letto il 2026-11-04. 131072 B, build `V0.4.0` 2025-07-23 18:11:04. Due letture identiche. Base delle patch e file di ritorno |
-| `dumps/EC-V0.4.0-all-keys.bin` | `d96e1b3e6a4f0fd1a3ea288b234afae3ad41dcb460b40419300df3ea40005894` | ISO, JIS, scambio Fn↔LCtrl, Back, Forward, ThinkVantage, pull-up e rilascio di Fn (98 byte + CRC). **Installata sulla scheda**, tasti ISO verificati con `evtest` |
+| `dumps/EC-V0.4.0-all-keys.bin` | `d96e1b3e6a4f0fd1a3ea288b234afae3ad41dcb460b40419300df3ea40005894` | ISO, JIS, scambio Fn↔LCtrl, Back, Forward, ThinkVantage, pull-up e rilascio di Fn (98 byte + CRC). **Installata sulla scheda**, tasti ISO e JIS verificati con `evtest` |
 | `dumps/EC-V0.4.0-iso-jis.bin` | `7ee70df0894832da7ed47dab8e2fda7674ea505c643ffb4b75d113f491471a74` | `V0.4.0` con tasti ISO e JIS (7 byte + CRC). ISO riferita funzionante, JIS non provata. File di ritorno sicuro |
 | `dumps/EC-V0.4.0-fn-ctrl-swap.bin` | `e1f1386daef06d7b51c5d65d8c1fc4764be7b33173d82a192db95b68f15be07f` | `V0.4.0` con scambio Fn↔LCtrl (3 byte + CRC), mai provata |
 | `dumps/EC-V0.4.0-iso-jis-fn-ctrl-swap.bin` | `a3f1ff4e1bdd374692f2854a7a8be4a48375938c5959f3e4643539e88675d57f` | ISO/JIS e scambio (10 byte + CRC). ISO e scambio riferiti funzionanti, JIS non provata. File di ritorno sicuro |
@@ -147,7 +147,7 @@ Sezioni del datasheet usate: `refs/DATASHEETS.md`.
 | `0x5600-0x564D` | `FF → codice` | Salva Fn alla pressione nella mappa `0x00E0` e lo riusa al rilascio, solo in `all-keys` |
 | `0x4A-0x4B` | `AF 5B → 79 1C` | CRC di `all-keys`. Negli altri file vale `F1 49` (ISO/JIS + scambio), `44 C4` (ISO/JIS), `1A D6` (scambio) |
 
-I codici interni `0x87` e `0x8F` non sono usati da matrice, overlay o codice. Mappatura Linux verificata su `drivers/input/keyboard/atkbd.c`, compresi i tasti JIS: Yen 124, Ro 89, Muhenkan 94, Henkan 92, Katakana/Hiragana 93. Con `evtest` sulla scheda arrivano Back, Forward e F13; i tasti JIS sono ancora da provare.
+I codici interni `0x87` e `0x8F` non sono usati da matrice, overlay o codice. Mappatura Linux verificata su `drivers/input/keyboard/atkbd.c`, compresi i tasti JIS: Yen 124, Ro 89, Muhenkan 94, Henkan 92, Katakana/Hiragana 93. Con `evtest` sulla scheda arrivano Back, Forward, F13 e tutti i tasti JIS.
 
 **Verifica con emulatore 8051.** Esegue il codice reale del firmware con le periferiche simulate. Risultati su `all-keys`:
 
@@ -164,7 +164,7 @@ Nelle sequenze casuali non contano Pausa, che contiene già il suo rilascio, e i
 
 Il pull-up segue il T61 di [USB_Laptop_Keyboard_Controller](https://github.com/thedalles77/USB_Laptop_Keyboard_Controller/tree/master/Example_Keyboards/Lenovo_ThinkPad_T61/Teensy%204p0) (`go_pu(HOTKEY)`) e l'adattatore X20x (il suo commento dice "active HIGH", ma il codice legge attivo basso con pull-up). Se la scheda ha già una resistenza, il datasheet consiglia di lasciarlo spento: i due pull-up in parallelo aumentano solo la corrente.
 
-Le celle ISO/JIS erano vuote: se su una tastiera non c'è il tasto, non cambia nulla. Le posizioni sono confermate su una matrice X20x JIS, tranne `<>`, che viene dalla X220 (§4). RCtrl non cambia.
+Le celle ISO/JIS erano vuote: se su una tastiera non c'è il tasto, non cambia nulla. Le posizioni JIS sono confermate sulla scheda con una tastiera giapponese, `<>` con una ISO (§9). RCtrl non cambia.
 
 **Patch `EC0416` (basate sulla `V0.3.2`):** restano solo come storia, non vanno flashate (vedi sotto).
 
@@ -493,7 +493,19 @@ Verifica con `evtest` su `/dev/input/event3`, tastiera ISO:
 | ThinkVantage | `code 183 (KEY_F13)` |
 | Fn fisico | `code 29 (KEY_LEFTCTRL)`, Ctrl+C funziona |
 
-Fn+F2 riferito funzionante. Ogni pressione ha il suo rilascio. **Non ancora provati:** rilascio di Fn prima del tasto, tasti JIS, le altre combinazioni con Fn.
+Verifica con `evtest`, tastiera JIS:
+
+| Tasto | Riga ricevuta |
+|---|---|
+| Hankaku/Zenkaku | `code 41 (KEY_GRAVE)` |
+| Yen | `code 124 (KEY_YEN)` |
+| Ro | `code 89 (KEY_RO)` |
+| Muhenkan | `code 94 (KEY_MUHENKAN)` |
+| Henkan | `code 92 (KEY_HENKAN)` |
+| Katakana/Hiragana | `code 93 (KEY_KATAKANAHIRAGANA)` |
+| `]` | `code 43 (KEY_BACKSLASH)` |
+
+Nel giro completo sulla tastiera JIS arrivano anche lettere, numeri, F1-F12, tasti di navigazione, frecce e modificatori, con tasti sovrapposti e autorepeat. Fn+F2 riferito funzionante. Ogni pressione ha il suo rilascio. **Non ancora provati:** rilascio di Fn prima del tasto, le altre combinazioni con Fn. La posizione `<>` è verificata solo su ISO: la cella non esiste sulle tastiere JIS.
 
 La procedura di flash resta valida per riscrivere `all-keys`:
 

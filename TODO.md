@@ -20,7 +20,7 @@ signature @0x40, firma @0x7F80, mappa banchi, tabella set2→set1 @0x0D03 — tu
 - [x] Patch tastiera `V0.4.0` (ISO/JIS, Fn↔LCtrl, Back, Forward, ThinkVantage, pull-up e rilascio di Fn): `tools/patch_keyboard.py`, verifica statica ed emulata, mai sull'hardware
 - [x] Flash `EC0416` con `ifu`: riuscito sulla scheda; registrare l'hash del dump successivo
 - [x] Flash `EC-V0.4.0-iso-jis.bin` e poi `EC-V0.4.0-iso-jis-fn-ctrl-swap.bin` con `ifu`: riusciti, ISO e scambio Fn↔LCtrl funzionanti; registrare l'hash del dump
-- [ ] Provare i tasti JIS su una tastiera giapponese
+- [x] Tasti JIS provati su tastiera giapponese con `all-keys`: Yen, Ro, Muhenkan, Henkan, Katakana/Hiragana, `]` e Hankaku/Zenkaku arrivano a Linux
 - [x] Flash `dumps/EC-V0.4.0-all-keys.bin`: riuscito; `<>`, `ù`, Back, Forward, ThinkVantage e Fn fisico come Ctrl verificati con `evtest`. Mai `EC0416_*.BIN` (CRC vecchio)
 - [ ] Dopo `all-keys`: registrare l'hash del dump (`d96e1b3e6a4f…`), provare il rilascio di Fn prima del tasto e le altre combinazioni con Fn
 - [ ] Decidere se i dump BIOS devono restare nella repo: possono contenere dati della macchina
