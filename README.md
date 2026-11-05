@@ -67,7 +67,7 @@ Questa guida è l'unico documento del progetto. I dump stanno in `dumps/` e i to
 | File | SHA256 | Note |
 |---|---|---|
 | `dumps/EC-V0.4.0-20250723-lettura1.bin`, `-lettura2.bin` | `9b8334bd5d5986ce97dfc5d8503fa643a97d8abb6c6166ce181c0525ec722311` | **Firmware originale della scheda**, letto il 2026-11-04. 131072 B, build `V0.4.0` 2025-07-23 18:11:04. Due letture identiche. Base delle patch e file di ritorno |
-| `dumps/EC-V0.4.0-all-keys.bin` | `fad3db0e3bfb30b3f120381fd00271e3861ac14b4d94ad7d3bcf37e3e7a4d4ab` | **File da flashare:** ISO, JIS, scambio Fn↔LCtrl, Back, Forward e ThinkVantage (16 byte + CRC), mai provata |
+| `dumps/EC-V0.4.0-all-keys.bin` | `d96e1b3e6a4f0fd1a3ea288b234afae3ad41dcb460b40419300df3ea40005894` | **File da flashare:** ISO, JIS, scambio Fn↔LCtrl, Back, Forward, ThinkVantage, pull-up e rilascio di Fn (98 byte + CRC), mai provata |
 | `dumps/EC-V0.4.0-iso-jis.bin` | `7ee70df0894832da7ed47dab8e2fda7674ea505c643ffb4b75d113f491471a74` | `V0.4.0` con tasti ISO e JIS (7 byte + CRC), mai provata |
 | `dumps/EC-V0.4.0-fn-ctrl-swap.bin` | `e1f1386daef06d7b51c5d65d8c1fc4764be7b33173d82a192db95b68f15be07f` | `V0.4.0` con scambio Fn↔LCtrl (3 byte + CRC), mai provata |
 | `dumps/EC-V0.4.0-iso-jis-fn-ctrl-swap.bin` | `a3f1ff4e1bdd374692f2854a7a8be4a48375938c5959f3e4643539e88675d57f` | Entrambe (10 byte + CRC), mai provata |
@@ -112,18 +112,19 @@ Sezioni del datasheet usate: `refs/DATASHEETS.md`.
 - **KBS matrix 18×8** (base `0x1D00h`: KSOL/KSOH1/KSOCTRL/KSOH2/KSI@`0x1D04`/KSOxLSDR `0x1D10-0x1D21`). Driver in banco1 `0x9300-0x9F00`: loop 16 righe KSO, legge KSI, indice `0x4D=(col<<4)|row|0x08`.
 - **Tabella matrice `0x2EB9`:** 128 byte, indice `(KSI<<4)|KSO` (`0x8CB2`). Identica in `EC0416` e `V0.4.0`. La tabella `0x2F39` (24 byte, 2 KSO extra) è vuota. Le voci sono codici interni, non scancode (vedi sotto).
 - **Codici interni** (`0x8D77`): `<0x80` set 2 diretto; `0x80-0x9B` tabella `0x3060` (`0x82` LWin, `0x84` Menu, `0x88` LShift, `0x89` RShift, `0x8A` LAlt, `0x8B` RAlt, `0x8C` LCtrl, `0x8D` RCtrl, `0x8E` Fn); `0x9C-0xDF` varianti a `0x2FE3`; `≥0xE0` coppie normale/Fn a `0x3046`.
-- **Fn:** non è in matrice. È il pin `0x1608` bit 7 (attivo basso, `0xC447`), con debounce nella voce 4 della tabella `0x2795`. Pressione e rilascio chiamano `0x8D77` con `0x8E` (`0xC45E`, `0xC465`), che imposta il bit `0x40` dello stato tastiera in iRAM `0xBC`. Quel pin non viene letto altrove.
+- **Fn:** non è in matrice. È il pin `0x1608` bit 7 (attivo basso, `0xC447`), con debounce nella voce 4 della tabella `0x2795`. Pressione e rilascio chiamano `0x8D77` con `0x8E` (`0xC45E`, `0xC465`), che imposta il bit `0x40` dello stato tastiera in iRAM `0xBC`. Quel pin non viene letto altrove. È GPH7 (piedino 3): `GPCRH7` `0x164F` vale `0x80`, cioè ingresso **senza pull-up interno**. La linea va solo a massa, quindi senza una resistenza sulla scheda resta flottante. Il debounce vale 6 letture uguali.
 - **Conversione scancode**: routine `0x0C09` (F0→break marker 0xFF, bit E7→casi speciali `0x83→0x41`/`0x84→0x54`, break `\|0x80`) e tabella **set2→set1 `0x0D03`** (128 B). Qui `0x83` e `0x84` sono byte set 2 già in uscita: F7 e Alt+SysRq. Sequenze multi-byte (Pausa `E1 14 77`): `0x25B2`; comandi PS/2: `0x2636`.
 - KBC 8042 (IRQ1/IRQ12, A20G): init `0x0A76`, dispatcher eventi `0x0D9C` (flag bit `0x30-0x3D`).
 - Flusso: KBS scan → tabella matrice → scancode set2 → conversione set1 → buffer KBC → porta `0x60` + IRQ1.
 - **ISO/JIS:** la tabella `0x0D03` copre tutti i set-2 necessari, ma **la matrice no**: le celle dei tasti ISO e JIS sono a `0x00`, e `0x8D77` scarta quel codice. Da qui il sintomo di `ù` e `<>` che non arrivano all'OS, in tutte le build viste.
 - **Confronto con ThinkPad:** la matrice coincide, trasposta, con la X220 di [thinkpad-ec](https://github.com/hamishcoleman/thinkpad-ec/blob/master/docs/table_matrix.txt): 88 celle occupate in comune e 52 tasti di scrittura su 52 con il codice atteso. Lì i codici sono numeri di tasto IBM, quindi quelli "sconosciuti" sono 14 Yen, 131 Muhenkan, 132 Henkan e 133 Kana. Differenze: LWin sta in `KSI2/KSO11` invece di `KSI3/KSO9`, e il firmware originale non ha ThinkVantage, Mic e PgBk/PgFd. La patch `all-keys` aggiunge tutti questi tasti tranne Mic (§5).
 - **Confronto con X20x JIS:** l'adattatore [bulat-chu](https://github.com/bulat-chu/Thinkpad-X6x-X20x-keyboard-USB-Adapter) documenta la matrice reale di una tastiera X6x/X20x giapponese. Convertita con il suo `pinout.txt` e con `matrix_pins`, dà 49 tasti su 49 uguali al firmware e conferma Yen, Ro, Muhenkan, Henkan, Kana e la cella `KSI6/KSO7`, che lì è `]` e su ISO è `#`. Anche LWin in `KSI2/KSO11` coincide con il suo `table-main.txt`, che ha però L_Shift e R_Shift scambiati rispetto al suo `keymap.c`. La cella ISO `<>` (`KSI5/KSO1`) non esiste su una tastiera JIS: viene solo dalla X220, ma è libera.
+- **Rilascio di Fn:** la routine `0x8CFA` riceve l'evento, lo salva in `0x080E` e non lo usa: sceglie la variante Fn guardando Fn al momento del rilascio. Rilasciare Fn prima del tasto, o premerlo dopo, manda il rilascio di un altro tasto: Fn+F2 emette `E0 1F 4B` (Win+L) e poi `F0 06`, lasciando Win e L premuti. Vale per 18 tasti ed è nel firmware originale. La mappa XRAM `0x00E0-0x00EF` letta da `0x8CFA` viene solo azzerata.
 - **Tasti rilevati e scartati:** la scansione legge qualsiasi incrocio KSO/KSI, ma un codice `0x00` si ferma in `0x8E41` (`JZ` a `0x8E51`) e non arriva al KBC. Valeva anche per ThinkVantage (`KSI5/KSO10`) e Back/Forward (`KSI6/KSO11`, `KSI7/KSO11`). Dedotto dal codice: `evtest` non è stato eseguito.
 
 ## 5. Patch della tastiera
 
-**Patch `V0.4.0`.** `tools/patch_keyboard.py` parte dal dump `V0.4.0`, ne controlla l'hash e i byte attesi, ricalcola il CRC (§3) e genera i quattro file `dumps/EC-V0.4.0-*.bin` (§1). Ogni file è verificato per dimensione, vettore di reset, firma e CRC. **Mai flashate:** un'immagine modificata non è ancora stata provata sull'hardware.
+**Patch `V0.4.0`.** `tools/patch_keyboard.py` parte dal dump `V0.4.0`, ne controlla l'hash e i byte attesi, ricalcola il CRC (§3) e genera i quattro file `dumps/EC-V0.4.0-*.bin` (§1). Ogni file è verificato per dimensione, vettore di reset, firma e CRC: questi controlli non dicono nulla sulla correttezza del codice. **Mai flashate:** un'immagine modificata non è ancora stata provata sull'hardware.
 
 | Byte | Da → a | Effetto |
 |---|---|---|
@@ -141,9 +142,27 @@ Sezioni del datasheet usate: `refs/DATASHEETS.md`.
 | `0x306E` | `5E → 38` | Codice `0x87`: da `E0 5E` a `E0 38`, Linux `KEY_BACK` |
 | `0x307E-0x307F` | `20 05 → 30 01` | Codice `0x8F`: da modificatore inutilizzato a `E0 30`, Linux `KEY_FORWARD` |
 | `0x2F13` (`KSI5/KSO10`) | `00 → 08` | ThinkVantage come F13 set 2, Linux `KEY_F13` |
-| `0x4A-0x4B` | `AF 5B → 3A 84` | CRC di `all-keys`. Negli altri file vale `F1 49` (ISO/JIS + scambio), `44 C4` (ISO/JIS), `1A D6` (scambio) |
+| `0x2764` | `80 → 84` | `GPCRH7`: pull-up interno da 75 kΩ sul pin di Fn, solo in `all-keys` |
+| `0x8CFA-0x8CFC` | `90 08 0E → 02 56 00` | Salto alla nuova routine di Fn, solo in `all-keys` |
+| `0x5600-0x564D` | `FF → codice` | Salva Fn alla pressione nella mappa `0x00E0` e lo riusa al rilascio, solo in `all-keys` |
+| `0x4A-0x4B` | `AF 5B → 79 1C` | CRC di `all-keys`. Negli altri file vale `F1 49` (ISO/JIS + scambio), `44 C4` (ISO/JIS), `1A D6` (scambio) |
 
-I codici interni `0x87` e `0x8F` non sono usati da matrice, overlay o codice. Mappatura Linux verificata su `drivers/input/keyboard/atkbd.c`. Non è provata sulla scheda.
+I codici interni `0x87` e `0x8F` non sono usati da matrice, overlay o codice. Mappatura Linux verificata su `drivers/input/keyboard/atkbd.c`, compresi i tasti JIS: Yen 124, Ro 89, Muhenkan 94, Henkan 92, Katakana/Hiragana 93. Non è provata sulla scheda.
+
+**Verifica con emulatore 8051.** Esegue il codice reale del firmware con le periferiche simulate. Risultati su `all-keys`:
+
+| Prova | Risultato |
+|---|---|
+| 128 celle, pressione e rilascio, anche con Shift, Fn o Ctrl tenuti | 509 casi, cambiano solo i tasti previsti |
+| I 10 tasti nuovi, byte per byte | 40 casi su 40 |
+| Fn rilasciato prima del tasto o premuto dopo | Originale 18 tasti errati su 127, patch 0 |
+| 300 sequenze casuali da 600 eventi | Tasti bloccati: originale 300, patch 0 |
+| Boot differenziale, 3 milioni di istruzioni | Unica scrittura diversa: `0x164F=84` |
+| Errori inseriti apposta | Tutti rilevati, 15 su 15 |
+
+Nelle sequenze casuali non contano Pausa, che contiene già il suo rilascio, e i falsi shift `E0 12` ed `E0 59`, ignorati da Linux. L'emulazione parte dopo il debounce per i tasti di matrice, simula i registri e non può provare la boot ROM né il cablaggio. Gli script non sono nella repo.
+
+Il pull-up segue il T61 di [USB_Laptop_Keyboard_Controller](https://github.com/thedalles77/USB_Laptop_Keyboard_Controller/tree/master/Example_Keyboards/Lenovo_ThinkPad_T61/Teensy%204p0) (`go_pu(HOTKEY)`) e l'adattatore X20x (il suo commento dice "active HIGH", ma il codice legge attivo basso con pull-up). Se la scheda ha già una resistenza, il datasheet consiglia di lasciarlo spento: i due pull-up in parallelo aumentano solo la corrente.
 
 Le celle ISO/JIS erano vuote: se su una tastiera non c'è il tasto, non cambia nulla. Le posizioni sono confermate su una matrice X20x JIS, tranne `<>`, che viene dalla X220 (§4). RCtrl non cambia.
 
@@ -295,6 +314,16 @@ Il riferimento è lo [schema dell'adattatore X201](https://github.com/bulat-chu/
 **Ogni riga va confermata col cicalino prima di saldare.**
 
 **Da non collegare:** nello schema il 38 è +5 V e il 35 è +3,3 V, il 36 è la massa del tasto Fn (`HOTKEY` sul contatto 1), 31 e 34 sono massa. 37, 39 e 40 sono il TrackPoint a 5 V. Sulla X210AI vanno misurati: l'adattatore fornisce queste alimentazioni da sé.
+
+**Cablaggio di Fn.** Il tasto è un interruttore fuori matrice tra il contatto 1 (`HOTKEY`) e il contatto 36. La nota dello schema dice che sulle X200/X201 il 36 fa da massa per `HOTKEY`, e l'adattatore lo collega a massa con un ponticello: quindi la massa arriva dalla scheda, non dalla tastiera. Servono due collegamenti sulla X210AI:
+
+| Tratto | Fonte | Stato |
+|---|---|---|
+| Contatto 1 → EC piedino 3 (GPH7) | Firmware e datasheet per il piedino, schema X201 per il contatto | Probabile, pista non visibile nelle foto |
+| Contatto 36 → massa | Schema X201 | Da misurare, nascosto dal connettore |
+| Pull-up esterno | Il firmware originale lascia il pull-up interno spento | Probabile, non visto |
+
+Nelle foto la tacca serigrafata marca il piedino 1, poi 5, 10, 15. I primi due componenti della fila vicino all'angolo (uno scuro, uno color ocra) sono separati dagli altri da due barre di serigrafia e potrebbero essere un filtro RC con pull-up: è solo un'ipotesi.
 
 **Accesso ai contatti:** l'adattatore monta una presa come quella della scheda, quindi non si innesta qui. Serve la spina JAE AA01 a 40 posizioni, il cui codice non è stato trovato, oppure il cavo piatto di una tastiera X201 guasta.
 
@@ -455,7 +484,7 @@ sudo sha256sum /boot/efi/EFI/tools/X210KEY.BIN /boot/efi/EFI/tools/V040.BIN
 sync
 ```
 
-Gli hash devono iniziare con `fad3db0e3bfb` e `9b8334bd5d59`. Da UEFI Shell, sul volume della ESP e nella cartella `EFI\tools`, con il controllo della porta al punto 4 qui sotto:
+Gli hash devono iniziare con `d96e1b3e6a4f` e `9b8334bd5d59`. Da UEFI Shell, sul volume della ESP e nella cartella `EFI\tools`, con il controllo della porta al punto 4 qui sotto:
 
 ```
 ifu.efi X210KEY.BIN 128

@@ -74,11 +74,34 @@ EXTRA_KEYS = [
     (cell(7, 11), 0x00, 0x8F),  # Browser Forward
     (cell(5, 10), 0x00, 0x08),  # ThinkVantage, set 2 F13, Linux KEY_F13
 ]
+# GPH7 reads the Fn line, which only pulls low: enable the internal 75k pull-up (GPCRH7)
+FN_PULLUP = [(0x2764, 0x80, 0x84)]
+# Stock 0x8CFA picks the Fn variant from the Fn state at release, so Fn up before the key
+# up leaves the Fn variant stuck. Keep the state seen at press in the bitmap at XRAM 0x00E0,
+# which the firmware clears at start and never writes
+FN_RELEASE_CODE = 0x5600
+FN_RELEASE = bytes.fromhex(
+    '90080E ED F0'    # 5600 keep the original store of the event type
+    'EF C3 949C 402C' # 5605 codes below 0x9C have no Fn variant: result 0
+    'FC 5407 905646 93 FB'  # 560B R3 = mask for the code
+    'EC 03 03 03 541F 24E0 F582 758300'  # 5613 DPTR = bitmap byte
+    'ED 7018'         # 5620 release or repeat: use the saved state
+    '78BC E6 5440 6007'  # 5623 press: read the Fn state
+    'E0 4B F0 7F01 8010'  # 562A saved 1, result 1
+    'EB F4 FA E0 5A F0'   # 5631 saved 0
+    '7F00 8006'       # 5637 result 0
+    'E0 5B 60F8 7F01'  # 563B result = saved state
+    'EF FD 7E00 22'   # 5641 R5 = R7 = result, R6 = 0
+    '0102040810204080'
+)
+FN_RELEASE_PATCH = [
+    (0x8CFA, 0x90, 0x02), (0x8CFB, 0x08, FN_RELEASE_CODE >> 8), (0x8CFC, 0x0E, FN_RELEASE_CODE & 0xFF),
+] + [(FN_RELEASE_CODE + i, 0xFF, byte) for i, byte in enumerate(FN_RELEASE)]
 BUILDS = {
     'EC-V0.4.0-iso-jis.bin': ISO_JIS,
     'EC-V0.4.0-fn-ctrl-swap.bin': FN_CTRL,
     'EC-V0.4.0-iso-jis-fn-ctrl-swap.bin': ISO_JIS + FN_CTRL,
-    'EC-V0.4.0-all-keys.bin': ISO_JIS + FN_CTRL + EXTRA_KEYS,
+    'EC-V0.4.0-all-keys.bin': ISO_JIS + FN_CTRL + EXTRA_KEYS + FN_PULLUP + FN_RELEASE_PATCH,
 }
 
 
