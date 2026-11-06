@@ -28,6 +28,14 @@ Stato al 2026-11-05: sulla scheda c'è `EC-V0.4.0-all-keys.bin`, con tasti ISO e
 - [ ] Capire perché `storico/diagnostica-20261017/full_dump.bin` differisce da `dumps/bios/`
 - [ ] Trovare `MTLH-NB06_B0.2.bin` e usare `storico/diagnostica-20261017/acpi.dat`, per chiudere l'analisi del brick in `ifu`: byte residuo su porta 0x62 → `EC ACK Fail` → cancellazione del blocco 0 → `Verify Fail`
 
+### Coreboot (README §16)
+
+- [ ] Leggere `setpci -s 00:16.0 0x40.l` sulla scheda: `90000255` = manufacturing mode, coreboot possibile
+- [ ] Guardare il chip BIOS: package WSON-8 secondo il port, marking e tensione
+- [ ] Capire cosa fanno gli eventi EC `_Q06`, `_Q07`, `_Q3B-_Q3F`, `_Q53`, `_Q69`, `_Q70` del DSDT originale, assenti nel port
+- [ ] Seguire la [CL 94886](https://review.coreboot.org/c/coreboot/+/94886): al 2026-11-06 è `NEW`, senza Code-Review
+- [ ] Solo dopo i punti sopra: MFIT sul proprio dump per disattivare Boot Guard, mai l'immagine di qualcun altro
+
 ## Fatto
 
 - [x] Dump BIOS: 33554432 byte, sha256 `dd6e3116…4669`, due letture identiche, flash descriptor valido a `0x10`
@@ -38,6 +46,7 @@ Stato al 2026-11-05: sulla scheda c'è `EC-V0.4.0-all-keys.bin`, con tasti ISO e
 - [x] Quattro flash riusciti con `ifu`: `EC0416`, `iso-jis`, `iso-jis-fn-ctrl-swap`, `all-keys`
 - [x] Tasti ISO e JIS, Back, Forward e ThinkVantage confermati con `evtest`
 - [x] Rilascio di Fn prima del tasto e combinazioni con Fn confermati sulla scheda
+- [x] Port coreboot confrontato con i dump: layout della flash identico, Boot Guard attivo, mappa della RAM EC coerente
 - [x] HOTKEY arriva a GPH7 e il contatto 36 è a massa: dedotto dallo scambio funzionante, senza misure
 
 ## Regole di sicurezza (README §5, §6, §9)

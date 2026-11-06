@@ -29,6 +29,7 @@ I percorsi `inputs/` di §1 restano come riferimento agli hash: quasi tutti quei
 | Brick segnalati | Meccanismo più probabile trovato nel codice di `ifu`, non riprodotto (§9) |
 | Recovery | Descritta, mai provata su questa scheda (§11) |
 | Porta EC_SPI1 | Pinout parziale da foto: 4 contatti su 10 sono FSPI. Accesso all'eFlash non documentato, test mode da chiarire (§13, §14) |
+| Coreboot | Port di terze parti, non ancora accettato upstream. Layout della flash identico ai nostri dump, Boot Guard attivo sulla scheda: va disattivato prima. Nulla provato qui (§16) |
 
 **Eseguito sulla X210AI:** `ifu.efi` in lettura (§6) e quattro flash, l'ultimo con `all-keys` (§9). `Fpt.efi` è stato solo disassemblato.
 
@@ -40,6 +41,7 @@ I percorsi `inputs/` di §1 restano come riferimento agli hash: quasi tutti quei
 4. Accesso al connettore tastiera: cavo di una tastiera X201 guasta o spina JAE AA01 a 40 posizioni, codice non ancora trovato (§7).
 5. Cablaggio RP2040, poi `isp id` e `isp read` con l'EC sano: il risultato va confrontato con il firmware installato in quel momento (§1). Niente scritture prima (§7).
 6. Cicalino sui contatti 1, 3, 7, 8, 9 e 10 di `EC_SPI1`: massa, EC 119, EC 100 e piedini SMBus (§13).
+7. Per coreboot: `setpci -s 00:16.0 0x40.l` sulla scheda, per sapere se è in manufacturing mode (§16).
 
 ## Indice
 
@@ -73,6 +75,7 @@ I percorsi `inputs/` di §1 restano come riferimento agli hash: quasi tutti quei
 **Varie**
 
 - §15 [Strumenti e convenzioni](#15-strumenti-e-convenzioni)
+- §16 [Coreboot](#16-coreboot)
 
 ---
 
@@ -390,7 +393,7 @@ Il BIOS sta su un chip SPI esterno, quindi qui un programmatore funziona. Fare i
 - UEFI Shell: `fpt.efi -d full.bin`
 - Linux: `flashrom -p internal -r full.bin`
 
-**Dal chip, a macchina spenta:** package SOIC-8, secondo `fparts.txt` W25Q128, MX25L12873, N25Q128 e simili a 3,3 V. Package e tensione sono dedotti da quella lista, non dalla scheda: leggere il marking e controllare il datasheet. Con una flash da 1,8 V serve un adattatore di livello.
+**Dal chip, a macchina spenta:** package **WSON-8** secondo il port coreboot (`board_info.txt` e foto in `Documentation/mainboard/51nb/x210ai.png`, §16), non SOIC-8 come scritto prima. Una clip SOIC non va bene: serve un adattatore a punte per WSON o la dissaldatura. Il chip è da 32 MiB, come i dump. Il modello non è noto: `fparts.txt` cita W25Q128, MX25L12873, N25Q128 e simili, che però sono da 16 MiB. Leggere il marking e controllare tensione e datasheet. Con una flash da 1,8 V serve un adattatore di livello.
 
 | Programmatore | Note |
 |---|---|
@@ -657,7 +660,7 @@ Il pin 1 è sul lato del triangolo. Restano da annotare il tipo di blocco (bascu
 1. **Massa:** ogni contatto contro un foro vite dorato.
 2. **Candidati:** ogni contatto contro i piedini della tabella.
 3. **Scansione:** per i rimasti, percorri i quattro lati dell'EC finché suona, poi restringi al piedino.
-4. **Altrove:** prova il chip BIOS SOIC-8 e le piazzole vicine al connettore.
+4. **Altrove:** prova il chip BIOS WSON-8 (§8) e le piazzole vicine al connettore.
 
 | Gruppo | Segnale | Piedino EC | Note |
 |---|---|---|---|
@@ -729,3 +732,49 @@ La prima scrittura arriva solo dopo la verifica del dump (§6). Riporta poi il p
 - `python3 tools/emulator/run_tests.py`: esegue il codice reale del firmware su tutte le immagini patchate. `tools/emulator/selftest.py` prova le istruzioni dell'emulatore. Niente dipendenze esterne.
 - `python3 tools/i8051.py <bin> 0 <start_hex> <end_hex>`: disassembler 8051 minimale, senza dipendenze. `tools/output/strings.txt` e `tools/output/key-regions.asm` sono artefatti generati.
 - Commit raggruppati per sessione. La cartella locale è la repo git privata `marcocancarini/x210ai-ec` e `inputs/` non viene pubblicata. Hash e sezioni del datasheet in `refs/DATASHEETS.md`.
+
+## 16. Coreboot
+
+Esiste un port di coreboot per la X210AI: [WheeledCord/coreboot-x210ai](https://github.com/WheeledCord/coreboot-x210ai), branch `x210ai`, di Fionn Cassidy. È un fork di coreboot con la scheda in `src/mainboard/51nb/x210ai/`. **Nulla di questa sezione è stato provato sulla nostra scheda:** i riscontri sono fatti con i dump e la diagnostica già nella repo.
+
+| Voce | Stato al 2026-11-06 |
+|---|---|
+| Fork | 25 commit sopra coreboot, ultimo push 2026-09-01. Nessuna issue aperta |
+| Upstream | [CL 94886](https://review.coreboot.org/c/coreboot/+/94886) `mb/51nb/x210ai: Add new mainboard`: stato `NEW`, patch set 4, Verified+1, nessun Code-Review, ultimo commento 2026-09-08. In coreboot `main` c'è solo `51nb/x210` |
+| Piattaforma | Meteor Lake U/H (`SOC_INTEL_METEORLAKE_U_H`, `FSP_TYPE_IOT`), payload a scelta |
+| Provato dall'autore | Core Ultra 7 165H con pannello 3000×2000: Linux, NVMe, SATA, WiFi, Bluetooth, Ethernet, audio ALC1220, eDP, HDMI/DP, USB, S3 |
+| Non provato | TPM (PTT non abilitato nel ME), Thunderbolt/USB4, WWAN, variante 185H |
+
+### Riscontro con la nostra scheda
+
+| Punto | Port coreboot | Nostra scheda | Esito |
+|---|---|---|---|
+| Layout della flash | `board.fmd`: 32 MiB, descriptor 16K, ME 8260K, DevExp2 10156K, BIOS 14 MiB a 18 MiB | Descriptor dei due dump in `dumps/bios/` e di `storico/diagnostica-20261017/full_dump.bin`: DESC `0x0-0x3FFF`, ME `0x4000-0x814FFF`, DevExp2 `0x815000-0x11FFFFF`, BIOS `0x1200000-0x1FFFFFF` | **Identico** |
+| Chip BIOS | WSON-8, SPI, saldato | Non verificato a vista | Corregge §8, che diceva SOIC-8 |
+| Boot Guard | Attivo di fabbrica: coreboot non parte finché non si disattiva | `MSR 0x13A = 0x30000006f`: verified boot e measured boot attivi (`storico/diagnostica-20261017/riepilogo.txt`) | **Concorde.** Va disattivato prima |
+| Manufacturing mode | `setpci -s 00:16.0 0x40.l` deve dare `90000255` | **Non letto** | Da fare: decide se coreboot è possibile |
+| EC | IT5571E su eSPI, porte `0x62/0x66`, SCI su GPE `0x6E` | Stesso chip (§2) | Concorde |
+| RAM dell'EC | `ec.asl`: lid `0x7F` bit 0, AC `0x80` bit 0, batteria `0x81-0x93` | `storico/diagnostica-20261017/ec_ram.bin`: `0x7F=01` (coperchio aperto), `0x81=09` (batteria presente, bit 3), capacità di progetto 8658, tensione di progetto 11100 mV, 238 cicli, 2554/5254 = 49 %, e `0x92=0x31` = 49 | **Valori coerenti** con la mappa del port |
+| Eventi dell'EC | `_Q0A` AC, `_Q0B` batteria, `_Q0C` coperchio, `_Q54` tasto di accensione | Il DSDT originale (`acpi.dat`) ha anche `_Q06`, `_Q07`, `_Q3B-_Q3F`, `_Q53`, `_Q69`, `_Q70` | **10 eventi non portati**, funzione da capire |
+| Flash interno | `flashrom -p internal --ifd -i bios -N -w build/coreboot.rom` | Nella diagnostica flashrom ha usato `/dev/mtd0` ("Opaque flash chip"): il driver del kernel tiene il controller e regioni e protezioni non sono visibili | Prima va scollegato il driver SPI del kernel |
+
+### Rapporto con il firmware EC
+
+Coreboot sostituisce solo la regione BIOS. L'eFlash dell'EC non viene toccata, quindi `EC-V0.4.0-all-keys.bin` resta com'è. La tastiera arriva all'OS dal KBC dell'EC su `0x60/0x64` (§4), e il port dichiara il controller PS/2 (`ps2_controller.asl`). Le combinazioni con Fn che l'EC traduce in scancode (§4) non dipendono dal BIOS. Dipende invece dal BIOS tutto ciò che passa per gli eventi `_Qxx` non portati: quali funzioni siano, va visto nel DSDT originale.
+
+### Ordine delle operazioni
+
+1. **Backup:** ci sono già due letture identiche del chip (§1, `dumps/bios/`). Prima di scrivere serve una lettura nuova, confrontata con quelle.
+2. **Manufacturing mode:** `setpci -s 00:16.0 0x40.l`. Se non dà `90000255`, la configurazione di Boot Guard è fusa e coreboot non è possibile.
+3. **Disattivare Boot Guard** con Intel MFIT, sul proprio dump: `mfit.exe --decompose dump.bin --saveconfig config.xml`, poi `BtGuardProfileConfig` da `Debug Profile` a `Boot Guard Disabled`, poi `mfit.exe --loadconfig config.xml --build dump_bgdisabled.bin`. L'autore usa MFIT 18.0.10.2285, che supporta il layout MTL-P. MFIT è software Intel e non è nella repo.
+4. **Scrivere l'immagine con Boot Guard disattivato** e controllare che il BIOS originale parta ancora. Questa scrittura tocca anche le regioni fuori dal BIOS, non solo i 14 MiB di coreboot.
+5. **Scrivere coreboot** nella sola regione BIOS: descriptor, ME e DevExp2 restano quelli di fabbrica.
+
+### Rischi e punti deboli
+
+- **Immagine precompilata:** il fork distribuiva un'immagine con Boot Guard disattivato, tolta il 2026-08-29 (`ae8c1be92e`) dopo la review: a due utenti, uno con 185H e uno con 165H, non funzionava, mentre il proprio dump modificato sì. Il `README.md` principale del fork cita ancora `x210ai-bootguard-disabled.bin`: è un residuo, quel file non c'è più. Usare solo il proprio dump.
+- **Thunderbolt** (review di Maya Matuszczyk): `tbt_pcie_rp0` dovrebbe essere `tbt_pcie_rp1`, manca il collegamento a `pmc_mux`, e il GPIO di accensione del retimer non è noto. Con le correzioni Thunderbolt funziona solo a volte.
+- **USB-C:** secondo l'autore funziona solo a volte, sia con coreboot sia con il BIOS originale. Potrebbe dipendere dalla scheda o dall'EC. Il PD è gestito dall'EC (§2): interessa anche questo progetto.
+- **PCIe:** un revisore segnala che su una sua scheda una root port del `devicetree.cb` non viene trovata e viene disattivata.
+- **S3:** funziona solo con `INTEL_TME` disattivato, perché la chiave della RAM non sopravvive alla sospensione.
+- **Recovery:** se la macchina non parte più, serve il programmatore sul chip WSON-8 (§8) con il dump di fabbrica. Non c'è un'altra via.
