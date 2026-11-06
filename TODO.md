@@ -25,16 +25,19 @@ Stato al 2026-11-05: sulla scheda c'è `EC-V0.4.0-all-keys.bin`, con tasti ISO e
 
 - [ ] Decidere se `dumps/bios/` deve restare nella repo: i dump possono contenere dati della macchina, e toglierli richiede di riscrivere la cronologia
 - [ ] Analizzare `dumps/bios/BIOS-X210AI-20261104-lettura1.bin` (32 MiB, due letture identiche) prima di considerarlo immagine di recovery
-- [ ] Capire perché `storico/diagnostica-20261017/full_dump.bin` differisce da `dumps/bios/`
+- [x] Capire perché `storico/diagnostica-20261017/full_dump.bin` differisce da `dumps/bios/`: descriptor e DevExp2 identici, cambiano solo zone di ME (partizioni dati) e BIOS (inizio regione), anche tra 04/11 e 06/11. Coerente con dati a runtime
 - [ ] Trovare `MTLH-NB06_B0.2.bin` e usare `storico/diagnostica-20261017/acpi.dat`, per chiudere l'analisi del brick in `ifu`: byte residuo su porta 0x62 → `EC ACK Fail` → cancellazione del blocco 0 → `Verify Fail`
 
 ### Coreboot (README §16)
 
-- [ ] Leggere `setpci -s 00:16.0 0x40.l` sulla scheda: `90000255` = manufacturing mode, coreboot possibile
-- [ ] Guardare il chip BIOS: package WSON-8 secondo il port, marking e tensione
-- [ ] Aggiungere a `ec.asl` gli eventi `_Q06`/`_Q07` (luminosità, `DHCF`): sono gli unici del DSDT originale con contenuto tra quelli mancanti
+Riferimento: [x210ai-coreboot](https://github.com/marcocancarini/x210ai-coreboot), `docs/STATO.md`.
+
+- [x] Leggere `setpci -s 00:16.0 0x40.l` sulla scheda: `90000255`, manufacturing mode confermato
+- [ ] Guardare il chip BIOS: marking e misura del package. Modello e tensione già letti: W25Q256JW, 1,8 V
+- [ ] Procurarsi l'adattatore WSON-8 per il T48 e preparare il secondo PC con Xgpro
+- [x] Aggiungere a `ec.asl` gli eventi `_Q06`/`_Q07` (luminosità, `DHCF`): patch in x210ai-coreboot, da provare sulla scheda
 - [ ] Seguire la [CL 94886](https://review.coreboot.org/c/coreboot/+/94886): al 2026-11-06 è `NEW`, senza Code-Review
-- [ ] Solo dopo i punti sopra: MFIT sul proprio dump per disattivare Boot Guard, mai l'immagine di qualcun altro
+- [x] MFIT sul proprio dump per disattivare Boot Guard: immagine costruita, non ancora scritta. Mai l'immagine di qualcun altro
 
 ### Ventole (README §17)
 
