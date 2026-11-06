@@ -76,6 +76,7 @@ I percorsi `inputs/` di §1 restano come riferimento agli hash: quasi tutti quei
 
 - §15 [Strumenti e convenzioni](#15-strumenti-e-convenzioni)
 - §16 [Coreboot](#16-coreboot)
+- §17 [Ventole: chi controlla la curva](#17-ventole-chi-controlla-la-curva)
 
 ---
 
@@ -755,12 +756,27 @@ Esiste un port di coreboot per la X210AI: [WheeledCord/coreboot-x210ai](https://
 | Manufacturing mode | `setpci -s 00:16.0 0x40.l` deve dare `90000255` | **Non letto** | Da fare: decide se coreboot è possibile |
 | EC | IT5571E su eSPI, porte `0x62/0x66`, SCI su GPE `0x6E` | Stesso chip (§2) | Concorde |
 | RAM dell'EC | `ec.asl`: lid `0x7F` bit 0, AC `0x80` bit 0, batteria `0x81-0x93` | `storico/diagnostica-20261017/ec_ram.bin`: `0x7F=01` (coperchio aperto), `0x81=09` (batteria presente, bit 3), capacità di progetto 8658, tensione di progetto 11100 mV, 238 cicli, 2554/5254 = 49 %, e `0x92=0x31` = 49 | **Valori coerenti** con la mappa del port |
-| Eventi dell'EC | `_Q0A` AC, `_Q0B` batteria, `_Q0C` coperchio, `_Q54` tasto di accensione | Il DSDT originale (`acpi.dat`) ha anche `_Q06`, `_Q07`, `_Q3B-_Q3F`, `_Q53`, `_Q69`, `_Q70` | **10 eventi non portati**, funzione da capire |
+| Eventi dell'EC | `_Q0A` AC, `_Q0B` batteria, `_Q0C` coperchio, `_Q54` tasto di accensione | Il DSDT originale (`acpi.dat`) ha anche `_Q06`, `_Q07`, `_Q3B-_Q3F`, `_Q53`, `_Q69`, `_Q70`. Solo `_Q06` e `_Q07` fanno qualcosa: chiamano `DHCF(3)` e `DHCF(2)`, il metodo della luminosità (`HBRT`, `BRTN`, `BRTL`). Gli altri 8 sono metodi vuoti | **Mancano i tasti della luminosità**, il resto non serve |
 | Flash interno | `flashrom -p internal --ifd -i bios -N -w build/coreboot.rom` | Nella diagnostica flashrom ha usato `/dev/mtd0` ("Opaque flash chip"): il driver del kernel tiene il controller e regioni e protezioni non sono visibili | Prima va scollegato il driver SPI del kernel |
 
-### Rapporto con il firmware EC
+### Flashare coreboot tocca l'EC?
 
-Coreboot sostituisce solo la regione BIOS. L'eFlash dell'EC non viene toccata, quindi `EC-V0.4.0-all-keys.bin` resta com'è. La tastiera arriva all'OS dal KBC dell'EC su `0x60/0x64` (§4), e il port dichiara il controller PS/2 (`ps2_controller.asl`). Le combinazioni con Fn che l'EC traduce in scancode (§4) non dipendono dal BIOS. Dipende invece dal BIOS tutto ciò che passa per gli eventi `_Qxx` non portati: quali funzioni siano, va visto nel DSDT originale.
+**No, il firmware dell'EC non viene toccato.** Sono due memorie diverse:
+
+| | Firmware EC | BIOS / coreboot |
+|---|---|---|
+| Dove sta | eFlash da 128 KiB **dentro** l'IT5571 (§2) | Chip SPI esterno WSON-8 da 32 MiB (§8) |
+| Chi lo scrive | `ifu.efi` tramite il firmware EC in esecuzione (§9), oppure ISP dal connettore tastiera (§7) | `flashrom -p internal`, `Fpt.efi`, programmatore sul chip |
+| Nel flash descriptor | **Nessuna regione EC**: la regione 8 è vuota nei due dump di `dumps/bios/` | DESC, ME, DevExp2, BIOS |
+
+Quindi `flashrom ... -i bios` non può raggiungere l'eFlash, e nemmeno la scrittura dell'intero chip per disattivare Boot Guard. `EC-V0.4.0-all-keys.bin` resta com'è. Il port non contiene codice che manda comandi all'EC: usa solo il bus eSPI, l'ACPI di `ec.asl`, che legge la RAM dell'EC su `0x62/0x66`, e il controller PS/2.
+
+Cambia invece **come il sistema usa l'EC**, senza modificarlo:
+
+- **Tastiera:** arriva all'OS dal KBC dell'EC su `0x60/0x64` (§4), e il port dichiara il controller PS/2 (`ps2_controller.asl`). Le combinazioni con Fn che l'EC traduce in scancode (§4) non dipendono dal BIOS.
+- **Luminosità:** passa per gli eventi `_Q06` e `_Q07`, che il port non ha. Con coreboot i tasti della luminosità non dovrebbero funzionare finché non vengono aggiunti a `ec.asl` (dedotto dal DSDT, non provato).
+- **Ventola:** non cambia, perché la curva è nel firmware EC (§17).
+- **eSPI:** se il BIOS configura male il bus, tastiera, batteria e coperchio smettono di arrivare all'OS. Il firmware EC resta comunque intatto, e rimettere il BIOS originale ripristina tutto.
 
 ### Ordine delle operazioni
 
@@ -778,3 +794,57 @@ Coreboot sostituisce solo la regione BIOS. L'eFlash dell'EC non viene toccata, q
 - **PCIe:** un revisore segnala che su una sua scheda una root port del `devicetree.cb` non viene trovata e viene disattivata.
 - **S3:** funziona solo con `INTEL_TME` disattivato, perché la chiave della RAM non sopravvive alla sospensione.
 - **Recovery:** se la macchina non parte più, serve il programmatore sul chip WSON-8 (§8) con il dump di fabbrica. Non c'è un'altra via.
+
+## 17. Ventole: chi controlla la curva
+
+**La curva della ventola è nell'EC, non nel BIOS.** Il firmware EC legge la temperatura della CPU, la confronta con una tabella a 8 punti e pilota direttamente le uscite PWM. Nel firmware `V0.4.0` la tabella è scritta come costanti. L'ACPI del BIOS originale non la legge e non la cambia, e lo stesso vale per coreboot. Tutto dedotto dal codice (`dumps/ec/EC-V0.4.0-20250723-lettura1.bin`), dal DSDT originale e dalla RAM EC del 2026-10-17. Niente è stato misurato sulla ventola.
+
+### Il percorso nel firmware EC
+
+| Passo | Dove | Cosa fa |
+|---|---|---|
+| Temperatura | `0xDEB3-0xDF2F` | Calcola la temperatura della CPU come TjMax meno uno scostamento in 1/64 °C, nello stile di PECI GetTemp, e la salva in xdata `0x9550`. TjMax vale 110 °C (`0x6E`) di default, oppure il valore letto in `0x9628`. Il firmware usa l'host PECI (`0x3000`), ma da quale bus arrivi il dato non è decodificato |
+| Copia nello spazio ACPI | `0xBC02` | Copia `0x9550` in `0x0470`, cioè l'offset `0x70` dello spazio EC visto da `0x62/0x66` |
+| Curva | `0xB9E9-0xBB3B` | Per ciascuno dei due canali sceglie la sorgente (offset `0x70-0x73`), cerca la soglia più alta non superata e salva il duty obiettivo |
+| Rampa e uscita | `0xBB3C-0xBC01` | Porta il duty attuale verso l'obiettivo a passi di 1, lo limita a CTR1 e lo scrive in DCR0 (`0x1802`) o DCR1 (`0x1803`) |
+| Accensione e spegnimento | `0xBC14`, `0xB98F`, `0xB9BB` | Se `0xCE90` restituisce 0 (forse sistema spento, non verificato) azzera obiettivo e temperatura e mette i piedini PWM0/PWM1 (GPA0/GPA1, `GPCRA0/1` a `0x1610/0x1611`) come GPIO bassi. Altrimenti li riporta alla funzione PWM |
+| Valori iniziali | `0xB841`, chiamata da `0xDC44` | Scrive modo, isteresi e tabella in `0x0440-0x046D` |
+
+**Registri PWM** (tabella di init a `0x3310`): CTR1 (`0x1841`) = `0x98` = 152. Il duty è `DCR/(CTR+1)` e con `DCR = CTR` l'uscita resta alta (datasheet IT5570, sezione 7.12), quindi `0x98` vale 100 %. Non c'è nessun accesso diretto ai registri del tachimetro (`0x181E-0x1821`): il firmware sembra non leggere i giri.
+
+### Struttura nello spazio EC
+
+I due canali sono intercalati: canale 0 agli offset pari, canale 1 a quelli dispari. Offset relativi all'inizio dello spazio EC (xdata `0x0400`):
+
+| Offset | Campo | Valore di fabbrica |
+|---|---|---|
+| `0x40/0x41` | Modo: bit 0-3 sorgente (`0x70+n`), bit 4-6 = `1` curva con rampa, bit 7 = curva saltata | `0x10` |
+| `0x42/0x43` | Temperatura usata | — |
+| `0x44/0x45` | Duty obiettivo | — |
+| `0x46/0x47` | Duty attuale | — |
+| `0x4A/0x4B` | Isteresi sotto la prima soglia | 2 |
+| `0x4C/0x4D` | Contatori della rampa, non decodificati | 0 |
+| `0x4E-0x6D` | 8 coppie soglia/duty | Tabella sotto |
+| `0x70-0x73` | Sorgenti di temperatura | `0x70` = CPU |
+
+| Temperatura CPU | 40 °C | 45 °C | 50 °C | 55 °C | 60 °C | 70 °C | 75 °C | 80 °C |
+|---|---|---|---|---|---|---|---|---|
+| Duty (su 152) | 20 | 40 | 60 | 80 | 100 | 120 | 140 | 152 |
+| Duty in % | 13 | 26 | 39 | 53 | 66 | 79 | 92 | 100 |
+
+Sotto i 40 °C l'obiettivo è 0, cioè ventola ferma. Entrambi i canali usano la stessa sorgente e la stessa tabella. Quante ventole siano davvero collegate non si sa: lo chassis X200/X201 ne ha una.
+
+**RAM EC del 2026-10-17** (`storico/diagnostica-20261017/ec_ram.bin`): la tabella è identica ai valori di fabbrica su entrambi i canali, ma `0x70` vale `0x64` (100 °C) e il duty attuale è `0x98` (100 %) su entrambi. O la CPU era davvero a 100 °C durante la diagnostica, o la temperatura arrivava sbagliata e la ventola girava al massimo. Va ricontrollato con la macchina a riposo.
+
+### E il BIOS?
+
+- **DSDT originale:** il campo `ECF2` sullo spazio EC si ferma a `BTP1` (offset `0x93`) e non nomina gli offset `0x40-0x73`. `FANM` esiste solo come nome di variabile.
+- **DPTF** (SSDT `DptfTabl`): il `_FSL` della ventola chiama `\_SB.PC00.LPCB.H_EC.DPTF.FNSL`, ma quel metodo non esiste in nessuna tabella. DPTF finisce nel ramo `FNSL not available` e non comanda la ventola.
+- **Codice del BIOS** (DXE/SMM): non analizzato. Non si può escludere che durante l'avvio scriva qualcosa nello spazio EC, ma i valori trovati in RAM sono identici alle costanti del firmware.
+- **Coreboot:** `ec.asl` non nomina questi offset, quindi la curva resta quella dell'EC.
+
+### Cambiare la curva
+
+- **Patch del firmware EC:** cambiare le costanti in `0xB841-0xB98E` (istruzioni `MOV A,#xx`) e ricalcolare il CRC (§3). È lo stesso percorso delle patch della tastiera, con gli stessi rischi (§9).
+- **Dall'OS, scrivendo nello spazio EC** (`ec_sys write_support=1`, offset `0x4E-0x6D` o modo `0x40`): possibile solo se il comando di scrittura ACPI dell'EC accetta quegli offset. Non è verificato, e i valori tornano quelli di fabbrica quando l'EC riparte da `0xB841`.
+- **Dal BIOS o da coreboot:** servirebbe aggiungere le scritture, non ci sono oggi.

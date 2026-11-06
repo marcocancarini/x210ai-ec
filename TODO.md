@@ -32,9 +32,16 @@ Stato al 2026-11-05: sulla scheda c'è `EC-V0.4.0-all-keys.bin`, con tasti ISO e
 
 - [ ] Leggere `setpci -s 00:16.0 0x40.l` sulla scheda: `90000255` = manufacturing mode, coreboot possibile
 - [ ] Guardare il chip BIOS: package WSON-8 secondo il port, marking e tensione
-- [ ] Capire cosa fanno gli eventi EC `_Q06`, `_Q07`, `_Q3B-_Q3F`, `_Q53`, `_Q69`, `_Q70` del DSDT originale, assenti nel port
+- [ ] Aggiungere a `ec.asl` gli eventi `_Q06`/`_Q07` (luminosità, `DHCF`): sono gli unici del DSDT originale con contenuto tra quelli mancanti
 - [ ] Seguire la [CL 94886](https://review.coreboot.org/c/coreboot/+/94886): al 2026-11-06 è `NEW`, senza Code-Review
 - [ ] Solo dopo i punti sopra: MFIT sul proprio dump per disattivare Boot Guard, mai l'immagine di qualcun altro
+
+### Ventole (README §17)
+
+- [ ] Rileggere la RAM EC a riposo: il 2026-10-17 l'offset `0x70` valeva 100 °C e il duty era al 100 % su entrambi i canali
+- [ ] Capire se il comando di scrittura ACPI dell'EC accetta gli offset `0x40-0x6D` (curva modificabile dall'OS)
+- [ ] Decodificare `0xCE90` (condizione di accensione delle ventole), i contatori della rampa `0x4C/0x4D` e il bus da cui arriva la temperatura
+- [ ] Contare le ventole collegate: due canali PWM nel firmware, una ventola nello chassis
 
 ## Fatto
 
@@ -46,6 +53,7 @@ Stato al 2026-11-05: sulla scheda c'è `EC-V0.4.0-all-keys.bin`, con tasti ISO e
 - [x] Quattro flash riusciti con `ifu`: `EC0416`, `iso-jis`, `iso-jis-fn-ctrl-swap`, `all-keys`
 - [x] Tasti ISO e JIS, Back, Forward e ThinkVantage confermati con `evtest`
 - [x] Rilascio di Fn prima del tasto e combinazioni con Fn confermati sulla scheda
+- [x] Curva della ventola trovata nel firmware EC (`0xB841`, `0xB9E9`): 8 punti da 40 a 80 °C, nessun controllo da ACPI o DPTF
 - [x] Port coreboot confrontato con i dump: layout della flash identico, Boot Guard attivo, mappa della RAM EC coerente
 - [x] HOTKEY arriva a GPH7 e il contatto 36 è a massa: dedotto dallo scambio funzionante, senza misure
 
