@@ -3,7 +3,7 @@
 # Usage: run_tests.py [image ...]    default: all the images in firmware/patched
 #
 # Peripherals are plain memory and matrix keys enter after the hardware debounce, so a
-# pass does not cover the boot ROM, the wiring or the host. See README section 5.
+# pass does not cover the boot ROM, the wiring or the host. See docs/2-modifiche-software.md, section 2.1.
 import os
 import random
 import sys
