@@ -17,7 +17,7 @@
 
 **`0xCE90`** restituisce 1 solo se XRAM `0x00B0` vale 1, probabilmente lo stato S0, e `0xCE71` restituisce 0. `0xCE71` tiene ferma la ventola se `0x04FB` (offset EC `0xFB`) vale 1 o se il contatore `0x00C2` non è a zero. A cosa servano quei due campi non è decodificato.
 
-**Tempi.** Il loop è chiamato da `0x0F1B`, in una cascata di contatori a `0x0EBC`: 5 tick, poi 10 (`0x44`), 20 (`0x45`) e 60 (`0x47`). Se il tick è da 1 ms, come suggerisce l'ultimo stadio da 60, i gradini sono 5 ms, 50 ms, 1 s e 1 min. Il loop gira ogni 100 tick, **circa 100 ms**. Il periodo del tick non è stato letto dalla configurazione del timer.
+**Tempi.** Il loop è chiamato da `0x0F1B`, in una cascata di contatori a `0x0EBC`: 5 tick, poi 10 (`0x44`), 20 (`0x45`) e 60 (`0x47`). Se il tick è da 1 ms, come suggerisce l'ultimo stadio da 60, i gradini sono 5 ms, 50 ms, 1 s e 1 min. Il loop gira ogni 100 tick, **circa 100 ms**. Il periodo del tick non è stato letto dalla configurazione del timer, ma la rampa misurata sulla scheda, circa 10 conteggi al secondo, lo conferma.
 
 **Registri PWM** (tabella di init a `0x3308`):
 
@@ -95,8 +95,8 @@ Una valutazione ricavata dalla logica. Ogni punto andrà confermato con le misur
 |---|---|---|
 | **Gradini** | Niente interpolazione: l'obiettivo salta di 20 conteggi (13 %) a ogni soglia, e la rampa lo distribuisce in circa 2 s | Cambi di velocità percepibili |
 | **Nessuna isteresi** | Con la temperatura a cavallo di una soglia l'obiettivo oscilla a ogni lettura, circa ogni 1,8 s | Probabile pendolamento, soprattutto a 40 °C tra fermo e 13 %. La rampa lo attenua poco: in quel tempo copre quasi un gradino |
-| **Uso leggero** | In questa sessione `coretemp` segnava 54-59 °C con carico intorno a 1. A 55 °C l'obiettivo è il 52 %, a 60 °C il 65 % | Se la temperatura dell'EC è simile, la ventola sta sopra il 50 % anche con poco lavoro. Il confronto è da fare ([4.4](4-ventola-acpi.md#44-prova-in-sola-lettura)) |
-| **Massimo a 80 °C** | Il 100 % arriva 30 °C sotto TjMax (110 °C) | Prudente ma rumorosa: un Core Ultra 7 165H in uno chassis X200/X201 può arrivarci con qualsiasi carico prolungato |
+| **Uso leggero** | Misurato a riposo: temperatura EC 49-57 °C, obiettivo 40-60, duty intorno al 39 % ([8.2](8-ventole-firmware.md#82-problemi-delle-letture)) | La ventola non si ferma mai, e oscilla tra il 26 e il 44 % circa |
+| **Massimo a 80 °C** | Il 100 % arriva 30 °C sotto TjMax (110 °C). Misurato: con il carico stabile a PL1 la temperatura resta a 74-79 °C e il duty al 92 % | Prudente e rumorosa: con carico lungo la ventola sta quasi al massimo |
 | **Buco a 65 °C** | Tra 60 e 70 °C il passo è di 10 °C, altrove di 5 °C | Innocuo: zona piatta al 65 % |
 | **Rampa simmetrica** | Salita e discesa uguali | Il divisore di discesa è già nel firmware, ma non usato. Basterebbe `0xC0` in `0x4C/0x4D` per ridurre il pendolamento |
 | **Nessun avvio forzato** | Da fermo sale di un conteggio alla volta e si ferma al 13 % se la temperatura resta bassa | Se la ventola non parte al 13 %, tra 40 e 45 °C resta ferma. Dipende dal modello |

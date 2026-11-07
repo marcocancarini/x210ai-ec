@@ -22,14 +22,13 @@ Stato al 2026-11-07: sulla scheda c'è `EC-V0.4.0-all-keys.bin`, con tasti ISO e
 
 ### Parte 3: curve della ventola
 
-- [ ] Leggere temperatura e duty a riposo e sotto carico (docs 4.4): il 2026-10-17 l'offset `0x70` valeva 100 °C e il duty era al 100 % su entrambi i canali
+- [ ] Capire perché nella prima prova la temperatura EC è rimasta a 54 °C: 2 minuti di letture rapide (52 byte al secondo) contro 2 minuti di letture lente, a riposo (docs 8.2, `storico/test-ventola-20261107/`)
 - [ ] Misurare giri, rumore e duty minimo di avvio (docs 3.5)
 - [ ] Scegliere una nuova curva
 - [ ] Decodificare `0x04FB` e `0x00C2`, che tengono ferma la ventola tramite `0xCE71`
 
 ### Parte 4: controllo ACPI
 
-- [ ] Prova in sola lettura con `ec_sys` (docs 4.4)
 - [ ] Prova di scrittura di un punto della tabella (docs 4.5), per confermare sulla scheda che il comando `0x81` raggiunge la curva
 - [ ] Verificare che i valori scritti sopravvivano a riavvio e sospensione
 - [ ] Decidere la via definitiva: patch EC, SSDT o coreboot (docs 4.3)
@@ -75,6 +74,7 @@ Riferimento: [x210ai-coreboot](https://github.com/marcocancarini/x210ai-coreboot
 - [x] Curva della ventola trovata nel firmware EC (`0xB841`, `0xB9E9`): 8 punti da 40 a 80 °C
 - [x] Comando di scrittura dell'EC: nessun filtro sugli offset (`0xD90E`), curva scrivibile dall'OS. Dal codice e dall'emulatore, non ancora provato sulla scheda
 - [x] Modi della ventola, modo manuale `0x90`, divisori della rampa `0x4C/0x4D` e `0xCE90` decodificati, isteresi senza effetto (`tools/emulator/fan_check.py`)
+- [x] Prove in sola lettura con `ec_sys` a riposo e sotto carico: la temperatura EC segue `coretemp`, duty 92 % con carico stabile, pendolamento confermato (docs 8.2)
 - [x] Catena della temperatura: PECI GetTemp su eSPI OOB, errori ignorati (`0x9508`), codici PECI letti come 110 °C
 - [x] Correzione della ventola provata in emulatore (`tools/emulator/fan_fix.py`), nessuna immagine generata
 - [x] Oggetti ACPI della ventola: `FAN0-4`, `TZ00` e `TFN1` non arrivano all'EC, `acpitz` è fisso a 27,85 °C

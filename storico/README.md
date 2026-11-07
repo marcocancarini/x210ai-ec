@@ -10,6 +10,7 @@ Tutti i dati usati nel progetto, raccolti il 2026-11-05 prima di tagliare le par
 | `diagnostica-20261017/` | Script `x210ai-diag.sh` e risultati del 17 ottobre: ACPI, DMI, RAM EC, dump BIOS con `flashrom`, `evtest`, dispositivi | `~/Desktop/EC mod marco/` |
 | `sessione-20261104/script/` | 40 script di analisi e prova, recuperati dagli appunti della sessione | Appunti del 2026-11-04 |
 | `sessione-20261104/evtest/` | Output di `evtest` con tastiera ISO e JIS sul firmware `all-keys` | Salvati durante la sessione |
+| `test-ventola-20261107/` | Prove sulla scheda del 7 novembre: script, log CSV e copie dello spazio EC. Vedi [8.2](../docs/8-ventole-firmware.md#82-problemi-delle-letture) | Sessione del 2026-11-07 |
 | `riferimenti/adattatore-x201/` | Schema, pinout, tabelle matrice, keymap e hwdb dell'adattatore X6x/X20x | [bulat-chu](https://github.com/bulat-chu/Thinkpad-X6x-X20x-keyboard-USB-Adapter) |
 | `riferimenti/thinkpad-ec/` | `table_matrix.txt` della X220 | [thinkpad-ec](https://github.com/hamishcoleman/thinkpad-ec) |
 | `riferimenti/linux/` | `atkbd.c`, `input-event-codes.h` | [Linux](https://github.com/torvalds/linux) |

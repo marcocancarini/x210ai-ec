@@ -35,7 +35,40 @@ I periodi vengono dalla cascata dei contatori ([3.1](3-curve-ventola.md#31-il-pe
 | **L7** | **`0x70` vecchio da spento.** In S3 e S5 la lettura si ferma e l'offset conserva l'ultimo valore, mentre `0x42` e `0x44` vengono azzerati | `0xB98F` non tocca `0x470` | Leggere lo spazio EC da spento può ingannare. Al risveglio la curva parte da lì per circa 2 s | Bassa |
 | **L8** | **Tachimetro non affidabile da fuori.** Il datasheet dice che leggere `F1TLRR/F1TMRR` da D2EC/I2EC non è garantito | Datasheet IT5570, 7.12.4.15 | Per i giri dall'host serve una patch, non I2EC | Bassa |
 
-**Il caso dei 100 °C del 17 ottobre.** Si restringe: un codice d'errore PECI darebbe 110 °C, quindi quel valore è una lettura valida con scostamento 10, reale o rimasta bloccata da L1. Una lettura sbagliata del TjMax è improbabile: `coretemp` riporta 110 °C. Resta da fare la prova di [4.4](4-ventola-acpi.md#44-prova-in-sola-lettura).
+**Il caso dei 100 °C del 17 ottobre.** Si restringe: un codice d'errore PECI darebbe 110 °C, quindi quel valore è una lettura valida. La seconda prova mostra l'EC a 100 °C con duty 152 nei primi secondi di carico: è la stessa situazione del dump, quindi la spiegazione più probabile è un picco reale durante la diagnostica.
+
+### Misure sulla scheda
+
+Script e log sono in `storico/test-ventola-20261107/`: `ec_log.sh` e `ec-log.csv` per la prima prova, `ec_log2.sh` e `ec-log2.csv` per la seconda, `spike.py` per gli spike.
+
+Prima prova del 2026-11-07, con `all-keys` e sola lettura di `ec_sys`, una lettura al secondo per 153 s. Il carico è durato solo 3 s, perché il limite di 95 °C dello script è scattato su uno spike.
+
+| Dato | Valori |
+|---|---|
+| `coretemp` | 46-95 °C |
+| Temperatura EC `0x70` e `0x42` | **54 °C in tutte le letture** |
+| Obiettivo `0x44` | 60 in tutte le letture |
+| Duty `0x46` | 64 nel dump iniziale, 63 alla prima riga, poi 60 |
+| Tabella e modo | Valori di fabbrica, modo `0x10` |
+
+A 46-48 °C la curva avrebbe dovuto dare 40, quindi **in questa prova la temperatura dell'EC non si è aggiornata**, mentre rampa e curva funzionavano. Il duty in discesa all'inizio mostra che il valore era cambiato poco prima.
+
+Seconda prova del 2026-11-07, sempre in sola lettura: 6 byte ogni 5 s, 1 minuto a riposo, 5 minuti di carico su 22 thread, 3 minuti di raffreddamento. **Qui la temperatura EC segue `coretemp`,** quindi il blocco non è costante. La differenza più evidente tra le due prove è il ritmo delle letture, 52 byte al secondo contro 6 ogni 5 s, ma il legame non è ancora provato.
+
+| Fase | Temperatura EC | Obiettivo | Duty | Frequenza media |
+|---|---|---|---|---|
+| Riposo | 49-57 °C | 40-60 | 44-67, oscilla | Circa 1200 MHz |
+| Primi 20 s di carico | Fino a 100 °C | 152 | Sale fino a 152 | Circa 2640 MHz |
+| Carico stabile | 74-79 °C | 140, una volta 120 | 140 (92 %) | Circa 1850 MHz |
+| Raffreddamento | 47-65 °C | 40-100 | 40-115, oscilla | Circa 1100 MHz |
+
+- **Pendolamento confermato:** a riposo l'obiettivo salta tra 40 e 60 e il duty non si assesta (I1, I2).
+- **Rampa confermata:** da 86 a 137 in 5 s, cioè circa 10 conteggi al secondo, coerente con il loop da 100 ms.
+- **Limite di potenza:** dopo circa 25 s la frequenza scende da 2640 a 1850 MHz e la temperatura da 100 a 74 °C. La CPU rallenta per il passaggio da PL2 (64 W) a PL1 (28 W), non per merito della ventola. I watt reali non sono stati misurati.
+- **Throttling:** `package_throttle_count` sale di circa 650 eventi nei secondi a 100 °C e continua a salire poco anche con gli spike a riposo. La causa degli eventi non è stata letta.
+- **Giri:** non misurati. Il valore 3705 nell'output è quel contatore.
+
+**Spike di `coretemp`.** Con 2 s di carico da 46 °C il picco è stato 101 °C con 1 thread, 100 °C con 4 e 90 °C con 22, con ritorno a 47 °C entro un secondo dalla fine, tranne con 1 thread (82 °C). `coretemp` si aggiorna una volta al secondo. È un picco locale del core in turbo: il dissipatore non fa in tempo a riceverlo e la ventola non può intervenire.
 
 ## 8.3 Problemi delle impostazioni
 
