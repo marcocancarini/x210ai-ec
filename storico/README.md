@@ -17,7 +17,7 @@ Tutti i dati usati nel progetto, raccolti il 2026-11-05 prima di tagliare le par
 
 ## Note sui dati
 
-- **Boot Guard:** `diagnostica-20261017/riepilogo.txt` riporta `MSR 0x13A = 0x30000006f`, con verified boot attivo: la regione BIOS non va modificata. Lo script dice che l'interpretazione è indicativa, da verificare sull'immagine. Il port coreboot conferma Boot Guard attivo di fabbrica e spiega come disattivarlo (README §16).
+- **Boot Guard:** `diagnostica-20261017/riepilogo.txt` riporta `MSR 0x13A = 0x30000006f`, con verified boot attivo: la regione BIOS non va modificata. Lo script dice che l'interpretazione è indicativa, da verificare sull'immagine. Il port coreboot conferma Boot Guard attivo di fabbrica e spiega come disattivarlo ([parte 7](../docs/7-coreboot.md)).
 - **Dump BIOS del 17 ottobre:** `full_dump.bin` è 32 MiB e differisce da `dumps/bios/` per 192721 byte, in cinque zone tra `0x3A9004` e `0x125FC7F`. Il motivo non è stato analizzato. `bios_region.bin` non è una copia completa: differisce molto di più e contiene circa 20 MB di zeri.
 - **Dati della macchina:** in `dmi.txt` seriali e UUID sono valori generici del produttore, ma i dump BIOS possono contenere dati della macchina. Vale la stessa decisione di `dumps/bios/`.
 - **Script:** sono prove di lavoro, alcuni usano percorsi temporanei e la vecchia disposizione delle cartelle. Quelli validi sono in `tools/`.
@@ -30,6 +30,6 @@ Tutti i dati usati nel progetto, raccolti il 2026-11-05 prima di tagliare le par
 | Copie di `EC0416.BIN` sul Desktop | Identiche a `firmware/vendor/EC0416.BIN` |
 | `ifu.efi`, `fe.nsh` e `MTLH-NB06_E03-250322.BIN` nell'archivio personale | Identici a quelli in `produttore/MTLH-NB06-ec-250322/` |
 | `IT5571E-128.pdf` | Non trovato su questo PC, resta solo il suo hash in `refs/DATASHEETS.md` |
-| Progetto RP2040 `ite_pp_isp` | Mai scaricato qui: è solo citato in README §7 |
+| Progetto RP2040 `ite_pp_isp` | Mai scaricato qui: è solo citato in [6.3](../docs/6-modifiche-hardware.md#63-guida-rp2040-isp-dal-connettore-tastiera) |
 | Screenshot della UEFI Shell | Foto dello schermo, non recuperate |
 | Appunti completi della sessione | Note personali: conservati solo in locale |

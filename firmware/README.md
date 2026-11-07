@@ -39,7 +39,7 @@ Senza il fix, nelle combinazioni con Fn va lasciato Fn per ultimo: altrimenti Fn
 
 ## Flash
 
-Il flash è sempre un rischio, e la recovery RP2040 non è pronta: se l'EC non riparte, `ifu` non serve più (README §9, §11). Nell'esempio il file è `all-keys`: per un'altra versione usare il suo file, nome e hash dalla tabella.
+Il flash è sempre un rischio, e la recovery RP2040 non è pronta: se l'EC non riparte, `ifu` non serve più ([2.4](../docs/2-modifiche-software.md#24-scrittura-dellec-con-ifu-rischi), [6.6](../docs/6-modifiche-hardware.md#66-brick-e-recovery)). Nell'esempio il file è `all-keys`: per un'altra versione usare il suo file, nome e hash dalla tabella.
 
 **1. Da CachyOS**, copia il file e controlla quello di ritorno:
 
@@ -139,7 +139,7 @@ ifu.efi X210SWAP.BIN 128
 ifu.efi V040.BIN 128
 ```
 
-Il primo comando torna alla versione senza codice aggiunto, il secondo all'originale. Se l'EC non parte, serve la recovery (README §11).
+Il primo comando torna alla versione senza codice aggiunto, il secondo all'originale. Se l'EC non parte, serve la recovery ([6.6](../docs/6-modifiche-hardware.md#66-brick-e-recovery)).
 
 ## Storico dei flash
 
