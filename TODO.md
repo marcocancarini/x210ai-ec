@@ -14,7 +14,6 @@ Stato al 2026-11-07: sulla scheda c'è `EC-V0.4.0-all-keys.bin`, con tasti ISO e
 - [ ] Decodificare cosa cambia tra `EC0416` e `V0.4.0` (driver SMBus, logica banchi 1 e 2)
 - [ ] Capire se il CRC viene controllato dalla boot ROM
 - [ ] Analizzare `dumps/bios/BIOS-X210AI-20261104-lettura1.bin` (32 MiB, due letture identiche) prima di considerarlo immagine di recovery
-- [ ] Decidere se `dumps/bios/` deve restare nella repo: i dump possono contenere dati della macchina, e toglierli richiede di riscrivere la cronologia
 
 ### Parte 2: modifiche via software
 
@@ -71,6 +70,7 @@ Riferimento: [x210ai-coreboot](https://github.com/marcocancarini/x210ai-coreboot
 - [x] Rilascio di Fn prima del tasto e combinazioni con Fn confermati sulla scheda
 - [x] HOTKEY arriva a GPH7 e il contatto 36 è a massa: dedotto dallo scambio funzionante, senza misure
 - [x] Capire perché `storico/diagnostica-20261017/full_dump.bin` differisce da `dumps/bios/`: descriptor e DevExp2 identici, cambiano solo zone di ME (partizioni dati) e BIOS (inizio regione), anche tra 04/11 e 06/11. Coerente con dati a runtime
+- [x] Dump BIOS tolti dalla repo e dalla cronologia, GPS tolto dalle foto: i dump restano solo in locale
 - [x] Curva della ventola trovata nel firmware EC (`0xB841`, `0xB9E9`): 8 punti da 40 a 80 °C
 - [x] Comando di scrittura dell'EC: nessun filtro sugli offset (`0xD90E`), curva scrivibile dall'OS. Dal codice e dall'emulatore, non ancora provato sulla scheda
 - [x] Modi della ventola, modo manuale `0x90`, divisori della rampa `0x4C/0x4D` e `0xCE90` decodificati, isteresi senza effetto (`tools/emulator/fan_check.py`)

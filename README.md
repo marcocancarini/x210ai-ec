@@ -26,9 +26,8 @@ Il chip è un **ITE IT5571 rev. 2**: core **8051**, eFlash embedded da 128 KiB, 
 1. Registrare l'hash del dump di `all-keys` ([conferma](firmware/README.md#conferma)).
 2. Leggere lo spazio EC con `ec_sys`, a riposo e sotto carico: non scrive nulla e chiude il caso dei 100 °C ([4.4](docs/4-ventola-acpi.md#44-prova-in-sola-lettura)).
 3. Provare la scrittura di un punto della curva ([4.5](docs/4-ventola-acpi.md#45-prova-in-scrittura)).
-4. Decidere se tenere i dump BIOS nella repo ([dump](dumps/README.md)).
-5. Misure sulla scheda, in ordine di utilità ([6.1](docs/6-modifiche-hardware.md#61-misure-mancanti)): prima i 15 segnali verso il connettore tastiera, poi il cablaggio RP2040 con `isp id` e `isp read`. Niente scritture prima ([6.3](docs/6-modifiche-hardware.md#63-guida-rp2040-isp-dal-connettore-tastiera)).
-6. Per coreboot: seguire la guida di [x210ai-coreboot](https://github.com/marcocancarini/x210ai-coreboot) ([parte 7](docs/7-coreboot.md)).
+4. Misure sulla scheda, in ordine di utilità ([6.1](docs/6-modifiche-hardware.md#61-misure-mancanti)): prima i 15 segnali verso il connettore tastiera, poi il cablaggio RP2040 con `isp id` e `isp read`. Niente scritture prima ([6.3](docs/6-modifiche-hardware.md#63-guida-rp2040-isp-dal-connettore-tastiera)).
+5. Per coreboot: seguire la guida di [x210ai-coreboot](https://github.com/marcocancarini/x210ai-coreboot) ([parte 7](docs/7-coreboot.md)).
 
 Elenco completo in [`TODO.md`](TODO.md).
 

@@ -20,7 +20,7 @@ Tutti i dati usati nel progetto, raccolti il 2026-11-05 prima di tagliare le par
 
 - **Boot Guard:** `diagnostica-20261017/riepilogo.txt` riporta `MSR 0x13A = 0x30000006f`, con verified boot attivo: la regione BIOS non va modificata. Lo script dice che l'interpretazione è indicativa, da verificare sull'immagine. Il port coreboot conferma Boot Guard attivo di fabbrica e spiega come disattivarlo ([parte 7](../docs/7-coreboot.md)).
 - **Dump BIOS del 17 ottobre:** `full_dump.bin` è 32 MiB e differisce da `dumps/bios/` per 192721 byte, in cinque zone tra `0x3A9004` e `0x125FC7F`. Il motivo non è stato analizzato. `bios_region.bin` non è una copia completa: differisce molto di più e contiene circa 20 MB di zeri.
-- **Dati della macchina:** in `dmi.txt` seriali e UUID sono valori generici del produttore, ma i dump BIOS possono contenere dati della macchina. Vale la stessa decisione di `dumps/bios/`.
+- **Dati della macchina:** in `dmi.txt` seriali e UUID sono valori generici del produttore. `full_dump.bin` e `bios_region.bin` contengono NVRAM, voci di avvio e regione ME: restano solo in locale e non sono nella repo.
 - **Script:** sono prove di lavoro, alcuni usano percorsi temporanei e la vecchia disposizione delle cartelle. Quelli validi sono in `tools/`.
 
 ## Cosa non c'è

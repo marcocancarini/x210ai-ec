@@ -1,2 +1,6 @@
 inputs/
 __pycache__/
+# Contengono dati della macchina: restano solo in locale
+dumps/bios/
+storico/diagnostica-20261017/full_dump.bin
+storico/diagnostica-20261017/bios_region.bin

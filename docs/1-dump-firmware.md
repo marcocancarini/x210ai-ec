@@ -24,7 +24,7 @@ Sezioni del datasheet usate: `refs/DATASHEETS.md`.
 
 I percorsi `inputs/` restano come riferimento agli hash: quasi tutti quei file ora sono in `storico/`.
 
-**Immagine BIOS.** `fb.nsh` chiama `MTLH-NB06_B0.2.bin`, che non è incluso nel pacchetto. In `dumps/bios/` ci sono due letture: 32 MiB, identici (SHA256 `dd6e311622b8c61fe8c51de8fef8f3ff28b625dffc5097836f12f5cd5b884669`), con flash descriptor a `0x10` e volumi `_FVH`. Sono nella repo dal commit `21485db` e non sono stati analizzati.
+**Immagine BIOS.** `fb.nsh` chiama `MTLH-NB06_B0.2.bin`, che non è incluso nel pacchetto. In `dumps/bios/` ci sono due letture: 32 MiB, identici (SHA256 `dd6e311622b8c61fe8c51de8fef8f3ff28b625dffc5097836f12f5cd5b884669`), con flash descriptor a `0x10` e volumi `_FVH`. Sono solo in locale, non nella repo, perché contengono dati della macchina, e non sono stati analizzati a fondo.
 
 | File del pacchetto | Ruolo | Note |
 |---|---|---|
