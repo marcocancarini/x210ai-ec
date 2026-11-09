@@ -5,7 +5,7 @@ Tutti i dati usati nel progetto, raccolti il 2026-11-05 prima di tagliare le par
 | Cartella | Contenuto | Provenienza |
 |---|---|---|
 | `produttore/` | Pacchetto EC (cartella e zip), pacchetto BIOS (cartella e `.rar`), tutorial `.docx` | `~/Desktop/EC mod marco/`, `~/Downloads/` |
-| `datasheet/` | `IT5570_A_V0.3.1_U.pdf` | archivio personale |
+| `datasheet/` | `IT5570_A_V0.3.1_U.pdf`, solo in locale: le pagine usate sono in [`refs/datasheet/`](../refs/datasheet/README.md) | archivio personale |
 | `report/` | `report.md`, `report_programmazione_T48.md`, analisi precedenti | archivio personale |
 | `diagnostica-20261017/` | Script `x210ai-diag.sh` e risultati del 17 ottobre: ACPI, DMI, RAM EC, dump BIOS con `flashrom`, `evtest`, dispositivi | `~/Desktop/EC mod marco/` |
 | `sessione-20261104/script/` | 40 script di analisi e prova, recuperati dagli appunti della sessione | Appunti del 2026-11-04 |

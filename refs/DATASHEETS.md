@@ -11,6 +11,8 @@
 
 ## Sezioni datasheet usate (IT5570 V0.3.1)
 
+Le pagine citate sono in [`datasheet/`](datasheet/README.md) come immagini. Il PDF completo non è nella repo.
+
 - §3.2 memory map: SMFI `0x1000h`, INTC `0x1100h`, EC2I `0x1200h`, **Bank `0x1300h`**, Common `0x1400h`, double-map `0x8000h`
 - §6.4.3.11.1 **16B-signature** (power-on EC code base locator) — pattern `A5…95 85 12 … 55 55` a offset `0x40–0xF0`
 - §6.4.4 Table 6-29 EC view SMFI: FLHCTRL1R `0x1031`, FLHCTRL2R `0x1032`, ECINDAR `0x103B-0x103F`, **P0BA0R/P0BA1R `0x104F/0x1050`** (protect range)
