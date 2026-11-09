@@ -9,12 +9,20 @@ Esegue il **codice macchina reale** del firmware EC su Python, istruzione per is
 | `run_tests.py` | Prove della tastiera sulle immagini in `firmware/patched/` |
 | `fan_check.py` | Prove della ventola sul firmware così com'è |
 | `fan_fix.py` | Correzioni proposte alla ventola, applicate solo in memoria |
+| `tach_read.py` | Patch del solo tachimetro, applicata solo in memoria ([8.6](../../docs/8-ventole-firmware.md#86-patch-del-tachimetro)) |
+| `asm8051.py` | Assembler minimo con etichette, usato dalle patch |
+| `fan_plant.py` | Modello dell'hardware della ventola: PWM, driver, ventola, linea e contatore del tachimetro, temperatura |
+| `host_ctl.py` | Patch per il controllo dall'host con timer e soglia a 85 °C, provata anche nel simulatore ([8.8](../../docs/8-ventole-firmware.md#88-patch-per-il-controllo-dallhost)) |
+| `fan_sim.py` | Task ventola reale ogni 100 ms dentro `fan_plant.py`, con gli scenari di [8.7](../../docs/8-ventole-firmware.md#87-simulatore-dellhardware-della-ventola) |
 
 ```fish
 python3 tools/emulator/selftest.py
 python3 tools/emulator/run_tests.py      # circa un minuto
 python3 tools/emulator/fan_check.py
 python3 tools/emulator/fan_fix.py
+python3 tools/emulator/tach_read.py
+python3 tools/emulator/fan_sim.py       # circa 10 s
+python3 tools/emulator/host_ctl.py
 ```
 
 ## Come funziona la CPU

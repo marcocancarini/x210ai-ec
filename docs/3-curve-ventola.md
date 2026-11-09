@@ -102,7 +102,7 @@ Una valutazione ricavata dalla logica. Ogni punto andrà confermato con le misur
 | **Nessun avvio forzato** | Da fermo sale di un conteggio alla volta e si ferma al 13 % se la temperatura resta bassa | Se la ventola non parte al 13 %, tra 40 e 45 °C resta ferma. Dipende dal modello |
 | **Una sola sorgente** | Solo la CPU: VRM, SSD e scocca non contano | Limite noto, nessun rimedio senza nuove sorgenti |
 | **Nessun tachimetro** | Una ventola bloccata non viene rilevata | Nessun allarme |
-| **Duty 20 kHz** | Sopra la soglia dell'udibile | Va bene per una ventola PWM. Va verificato se la ventola sia a 3 o 4 fili ([5.5](5-hardware.md#55-ventola)) |
+| **Duty 20 kHz** | Sopra la soglia dell'udibile | Con una ventola a 3 fili, come quella in foto, il PWM pilota un driver che regola l'alimentazione ([5.5](5-hardware.md#pwm-e-tachimetro-con-3-fili)). Se la commuta a 20 kHz, il tachimetro può arrivare tagliato |
 
 **Sintesi.** La curva è prudente: protegge la CPU e fa rumore prima del necessario. I difetti reali sono l'isteresi inattiva e il duty alto già con carichi leggeri. Entrambi sono rimediabili senza hardware: dall'OS ([parte 4](4-ventola-acpi.md)) o nel firmware ([parte 8](8-ventole-firmware.md)).
 

@@ -48,7 +48,12 @@ Elenco completo in [`TODO.md`](TODO.md).
 - `python3 tools/patch_keyboard.py <dump V0.4.0> <cartella>`: genera le immagini. Con `--check <file>` controlla dimensione, reset, firma e CRC, non la correttezza del codice.
 - `python3 tools/emulator/run_tests.py`: esegue il codice reale del firmware su tutte le immagini patchate. `tools/emulator/selftest.py` prova le istruzioni dell'emulatore. Niente dipendenze esterne.
 - `python3 tools/emulator/fan_check.py`: esegue il codice reale della ventola e controlla modi, rampa, isteresi e scrittura dallo spazio EC.
-- `python3 tools/emulator/fan_fix.py`: prova in memoria le correzioni della ventola, senza scrivere file. Come funziona l'emulatore: [`tools/emulator/README.md`](tools/emulator/README.md).
+- `python3 tools/emulator/fan_fix.py`: prova in memoria le correzioni della ventola, senza scrivere file.
+- `python3 tools/emulator/tach_read.py`: prova in memoria la sola lettura del tachimetro, senza scrivere file.
+- `python3 tools/emulator/host_ctl.py`: prova in memoria la patch per il controllo della ventola dall'OS.
+- `tools/host/ec_fan.py`: stato della ventola dall'OS, log per le misure, lettura I2EC del tachimetro ([4.8](docs/4-ventola-acpi.md#48-strumento-dallos)).
+- `firmware/acpi/x210ai-fan.asl`: bozza di SSDT con ventola ACPI 4.0 e temperatura vera ([4.7](docs/4-ventola-acpi.md#47-ssdt-ventola-acpi-40)).
+- `python3 tools/emulator/fan_sim.py`: fa girare il task ventola con un modello dell'hardware (driver, ventola, tachimetro, temperatura) e confronta le ipotesi. Come funziona l'emulatore: [`tools/emulator/README.md`](tools/emulator/README.md).
 - `python3 tools/i8051.py <bin> 0 <start_hex> <end_hex>`: disassembler 8051 minimale, senza dipendenze. `tools/output/strings.txt` e `tools/output/key-regions.asm` sono artefatti generati.
 - Commit raggruppati per sessione. `inputs/` resta in locale e non è nella repo. Hash e sezioni del datasheet in `refs/DATASHEETS.md`.
 

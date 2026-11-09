@@ -142,6 +142,25 @@ Sulla ventola ci sono solo dati dal firmware e dal datasheet: nessuno l'ha ancor
 | TACH0A | 47, GPD6 | `GPCRD6` `0x162E` = `0x00`: funzione alternativa, cioè tachimetro |
 | TACH1A | 48, GPD7 | `GPCRD7` `0x162F` = `0x00`: come TACH0A |
 
-I tachimetri sono configurati ma il firmware non legge i registri `0x181E-0x1821`, e quei registri non sono nello spazio EC. Per leggere i giri dall'host serve una patch che copi il valore nello spazio EC ([8.5](8-ventole-firmware.md#85-correzioni-proposte-nel-firmware)): il datasheet avverte che la lettura da I2EC non è garantita.
+I tachimetri sono configurati ma il firmware non legge i registri `0x181E-0x1821`, e quei registri non sono nello spazio EC. Per leggere i giri dall'host serve una patch che copi il valore nello spazio EC ([8.6](8-ventole-firmware.md#86-patch-del-tachimetro)): il datasheet avverte che la lettura da I2EC non è garantita.
 
-**Non sappiamo:** quante ventole sono collegate (due canali nel firmware, una ventola nello chassis X200/X201), il connettore, se la ventola è a 3 o 4 fili, se il segnale di tachimetro arriva davvero al piedino.
+### PWM e tachimetro con 3 fili
+
+La foto della ventola venduta come ricambio ([tpart.net](https://www.tpart.net/product/x210ai-custom-fan/)) mostra **3 fili** (rosso, blu, un terzo rosa o rosso). È la ventola in vendita, non quella montata, e il venditore avverte che può essere diversa.
+
+Una ventola a 3 fili ha alimentazione, massa e tachimetro. Non ha un ingresso PWM, che esiste solo nelle ventole a 4 fili. PWM e tachimetro convivono lo stesso, perché il PWM non arriva alla ventola:
+
+```
+EC PWM0 (pin 24) ──► driver sulla scheda (MOSFET o regolatore) ──► filo +V   ─┐
+                                                          massa ──► filo GND  ├─ ventola
+EC TACH0A (pin 47) ◄── pull-up ◄─────────────────────────────────── filo TACH ┘
+```
+
+- **PWM:** l'EC genera circa 20 kHz su GPA0 ([3.1](3-curve-ventola.md#31-il-percorso-nel-firmware)). Un driver sulla scheda regola l'alimentazione della ventola. Può commutarla a 20 kHz o filtrarla in una tensione continua: non sappiamo quale.
+- **Tachimetro:** è il terzo filo, open collector con pull-up, e torna a EC 47. Di solito dà 2 impulsi per giro.
+- **Effetto sul tachimetro:** se il driver commuta l'alimentazione, nelle fasi spente il sensore della ventola non è alimentato e gli impulsi possono arrivare tagliati. Con un'alimentazione filtrata il problema non c'è.
+- **Due canali nel firmware:** PWM1 e TACH1A sono configurati come PWM0 e TACH0A. Possono essere la configurazione di serie dei piedini o piazzole per una seconda ventola: non provano che le ventole siano due.
+
+Come verificarlo senza scollegare nulla: TODO, parte 5 e 6.
+
+**Non sappiamo:** quante ventole sono collegate, il connettore, se la ventola montata è davvero a 3 fili, come il driver regola l'alimentazione, se il tachimetro arriva davvero al piedino.

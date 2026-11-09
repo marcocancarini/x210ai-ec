@@ -49,7 +49,7 @@ La lettura `0x80` (`0xD8FB`) è altrettanto libera. Nell'emulatore le scritture 
 | Via | Come | Durata | Stato |
 |---|---|---|---|
 | **Scrittura dall'OS** | `ec_sys write_support=1`, da script o servizio | Fino al prossimo reset dell'EC | Possibile: il modulo c'è e il lockdown è spento. Con Secure Boot e lockdown il kernel può bloccarla |
-| **SSDT aggiuntiva** | Tabella caricata da initrd (`CONFIG_ACPI_TABLE_UPGRADE=y`) o `configfs` (`=m`), con un `Field` su `ECF2` e una ventola ACPI 4.0: `_FIF`, `_FPS`, `_FSL`, `_FST` | A ogni avvio | Da provare. Darebbe una vera ventola a Linux, con il driver `acpi-fan`. I giri resterebbero ignoti (`0xFFFFFFFF`) |
+| **SSDT aggiuntiva** | Tabella caricata da initrd (`CONFIG_ACPI_TABLE_UPGRADE=y`) o `configfs` (`=m`), con un `Field` su `ECF2` e una ventola ACPI 4.0: `_FIF`, `_FPS`, `_FSL`, `_FST` | A ogni avvio | Bozza in [4.7](#47-ssdt-ventola-acpi-40), mai caricata. Darebbe una vera ventola a Linux, con il driver `acpi-fan`. Per i giri e per un controllo sicuro serve la patch EC della [8.8](8-ventole-firmware.md#88-patch-per-il-controllo-dallhost) |
 | **Coreboot** | Gli stessi metodi in `ec.asl`, più un `_TMP` vero | A ogni avvio | Da fare dopo il primo avvio di coreboot ([parte 7](7-coreboot.md)) |
 | **Patch del firmware EC** | Cambiare le costanti in `0xB841-0xB98E` (istruzioni `MOV A,#xx`), correggere l'isteresi, ricalcolare il CRC ([1.3](1-dump-firmware.md#13-firme-e-checksum)) | Permanente, vale da subito e con qualsiasi OS | Stesso percorso delle patch della tastiera, con gli stessi rischi ([2.4](2-modifiche-software.md#24-scrittura-dellec-con-ifu-rischi)) |
 | **BIOS originale** | Aggiungere le scritture | — | No: Boot Guard è attivo ([7.1](7-coreboot.md#71-riscontro-con-la-nostra-scheda)) |
@@ -116,3 +116,59 @@ Solo dopo la prova in lettura, con la macchina davanti e controllando `coretemp`
 | **Offset sbagliato** | Tutti i 256 byte sono scrivibili. `0xFB` può fermare la ventola, altri campi toccano la batteria | Limiti di [4.5](#45-prova-in-scrittura) |
 | **Temperatura dall'host** | Con sorgente `0x72`, se l'OS smette di scrivere la temperatura resta quella | Non usarla senza un motivo preciso |
 | **Nessun riscontro** | Senza tachimetro, l'EC non sa se la ventola gira ([3.4](3-curve-ventola.md#34-valutazione)) | Controllare a orecchio e con `coretemp` |
+
+## 4.7 SSDT: ventola ACPI 4.0
+
+`firmware/acpi/x210ai-fan.asl` è una **bozza mai caricata** sulla scheda. Compila con `iasl` 20251212 senza errori né avvisi, controllata contro il DSDT del 17 ottobre.
+
+| Oggetto | Cosa fa |
+|---|---|
+| `\_SB.PC00.LPCB.H_EC.XFRG` | Seconda regione `EmbeddedControl` sugli offset `0x40-0xCF`, con i soli campi che servono: duty `0x46`, temperatura `0x70`, tachimetro `0x74`, richiesta `0xC9`, timer `0xCA` |
+| `\_SB.XFAN` | Ventola ACPI 4.0 (`PNP0C0B`, `_UID` 0x10): `_FIF` a passi dell'1 %, `_FPS` con giri stimati dal modello, `_FSL` scrive la richiesta con timer 255, `_FST` restituisce duty e giri |
+| `XAUT` | Metodo non standard: ridà la ventola alla curva |
+| `\_TZ.XTZ0` | Zona termica con la temperatura vera da `0x70`, letta ogni 5 s. **Nessuna soglia**: senza la correzione L3 un errore PECI vale 110 °C, e un `_CRT` spegnerebbe la macchina |
+
+**Senza la patch EC** `_FSL` scrive due byte non usati e non cambia nulla, `_FST` dà giri 0, e `XTZ0` funziona già. Si può quindi provare la tabella prima del flash: `_FSL` deve far comparire i valori in `0xC9-0xCA` (4.8, `status`).
+
+**Caricamento.** Il kernel della scheda ha `CONFIG_ACPI_TABLE_UPGRADE=y`, e mkinitcpio ha l'hook `acpi_override`:
+
+```fish
+iasl firmware/acpi/x210ai-fan.asl
+sudo install -Dm644 firmware/acpi/x210ai-fan.aml /etc/initcpio/acpi_override/x210ai-fan.aml
+# aggiungere acpi_override a HOOKS in /etc/mkinitcpio.conf, poi
+sudo mkinitcpio -P
+```
+
+Per tornare indietro: togliere il file e l'hook, rigenerare l'initramfs. Dopo il riavvio:
+
+```fish
+sudo dmesg | grep -i -E 'ACPI.*(override|upgrade|X210AI)'
+grep . /sys/bus/acpi/devices/PNP0C0B:*/path
+ls /sys/class/thermal/ ; grep . /sys/class/thermal/thermal_zone*/type
+```
+
+Linux dovrebbe vedere una sesta ventola, con `cur_state` da 0 a 100 nel suo `cooling_device`. I giri compaiono negli attributi del dispositivo e, nei kernel recenti, anche in hwmon: va verificato sul kernel 7.3.
+
+**Da sapere:**
+- `\_TZ.FAN0-FAN4` restano: non si tolgono con una SSDT.
+- `_FPS` contiene giri inventati: vanno sostituiti con quelli misurati (3.5).
+- Il driver `acpi-fan` non sa ridare la ventola alla curva. Per farlo servono `XAUT` (con `acpi_call`), `ec_fan.py auto` o una sospensione.
+
+## 4.8 Strumento dall'OS
+
+`tools/host/ec_fan.py` legge e, se richiesto, scrive dall'OS. Serve root.
+
+| Comando | Cosa fa | Scrive |
+|---|---|---|
+| `status` | Modo, temperature, obiettivo, duty, curva, tachimetro, richiesta dell'host. Con `--ec-file` decodifica un dump salvato | No |
+| `log --out file.csv` | Le stesse grandezze più `coretemp`, una riga al secondo: è la misura di 4.4 e 3.5 | No |
+| `i2ec` | Legge i registri del tachimetro `0x181E-0x1821`, `TSWCTLR`, `ZINTSCR` e `GPCRD6` via I2EC. **Prima di tutto controlla che l'ID del chip sia `0x5570` o `0x5571`**, e altrimenti si ferma | Solo i registri di indice del Super I/O su `0x2E/0x2F` |
+| `request 40 --timer 10`, `--forever` | Scrive richiesta e timer. Ha effetto solo con la patch 8.8 | `0xC9`, `0xCA` |
+| `auto` | Azzera il timer | `0xCA` |
+
+`status` e `log` vogliono `modprobe ec_sys`, le scritture `ec_sys write_support=1`. `status` è provato sul dump del 17 ottobre. `i2ec`, `request` e `auto` non sono mai stati eseguiti.
+
+**`i2ec` è la prova del tachimetro senza patch.**
+- Un conteggio che segue il duty dimostra che il tachimetro arriva a EC 47.
+- Un valore fisso o `FF` non dimostra niente: il datasheet dice che la lettura da I2EC non è garantita.
+- Il protocollo è quello del datasheet (6.3.2.9, Figure 7-41), con lo stesso controllo dell'ID che fa l'`ectool` di System76.

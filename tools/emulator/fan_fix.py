@@ -10,42 +10,16 @@ from cpu8051 import CPU
 from fan_check import (TARGET, DIVIDER, HYSTERESIS, MODE, TEMP, DCR0, IMAGE, RETURN, call, check, ec,
                        failures_count, fresh, loop)
 import run_tests
+from asm8051 import DPTR, LCALL, LJMP, assemble
+from tach_read import TACH, tach_items
 
 ORIGINAL = run_tests.ORIGINAL
 BASE = 0x5660        # free in all-keys, which ends at 0x564D
 FAIL_COUNT = 0x047C  # EC offset 0x7C, not used by the firmware: failed temperature reads
-TACH = 0x0474        # EC offsets 0x74-0x77, not used by the firmware: raw tachometer counts
 FAIL_LIMIT = 5
 FAILSAFE_C = 90      # above the last threshold, so the curve goes to 100 %
 DOWN_DIVIDER = 0xC0  # ramp down 4 times slower than ramp up
 PECI_READ = 0xDF98
-
-
-def LCALL(address): return [0x12, address >> 8, address & 255]
-def LJMP(address): return [0x02, address >> 8, address & 255]
-def DPTR(address): return [0x90, address >> 8, address & 255]
-
-
-def assemble(items):
-    # items are byte lists, 'label:' strings or (opcode..., 'label') tuples with a rel8 last
-    labels, pc = {}, BASE
-    for item in items:
-        if isinstance(item, str):
-            labels[item[:-1]] = pc
-        else:
-            pc += len(item)
-    code, pc = [], BASE
-    for item in items:
-        if isinstance(item, str):
-            continue
-        pc += len(item)
-        if isinstance(item, tuple):
-            offset = labels[item[-1]] - pc
-            assert -128 <= offset <= 127, item
-            code += list(item[:-1]) + [offset & 255]
-        else:
-            code += item
-    return bytes(code), labels
 
 
 def routines():
@@ -104,10 +78,7 @@ def routines():
         # Fan task: publishes the tachometer and leaves manual mode when the fan is switched off
         'task:',
         LCALL(0xBC14),
-        DPTR(0x181E), [0xE0], DPTR(TACH), [0xF0],
-        DPTR(0x181F), [0xE0], DPTR(TACH + 1), [0xF0],
-        DPTR(0x1820), [0xE0], DPTR(TACH + 2), [0xF0],
-        DPTR(0x1821), [0xE0], DPTR(TACH + 3), [0xF0],
+        *tach_items(),                                  # same routine as tach_read.py
         LCALL(0xCE90), [0xEF], (0x70, 'on'),
         DPTR(0x0440), [0xE0, 0x54, 0x7F, 0xF0, 0xA3, 0xE0, 0x54, 0x7F, 0xF0],
         'on:',
@@ -118,7 +89,7 @@ def routines():
         LCALL(0xBC0E),
         DPTR(0x044C), [0x74, DOWN_DIVIDER, 0xF0, 0xA3, 0xF0, 0x22],
     ]
-    return assemble(items)
+    return assemble(items, BASE)
 
 
 def patched():
