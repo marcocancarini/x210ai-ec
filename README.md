@@ -15,7 +15,7 @@ Il chip è un **ITE IT5571 rev. 2**: core **8051**, eFlash embedded da 128 KiB, 
 | 3. [Curve della ventola](docs/3-curve-ventola.md) | Curva dell'EC, modi, rampa, valutazione | Decodificata e provata in emulatore. **Nessuna misura sulla ventola.** Isteresi inattiva e duty alto già con poco carico |
 | 4. [Controllo ventola da ACPI](docs/4-ventola-acpi.md) | Cosa fa l'ACPI, scrittura dello spazio EC, vie possibili | L'ACPI di fabbrica non comanda nulla. **La curva è scrivibile dall'OS**, dal codice: mai provato sulla scheda |
 | 5. [Studio dell'hardware](docs/5-hardware.md) | EC, `EC_SPI1`, connettore tastiera, chip BIOS, ventola | Da foto, datasheet e firmware. `EC_SPI1`: 4 contatti su 10 sono FSPI |
-| 6. [Modifiche via hardware e misure mancanti](docs/6-modifiche-hardware.md) | Misure da fare, ISP con RP2040, programmatore, recovery | Niente provato sulla scheda. La recovery è descritta, mai eseguita |
+| 6. [Modifiche via hardware e misure mancanti](docs/6-modifiche-hardware.md) | Misure da fare, ISP con RP2040, programmatore, recovery | Niente provato sulla scheda. La recovery è descritta, mai eseguita. **Prossimo passo:** chip di ricambio programmato al banco |
 | 7. [Coreboot](docs/7-coreboot.md) | Port di terze parti, riscontro con la scheda, ordine delle operazioni | Non accettato upstream. Manufacturing mode confermato, Boot Guard attivo. Immagine compilata, mai scritta: tutto in [x210ai-coreboot](https://github.com/marcocancarini/x210ai-coreboot) |
 | 8. [Ventole: analisi del firmware](docs/8-ventole-firmware.md) | Catena di lettura, problemi di letture e impostazioni, correzioni proposte | Errori di temperatura ignorati, giri mai letti, isteresi inattiva. Correzione provata solo in emulatore, nessuna immagine generata |
 
@@ -23,11 +23,13 @@ Il chip è un **ITE IT5571 rev. 2**: core **8051**, eFlash embedded da 128 KiB, 
 
 ## Prossimi passi
 
-1. Registrare l'hash del dump di `all-keys` ([conferma](firmware/README.md#conferma)).
-2. Leggere lo spazio EC con `ec_sys`, a riposo e sotto carico: non scrive nulla e chiude il caso dei 100 °C ([4.4](docs/4-ventola-acpi.md#44-prova-in-sola-lettura)).
-3. Provare la scrittura di un punto della curva ([4.5](docs/4-ventola-acpi.md#45-prova-in-scrittura)).
-4. Misure sulla scheda, in ordine di utilità ([6.1](docs/6-modifiche-hardware.md#61-misure-mancanti)): prima i 15 segnali verso il connettore tastiera, poi il cablaggio RP2040 con `isp id` e `isp read`. Niente scritture prima ([6.3](docs/6-modifiche-hardware.md#63-guida-rp2040-isp-dal-connettore-tastiera)).
-5. Per coreboot: seguire la guida di [x210ai-coreboot](https://github.com/marcocancarini/x210ai-coreboot), non ancora pubblica ([parte 7](docs/7-coreboot.md)).
+1. **Prova di disaster recovery:** comprare un IT5571E-128 e programmarlo con un programmatore dedicato, fuori dalla scheda, con il proprio dump. Va fatta prima di scrivere altre modifiche nell'EC ([6.7](docs/6-modifiche-hardware.md#prova-di-disaster-recovery-al-banco), [TODO](TODO.md#prova-di-disaster-recovery-su-chip-di-ricambio-in-ordine)).
+2. Registrare l'hash del dump di `all-keys` ([conferma](firmware/README.md#conferma)).
+3. Leggere lo spazio EC con `ec_sys`, a riposo e sotto carico: non scrive nulla e chiude il caso dei 100 °C ([4.4](docs/4-ventola-acpi.md#44-prova-in-sola-lettura)).
+4. Provare la scrittura di un punto della curva ([4.5](docs/4-ventola-acpi.md#45-prova-in-scrittura)).
+5. Misure sulla scheda, in ordine di utilità ([6.1](docs/6-modifiche-hardware.md#61-misure-mancanti)): prima i 15 segnali verso il connettore tastiera, poi il cablaggio RP2040 con `isp id` e `isp read`. Niente scritture prima ([6.3](docs/6-modifiche-hardware.md#63-guida-rp2040-isp-dal-connettore-tastiera)).
+6. Verifiche sulla ventola, dopo la prova di recovery: PWM, tachimetro e tensioni sul connettore con il multimetro ([TODO](TODO.md#sessione-sullhardware-ventola-in-ordine), [5.5](docs/5-hardware.md#55-ventola)).
+7. Per coreboot: seguire la guida di [x210ai-coreboot](https://github.com/marcocancarini/x210ai-coreboot), non ancora pubblica ([parte 7](docs/7-coreboot.md)).
 
 Elenco completo in [`TODO.md`](TODO.md).
 

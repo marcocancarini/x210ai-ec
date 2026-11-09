@@ -32,7 +32,8 @@ Tutte le misure ancora da fare, in ordine di utilità. Sono a scheda spenta salv
 | **Filo verso DBGR/SMB** | Da valutare dopo la mappa di `EC_SPI1`, FT232H | Seconda via ISP e debug | Dipende dalle misure ([6.4](#64-lettura-con-dbgrsmb)) |
 | **Ascolto FSPI** | Analizzatore logico, cavetto FFC 10 pin da 0,5 mm | Capire se la porta lavora all'avvio | Solo ascolto ([6.8](#68-guida-riconoscere-il-pinout)) |
 | **Tachimetro della ventola** | Da valutare dopo la misura. Se la ventola ha il filo e non arriva a EC 47, un collegamento | Giri leggibili, con una patch EC | Ipotesi ([5.5](5-hardware.md#55-ventola)) |
-| **Sostituzione del chip EC** | Rework LQFP, chip nuovo, ISP | Scheda riparata se il chip è morto | Ultima risorsa ([6.7](#67-chip-di-ricambio)) |
+| **Programmatore dedicato per IT5571** | Programmatore con IT5571E nella lista, zoccolo LQFP-128 passo 0,4 mm, chip di ricambio | Chip programmato e verificato fuori dalla scheda | **Prossimo passo**: da acquistare ([6.7](#67-chip-di-ricambio)) |
+| **Sostituzione del chip EC** | Rework LQFP, chip già programmato e verificato | Scheda riparata se il chip è morto o l'ISP non riesce | Ultima risorsa ([6.7](#67-chip-di-ricambio)) |
 
 Il pull-up di Fn non richiede modifiche: lo abilita già `all-keys`.
 ## 6.3 Guida RP2040: ISP dal connettore tastiera
@@ -134,6 +135,7 @@ Il pacchetto del produttore **non contiene istruzioni di recovery**. Queste sono
 |---|---|---|
 | **EC** (eFlash nel chip) | `ifu` se l'EC parte, altrimenti ISP dal connettore tastiera ([6.3](#63-guida-rp2040-isp-dal-connettore-tastiera)), con `dumps/ec/EC-V0.4.0-20250723-lettura1.bin` | Metodo da datasheet, collegamenti da ricavare |
 | **BIOS** (chip SPI esterno) | Programmatore sul chip ([6.5](#65-programmatore-sul-chip-del-bios)) | Serve un dump verificato: quelli in `dumps/bios/` non sono ancora stati analizzati |
+| **EC, chip morto o ISP fallito** | Sostituzione con un chip di ricambio programmato al banco ([6.7](#67-chip-di-ricambio)) | Prova al banco pianificata, rework mai fatto |
 | **EC tramite `EC_SPI1`** | Porta FSPI ([5.2](5-hardware.md#52-porta-di-debug-ec_spi1)) | Non è un piano di recovery finché non si chiarisce il test mode |
 
 **EC corrotto:** la boot ROM è intatta, ma non trova la 16B-signature. Sintomi: niente accensione, tastiera o ricarica, ventola al massimo. `ifu` non serve, perché richiede il firmware in esecuzione. Il chip è vivo, quindi l'ISP dovrebbe funzionare anche con flash illeggibile, se VSTBY è presente. Verificare sempre dopo la scrittura.
@@ -147,6 +149,25 @@ Il pacchetto del produttore **non contiene istruzioni di recovery**. Queste sono
 - **Serve il package LQFP-128:** JLCPCB/LCSC `IT5571E-128/CX` (C24833823), AliExpress/eBay IT5571E-128. Le versioni VFBGA (`IT5571VG-128/CX`, C7429720) **non sono compatibili con la piazzola**. IT5570E-128 ha lo stesso package, ma è un altro chip. Esistono chip pre-programmati per modello (icchipforlaptop.com e simili). Prima di ordinare, leggere il marking.
 - Un chip nuovo ha l'eFlash vuota: va programmato via ISP o programmatore ITE, **non con il T48**. Il firmware è specifico della scheda: usare il proprio dump.
 - Se è fallito solo il flash, non serve comprare nulla: basta riscrivere via ISP.
+
+### Prova di disaster recovery al banco
+
+Decisa il 2026-11-09, prima di scrivere altre modifiche nell'EC: comprare un IT5571E-128 e programmarlo con un programmatore dedicato, fuori dalla scheda. La procedura passo per passo è in [`TODO.md`](../TODO.md#prova-di-disaster-recovery-su-chip-di-ricambio-in-ordine).
+
+| Cosa | Stato |
+|---|---|
+| Chip IT5571E-128, LQFP-128, due pezzi | Da acquistare |
+| Programmatore con IT5571E nella lista dei supportati | Da scegliere: la lista va verificata prima dell'acquisto |
+| Zoccolo LQFP-128 passo 0,4 mm | Da acquistare, compatibile con il programmatore |
+| Lettura, scrittura e verifica di `V0.4.0` e `all-keys` | Da fare |
+| Chip di scorta programmato con `V0.4.0` | Da fare |
+
+Cosa dimostra la prova:
+
+- che il proprio dump, scritto su un chip vuoto, si rilegge identico, con lo stesso hash;
+- che si ha un chip pronto da montare se l'EC della scheda si rompe e l'ISP non riesce.
+
+Cosa **non** dimostra: che la scheda si avvii con il chip sostituito. Lo si scopre solo col rework, che resta l'ultima risorsa. Prima viene sempre l'ISP dal connettore tastiera ([6.3](#63-guida-rp2040-isp-dal-connettore-tastiera)).
 
 ## 6.8 Guida: riconoscere il pinout
 

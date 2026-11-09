@@ -1,8 +1,41 @@
 # TODO — X210AI EC (IT5571)
 
-Stato al 2026-11-08: sulla scheda c'è `EC-V0.4.0-all-keys.bin`, con tasti ISO e JIS, scambio Fn↔L-Ctrl, Back, Forward, ThinkVantage, rilascio di Fn e combinazioni con Fn confermati. Versioni e procedure in [`firmware/README.md`](firmware/README.md), analisi nelle parti di [`docs/`](README.md#parti-del-progetto). Per la ventola, patch, SSDT e strumento lato OS sono pronti ma mai usati sulla scheda: il prossimo passo è la sessione sull'hardware qui sotto.
+Stato al 2026-11-08: sulla scheda c'è `EC-V0.4.0-all-keys.bin`, con tasti ISO e JIS, scambio Fn↔L-Ctrl, Back, Forward, ThinkVantage, rilascio di Fn e combinazioni con Fn confermati. Versioni e procedure in [`firmware/README.md`](firmware/README.md), analisi nelle parti di [`docs/`](README.md#parti-del-progetto). Per la ventola, patch, SSDT e strumento lato OS sono pronti ma mai usati sulla scheda.
+
+Dal 2026-11-09 il prossimo passo è la **prova di disaster recovery** su un chip EC di ricambio, programmato al banco con un programmatore dedicato. Serve ad avere un ripristino provato prima di scrivere altre modifiche nell'EC. Le verifiche sulla ventola (PWM, tachimetro, tensioni con il multimetro) vengono dopo.
+
+## Prova di disaster recovery su chip di ricambio, in ordine
+
+Obiettivo: saper programmare un IT5571 con il proprio firmware fuori dalla scheda, prima di scrivere altre modifiche nell'EC. Se una modifica rende la scheda inutilizzabile e l'ISP non basta, la via finale è sostituire il chip con uno già programmato e verificato ([docs 6.6, 6.7](docs/6-modifiche-hardware.md#67-chip-di-ricambio)). Niente di questo tocca la scheda.
+
+**1. Acquisto**
+
+- [ ] Chip **IT5571E-128**, package **LQFP-128** (14×14 mm, passo 0,4 mm): LCSC `IT5571E-128/CX` (C24833823) o AliExpress/eBay. **Non** la versione VFBGA `IT5571VG-128`, che non va sulla piazzola. Meglio due pezzi: uno per le prove, uno di scorta
+- [ ] Alla consegna, foto del marking e confronto con il chip sulla scheda (rev. 2). Annotare fornitore, prezzo e marking in docs 6.7
+- [ ] Programmatore dedicato con **IT5571E nella lista dei chip supportati**, verificata sul sito o nel software del produttore **prima** dell'acquisto. Il T48 non supporta i chip EC ITE (docs 6.7). Annotare modello, versione del software e voce scelta
+- [ ] Zoccolo o adattatore **LQFP-128 passo 0,4 mm** compatibile con quel programmatore
+
+**2. Prove al banco, sul chip di prova**
+
+- [ ] Leggere l'ID del chip e la flash vuota. Salvare la lettura e annotare il valore dei byte vuoti
+- [ ] Scrivere `dumps/ec/EC-V0.4.0-20250723-lettura1.bin` (firmware originale `V0.4.0`, 128 KiB)
+- [ ] Rileggere e confrontare: SHA256 uguale a quello di `dumps/SHA256SUMS`. Ripetere la lettura due volte
+- [ ] Cancellare, riscrivere `firmware/patched/EC-V0.4.0-all-keys.bin`, rileggere e confrontare con `firmware/SHA256SUMS`
+- [ ] Controllare se il programmatore gestisce le zone protette (P0BA0R/P0BA1R, [`refs/datasheet/`](refs/datasheet/README.md), pagine 158-159). La lettura deve contenere la 16B-signature a `0x40` (docs 1)
+- [ ] Annotare tempi, impostazioni e messaggi del software: diventano la procedura di docs 6.7
+
+**3. Chip di scorta**
+
+- [ ] Programmare il secondo chip con il firmware originale `V0.4.0`, verificarlo e conservarlo in una bustina antistatica etichettata con nome e hash
+- [ ] Scrivere in docs 6.6 la procedura completa: quando usare `ifu`, quando l'ISP dal connettore tastiera, quando la sostituzione del chip
+
+**4. Dopo la prova**
+
+- [ ] Riprendere le verifiche sulla ventola (sezione sotto), poi la patch EC della ventola. Il punto 5 della sezione sotto richiede questa prova conclusa
 
 ## Sessione sull'hardware: ventola, in ordine
+
+**Rinviata a dopo la prova di disaster recovery.** Le verifiche servono a determinare PWM, tachimetro e tensioni sul connettore della ventola con il multimetro (punto 2), prima di qualsiasi patch.
 
 Ogni passo usa i risultati del precedente. Strumento: `tools/host/ec_fan.py` (docs 4.8). Ipotesi da confrontare: docs 5.5 e 8.7.
 
@@ -42,7 +75,7 @@ Ogni passo usa i risultati del precedente. Strumento: `tools/host/ec_fan.py` (do
 - [ ] Decidere il contenuto: tachimetro (8.6), controllo dall'host (8.8), correzioni della curva (8.5), e la soglia `SAFE_C`
 - [ ] Unire `host_ctl.py` e `fan_fix.py`, che si agganciano entrambi a `0xB60B` e `0xBB36`: isteresi, poi scelta tra richiesta e curva. Rifare tutte le prove e gli scenari del simulatore
 - [ ] Estendere `tools/patch_keyboard.py` per scrivere l'immagine: CRC, firma, regole di docs 2.1
-- [ ] Prima del flash, una via di recovery provata: ISP via RP2040 in sola lettura o programmatore (parte 5 e 6)
+- [ ] Prima del flash, una via di recovery provata: chip di ricambio programmato al banco (sezione sopra), ISP via RP2040 in sola lettura o programmatore (parte 5 e 6)
 - [ ] Dopo il flash: `status` con i giri in `0x74`, `request 30 --timer 5` e scadenza, `request --forever` e sospensione (al risveglio deve tornare la curva), `auto`, SSDT con la patch
 
 ## Da fare
