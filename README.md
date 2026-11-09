@@ -27,7 +27,7 @@ Il chip è un **ITE IT5571 rev. 2**: core **8051**, eFlash embedded da 128 KiB, 
 2. Leggere lo spazio EC con `ec_sys`, a riposo e sotto carico: non scrive nulla e chiude il caso dei 100 °C ([4.4](docs/4-ventola-acpi.md#44-prova-in-sola-lettura)).
 3. Provare la scrittura di un punto della curva ([4.5](docs/4-ventola-acpi.md#45-prova-in-scrittura)).
 4. Misure sulla scheda, in ordine di utilità ([6.1](docs/6-modifiche-hardware.md#61-misure-mancanti)): prima i 15 segnali verso il connettore tastiera, poi il cablaggio RP2040 con `isp id` e `isp read`. Niente scritture prima ([6.3](docs/6-modifiche-hardware.md#63-guida-rp2040-isp-dal-connettore-tastiera)).
-5. Per coreboot: seguire la guida di [x210ai-coreboot](https://github.com/marcocancarini/x210ai-coreboot) ([parte 7](docs/7-coreboot.md)).
+5. Per coreboot: seguire la guida di [x210ai-coreboot](https://github.com/marcocancarini/x210ai-coreboot), non ancora pubblica ([parte 7](docs/7-coreboot.md)).
 
 Elenco completo in [`TODO.md`](TODO.md).
 
@@ -50,4 +50,15 @@ Elenco completo in [`TODO.md`](TODO.md).
 - `python3 tools/emulator/fan_check.py`: esegue il codice reale della ventola e controlla modi, rampa, isteresi e scrittura dallo spazio EC.
 - `python3 tools/emulator/fan_fix.py`: prova in memoria le correzioni della ventola, senza scrivere file. Come funziona l'emulatore: [`tools/emulator/README.md`](tools/emulator/README.md).
 - `python3 tools/i8051.py <bin> 0 <start_hex> <end_hex>`: disassembler 8051 minimale, senza dipendenze. `tools/output/strings.txt` e `tools/output/key-regions.asm` sono artefatti generati.
-- Commit raggruppati per sessione. La cartella locale è la repo git privata `marcocancarini/x210ai-ec` e `inputs/` non viene pubblicata. Hash e sezioni del datasheet in `refs/DATASHEETS.md`.
+- Commit raggruppati per sessione. `inputs/` resta in locale e non è nella repo. Hash e sezioni del datasheet in `refs/DATASHEETS.md`.
+
+## Licenza
+
+Script, strumenti e documentazione di questa repo sono distribuiti con licenza [GPL-2.0](LICENSE).
+
+Restano dei rispettivi autori, con le loro condizioni:
+
+- i firmware EC del produttore (`firmware/vendor/`, `storico/produttore/`) e i dump letti dalla scheda (`dumps/ec/`); le immagini patchate in `firmware/patched/` sono derivate da questi;
+- le pagine del datasheet ITE in `refs/datasheet/` e `refs/img/it5571-pinout-lqfp128.png`, riprodotte solo come riferimento;
+- i file in `storico/riferimenti/`, con link al progetto di origine in [`storico/README.md`](storico/README.md);
+- la UEFI Shell in `usb-tools/EFI/` (EDK2, licenza BSD).

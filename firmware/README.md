@@ -41,7 +41,7 @@ Senza il fix, nelle combinazioni con Fn va lasciato Fn per ultimo: altrimenti Fn
 
 Il flash è sempre un rischio, e la recovery RP2040 non è pronta: se l'EC non riparte, `ifu` non serve più ([2.4](../docs/2-modifiche-software.md#24-scrittura-dellec-con-ifu-rischi), [6.6](../docs/6-modifiche-hardware.md#66-brick-e-recovery)). Nell'esempio il file è `all-keys`: per un'altra versione usare il suo file, nome e hash dalla tabella.
 
-**1. Da CachyOS**, copia il file e controlla quello di ritorno. `ifu.efi` non è nella repo: va scaricato a parte, controllato con l'hash e messo in `usb-tools/` ([dove trovarlo](../usb-tools/README.md)).
+**1. Da CachyOS**, dalla cartella della repo, copia il file e controlla quello di ritorno. `ifu.efi` non è nella repo: va scaricato a parte, controllato con l'hash e messo in `usb-tools/` ([dove trovarlo](../usb-tools/README.md)).
 
 ```fish
 sudo mkdir -p /boot/efi/EFI/tools

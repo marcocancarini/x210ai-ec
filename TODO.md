@@ -54,7 +54,7 @@ Elenco completo delle misure in docs 6.1.
 
 ### Parte 7: coreboot
 
-Riferimento: [x210ai-coreboot](https://github.com/marcocancarini/x210ai-coreboot), `docs/STATO.md`.
+Riferimento: [x210ai-coreboot](https://github.com/marcocancarini/x210ai-coreboot) (non ancora pubblica), `docs/STATO.md`.
 
 - [ ] Seguire la [CL 94886](https://review.coreboot.org/c/coreboot/+/94886): al 2026-11-06 è `NEW`, senza Code-Review
 

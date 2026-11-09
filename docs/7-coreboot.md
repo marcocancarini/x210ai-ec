@@ -1,6 +1,6 @@
 # Parte 7: Coreboot
 
-Esiste un port di coreboot per la X210AI: [WheeledCord/coreboot-x210ai](https://github.com/WheeledCord/coreboot-x210ai), branch `x210ai`, di Fionn Cassidy. È un fork di coreboot con la scheda in `src/mainboard/51nb/x210ai/`. **Nulla è stato ancora scritto o avviato sulla nostra scheda.** Patch, configurazione, strumenti e guida sono nella repo privata [x210ai-coreboot](https://github.com/marcocancarini/x210ai-coreboot), che è il riferimento aggiornato: questa sezione tiene il confronto con la scheda.
+Esiste un port di coreboot per la X210AI: [WheeledCord/coreboot-x210ai](https://github.com/WheeledCord/coreboot-x210ai), branch `x210ai`, di Fionn Cassidy. È un fork di coreboot con la scheda in `src/mainboard/51nb/x210ai/`. **Nulla è stato ancora scritto o avviato sulla nostra scheda.** Patch, configurazione, strumenti e guida sono nella repo [x210ai-coreboot](https://github.com/marcocancarini/x210ai-coreboot), non ancora pubblica, che è il riferimento aggiornato: questa sezione tiene il confronto con la scheda.
 
 | Voce | Stato al 2026-11-06 |
 |---|---|
