@@ -39,7 +39,7 @@ Elenco completo in [`TODO.md`](TODO.md).
 | [`firmware/`](firmware/README.md) | Versione del produttore, immagini patchate, versioni da non usare, hash |
 | [`dumps/`](dumps/README.md) | Letture di EC e BIOS dalla scheda, con hash |
 | `tools/` | `patch_keyboard.py`, disassembler `i8051.py`, [emulatore](tools/emulator/README.md) |
-| `usb-tools/` | `ifu.efi`, `Fpt.efi`, UEFI Shell |
+| [`usb-tools/`](usb-tools/README.md) | UEFI Shell e `fe.nsh`. `ifu.efi` e `Fpt.efi` sono proprietari e non inclusi: il README dice dove trovarli |
 | `refs/` | Immagini, foto e note sul datasheet |
 | [`storico/`](storico/README.md) | Tutti i dati usati nel progetto, da sfoltire |
 

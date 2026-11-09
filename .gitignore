@@ -5,3 +5,10 @@ dumps/bios/
 storico/diagnostica-20261017/full_dump.bin
 storico/diagnostica-20261017/bios_region.bin
 storico/datasheet/
+# Strumenti proprietari e pacchetti che li contengono: vedi usb-tools/README.md
+usb-tools/Fpt.efi
+usb-tools/ifu.efi
+storico/produttore/X210AI0724BIOS/Fpt.efi
+storico/produttore/MTLH-NB06-ec-250322/ifu.efi
+storico/produttore/X210AI0724BIOS.rar
+storico/produttore/X210AI-EC-updated-on-03-22.zip

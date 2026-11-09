@@ -15,8 +15,8 @@ Cosa c'è nel firmware EC e nei dump: file, architettura, firme, tastiera e diff
 | `firmware/obsolete/EC0416_ctrl-caps-swap.BIN` | `21f63a733dd5ee8b338ffefcda093ffec8d38c38138bc97c1e82a65a20acd406` | Patch demo L-Ctrl↔CapsLock (2 byte). **CRC non aggiornato, non flashare** |
 | `firmware/obsolete/EC0416_fn-ctrl-swap.BIN` | `970431688f10aa160973d3f276c453e5cc86427a28a01ee34ef43ea17dfabee8` | **Errata, non usare:** cambia Alt+SysRq, non Fn, e ha il CRC vecchio ([1.3](#13-firme-e-checksum), [2.1](2-modifiche-software.md#21-patch-della-tastiera)) |
 | `inputs/ec/MTLH-NB06-ec-250322/MTLH-NB06_E03-250322.BIN` | `151edd7a59cad1eb4a3d7b0827ee0937f73f0645a3cbf8d532f5e6bc0de5bbde` | EC vecchia, build 2025-03-22, md5 `4bbc1e54aad8cac51a3e0a5e5274ed28` |
-| `inputs/ec/X210AI-EC-updated-on-03-22.zip` | `b850c8941df6eecbea035aefe481eb1c50fe8d5da4ea9b333717fc7a7230bc4e` | Archivio originale di `MTLH-NB06-ec-250322/` |
-| `inputs/bios/X210AI0724BIOS.rar` | `a1090b7986e6e3cb2485333f73fd5f8d62822f64bedfe7cad5733e88ddd94663` | Solo strumenti, estratti in `inputs/bios/extracted/`. **Nessuna immagine BIOS** |
+| `inputs/ec/X210AI-EC-updated-on-03-22.zip` | `b850c8941df6eecbea035aefe481eb1c50fe8d5da4ea9b333717fc7a7230bc4e` | Archivio originale di `MTLH-NB06-ec-250322/`. Non nella repo: contiene `ifu.efi` |
+| `inputs/bios/X210AI0724BIOS.rar` | `a1090b7986e6e3cb2485333f73fd5f8d62822f64bedfe7cad5733e88ddd94663` | Solo strumenti, estratti in `inputs/bios/extracted/`. **Nessuna immagine BIOS**. Non nella repo: contiene `Fpt.efi` |
 | `inputs/datasheets/IT5571E-128.pdf` | `a4e4afae8a157b7424401cf65c9dbecddce937b8b88a3dc1474124439bfc5753` | Datasheet sintetico, 29 pagine |
 | `inputs/datasheets/IT5570_A_V0.3.1_U.pdf` | `01666ebe44ece4a436b5ffaad40c9570c17f0b3480862caf224953585c59102f` | IT5570 V0.3.1, parente stretto dell'IT5571 |
 
@@ -29,8 +29,8 @@ I percorsi `inputs/` restano come riferimento agli hash: quasi tutti quei file o
 | File del pacchetto | Ruolo | Note |
 |---|---|---|
 | `inputs/bios/extracted/uefi-shell/EFI/BOOT/BOOTX64.efi`, `BOOTIA32.efi` | UEFI Shell, build 2013 | Non scrive nulla: è l'ambiente da cui lanciare i tool, da copiare in radice sulla chiavetta |
-| `inputs/ec/MTLH-NB06-ec-250322/ifu.efi` | ITE Flash Utility 2.3.1a, build DEBUG | Legge e scrive l'EC. Presente solo nel pacchetto EC |
-| `inputs/bios/extracted/Fpt.efi` + `fb.nsh` | Intel Flash Programming Tool | Legge e scrive il chip SPI del BIOS |
+| `inputs/ec/MTLH-NB06-ec-250322/ifu.efi` | ITE Flash Utility 2.3.1a, build DEBUG | Legge e scrive l'EC. Presente solo nel pacchetto EC. Proprietario, non nella repo ([dove trovarlo](../usb-tools/README.md)) |
+| `inputs/bios/extracted/Fpt.efi` + `fb.nsh` | Intel Flash Programming Tool | Legge e scrive il chip SPI del BIOS. Proprietario, non nella repo ([dove trovarlo](../usb-tools/README.md)) |
 | `inputs/bios/extracted/fparts.txt` | Lista di 204 flash SPI | Le voci non sono validate, lo dice il file stesso |
 | Tutorial `.docx` nel pacchetto BIOS | Guida generica con esempi di un altro modello (R51) | Non tratta backup, alimentazione, errori o recovery |
 
